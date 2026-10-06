@@ -33,8 +33,7 @@ public final class ExposureModel implements LightSampler {
     /** Visibility multiplier at zero exposure: hard to see, not invisible. */
     public static final float FLOOR = 0.12F;
 
-    private static final int MAX_BLOCK_SOURCES = 8;
-    private static final int SOURCE_RADIUS = 15;
+    private static final int SOURCE_RADIUS = LightTransport.SOURCE_RADIUS;
     private static final double SKY_RAY_LENGTH = 64.0;
     private static final float SHADE_FRACTION = 0.3F;
     private static final float NIGHT_BASE = 0.03F;
@@ -76,6 +75,11 @@ public final class ExposureModel implements LightSampler {
         return compute(level, point);
     }
 
+    /** Block and dynamic light only (no sky), uncached: the term visual lighting bakes into terrain (doc 30). */
+    public static float blockExposureUncached(ServerLevel level, Vec3 point) {
+        return blockExposure(level, point);
+    }
+
     private static float compute(ServerLevel level, Vec3 point) {
         float blocks = blockExposure(level, point);
         float sky = skyExposure(level, point);
@@ -85,41 +89,17 @@ public final class ExposureModel implements LightSampler {
     // ------------------------------------------------------------------------------------------------
     // Block + dynamic lights
 
-    private record Candidate(Vec3 pos, float potential, BlockPos skip) {}
-
     static float blockExposure(ServerLevel level, Vec3 point) {
         BlockPos center = BlockPos.containing(point);
-        List<Candidate> candidates = new ArrayList<>();
+        List<LightTransport.Candidate> candidates = new ArrayList<>();
         for (LightSourceIndex.Source source : LightSourceIndex.sourcesNear(level, center, SOURCE_RADIUS)) {
-            Vec3 pos = Vec3.atCenterOf(source.pos());
-            float potential = (source.emission() - (float) pos.distanceTo(point)) / 15.0F;
-            if (potential > 0.0F) {
-                candidates.add(new Candidate(pos, potential, source.pos()));
-            }
+            LightTransport.offer(candidates, Vec3.atCenterOf(source.pos()), source.emission(), source.pos(), point);
         }
         for (DynamicLights.Light light : DynamicLights.near(level, point)) {
-            float potential = (light.emission() - (float) light.pos().distanceTo(point)) / 15.0F;
-            if (potential > 0.0F) {
-                candidates.add(new Candidate(light.pos(), potential, BlockPos.containing(light.pos())));
-            }
+            LightTransport.offer(candidates, light.pos(), light.emission(), BlockPos.containing(light.pos()), point);
         }
-        if (candidates.isEmpty()) {
-            return 0.0F;
-        }
-        candidates.sort((a, b) -> Float.compare(b.potential, a.potential));
-
-        float darkness = 1.0F;
-        int traced = 0;
-        for (Candidate candidate : candidates) {
-            if (traced++ >= MAX_BLOCK_SOURCES) {
-                break;
-            }
-            float transmittance = SightRay.transmittance(level, candidate.pos, point, false, candidate.skip);
-            if (transmittance > 0.0F) {
-                darkness *= 1.0F - Math.min(1.0F, candidate.potential * transmittance);
-            }
-        }
-        return 1.0F - darkness;
+        // Shared with the client's visual lighting (doc 30), so both compute the same shadows.
+        return LightTransport.shadowed(level, point, candidates, null);
     }
 
     // ------------------------------------------------------------------------------------------------

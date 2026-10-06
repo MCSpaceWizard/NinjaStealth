@@ -78,7 +78,14 @@ public final class LightSourceIndex {
         if (chunk == null) {
             return List.of();
         }
-        LevelChunkSection section = chunk.getSection(chunk.getSectionIndexFromSectionY(sy));
+        return scanSection(chunk.getSection(chunk.getSectionIndexFromSectionY(sy)), sx, sy, sz);
+    }
+
+    /**
+     * Every light-emitting block in one chunk section (section coordinates {@code sx, sy, sz}). Pure, so the
+     * client's visual lighting (doc 30) indexes sources exactly like the server does.
+     */
+    public static List<Source> scanSection(LevelChunkSection section, int sx, int sy, int sz) {
         if (section.hasOnlyAir() || !section.maybeHas(state -> state.getLightEmission() > 0)) {
             return List.of();
         }

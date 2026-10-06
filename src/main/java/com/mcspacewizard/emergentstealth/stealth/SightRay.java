@@ -5,7 +5,6 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -32,17 +31,27 @@ public final class SightRay {
     /**
      * @param targetCrawling whether the target is crawling, which makes concealing foliage block sight
      */
-    public static float transmittance(Level level, Vec3 from, Vec3 to, boolean targetCrawling) {
-        return transmittance(level, from, to, targetCrawling, null);
+    public static float transmittance(BlockGetter level, Vec3 from, Vec3 to, boolean targetCrawling) {
+        return transmittance(level, from, to, targetCrawling, null, null);
     }
 
     /**
      * @param skip a block to ignore (e.g. a light source's own block when tracing light from it), or null
      */
-    public static float transmittance(Level level, Vec3 from, Vec3 to, boolean targetCrawling, @Nullable BlockPos skip) {
+    public static float transmittance(BlockGetter level, Vec3 from, Vec3 to, boolean targetCrawling, @Nullable BlockPos skip) {
+        return transmittance(level, from, to, targetCrawling, skip, null);
+    }
+
+    /**
+     * Takes any {@link BlockGetter} so the client renderer can trace the same shadows as the server (doc 30).
+     *
+     * @param skipEnd a second block to ignore, e.g. the cell being lit when baking light for rendering, or null
+     */
+    public static float transmittance(BlockGetter level, Vec3 from, Vec3 to, boolean targetCrawling,
+            @Nullable BlockPos skip, @Nullable BlockPos skipEnd) {
         Accumulator acc = new Accumulator();
         BlockGetter.traverseBlocks(from, to, acc, (a, pos) -> {
-            if (skip != null && pos.equals(skip)) {
+            if ((skip != null && pos.equals(skip)) || (skipEnd != null && pos.equals(skipEnd))) {
                 return null;
             }
             a.transmittance *= blockTransmittance(level, pos, from, to, targetCrawling, a);
@@ -51,7 +60,7 @@ public final class SightRay {
         return acc.transmittance <= 0.01F ? 0.0F : acc.transmittance;
     }
 
-    private static float blockTransmittance(Level level, BlockPos pos, Vec3 from, Vec3 to, boolean targetCrawling, Accumulator acc) {
+    private static float blockTransmittance(BlockGetter level, BlockPos pos, Vec3 from, Vec3 to, boolean targetCrawling, Accumulator acc) {
         BlockState state = level.getBlockState(pos);
         if (state.getFluidState().is(FluidTags.WATER) && ++acc.waterBlocks > MAX_WATER_BLOCKS) {
             return 0.0F;

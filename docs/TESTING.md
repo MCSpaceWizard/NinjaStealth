@@ -14,6 +14,40 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Track E: Visual lighting (shadows you can see, dynamic lights, dark is dark) 🧪
+
+What you **see** now follows the same light model the guards use (design doc [30](design/30-visual-lighting.md)). Screenshots are in `docs/screenshots/visual-lighting/`.
+
+**Automated checks:** 2 more GameTests (29 total). For every air cell of a test room, the light baked for rendering equals the gameplay light:
+- a torch with a wall and glass
+- a player holding a torch next to a wall
+
+**Verified here in a real client** (software GL):
+- vanilla renderer, **Sodium 0.9.2**, and **Sodium + Iris 1.11.4** with a shader pack
+- shadows behind walls, a pillar's shadow updating live, held-torch light following the player, an NPC's torch, and dark-is-dark
+
+**Setup:** night (`/time set 18000`; `/time set 114000` for a new moon), creative. Options are in Mods → Emergent Stealth → Config → **Visual Lighting**. Changes apply immediately (chunks rebuild).
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| V.1 | Shadows behind walls | Place a torch 2 blocks from a 1-block-thick wall. Look at the ground on the far side | The far side is dark. In vanilla (turn off *Shadow-Casting Block Light*), light leaks around the wall's ends and glows along its foot |
+| V.2 | Shadows match the light gem | Stand in the dark spot from V.1, in survival | The light gem is dark, and the ground you stand on looks dark too |
+| V.3 | Live shadow updates | Place a 3-high pillar right next to a torch, then break it | A shadow wedge appears behind the pillar right away, and disappears when you break it |
+| V.4 | Held torch | At night, hold a torch (either hand), lantern, soul torch or glowstone. Walk around | The ground and walls around you light up and the light follows you (in steps of about half a block). Put the torch away → dark again |
+| V.5 | Held light casts shadows | Hold a torch next to a wall | The far side of the wall stays dark |
+| V.6 | Other carriers | `/es npc spawn emergentstealth:ashigaru`, then `/item replace entity @e[type=emergentstealth:stealth_npc] weapon.offhand with torch`. Also set a mob on fire | Light moves with the NPC; the burning mob glows |
+| V.7 | Dropped items (optional) | Turn on *Dropped Items Glow*, then drop a torch | It glows. Off by default, because guards don't count dropped torches |
+| V.8 | Dark is dark | Video Settings → Brightness → **Bright**. Go into a dark cave or room | Still genuinely dark. Turn off *Dark Is Dark* (accessibility) → vanilla brightness is back |
+| V.9 | Iris shader packs | `./gradlew runClient -PwithIris`, enable a shader pack | Torch shadows and held lights still show. Dark-is-dark steps aside (log: `Iris shader pack active: dark-is-dark paused`) unless *Dark Is Dark With Shader Packs* is on |
+| V.10 | Sodium | `./gradlew runClient -PwithSodium`, then repeat V.1–V.5 | Same results as vanilla rendering |
+| V.11 | Performance | Walk through a torch-lit area holding a torch, with ~20 torches around | No stutter on a normal GPU/CPU. If chunks lag behind, raise *Dynamic Light Update Interval* |
+| V.12 | Dedicated server | `./gradlew runServer` | Starts normally (all visual code is client-only) |
+
+**Known differences from gameplay** (doc 30 §9):
+- sky and sun shadows aren't baked; that's vanilla sky light
+- lava lakes and very dense light clusters use vanilla light
+- light pools are round rather than diamond-shaped
+
 ## Stage 5: Navigation, patrols & routines 🧪
 
 **Automated checks (already passing):** 6 more GameTests (27 total):

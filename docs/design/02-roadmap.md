@@ -79,7 +79,7 @@ The goal of M1 is the **vertical slice** you approved [Z-02]: one guard type tha
 
 ## Track E: Presentation (runs alongside from M1 on; polish lands after M4)
 
-- **Visual light & shadow R&D** (Q2): "dark is dark" post-process, visual dynamic lights, a custom shadow-rendering investigation (Veil or our own), Iris coexistence.
+- **Visual light & shadow R&D** (Q2): "dark is dark" post-process, visual dynamic lights, a custom shadow-rendering investigation (Veil or our own), Iris coexistence. 🧪 First pass merged ([doc 30](30-visual-lighting.md)): baked block-light shadows from the gameplay model, dynamic lights, dark is dark; works with Sodium and Iris.
 - **Animation:** PAL player animations (takedowns, climbing, dragging, crawl) and GeckoLib NPC animations.
 - **Smoke:** volumetric-looking smoke.
 - **Music and sound:** dynamic music by alert state; CC0 sound effects; accessibility visual sound cues.

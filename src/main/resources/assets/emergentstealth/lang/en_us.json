@@ -36,5 +36,16 @@
   "commands.emergentstealth.patrol.list": "%s patrol route(s) in this dimension:",
   "commands.emergentstealth.patrol.selected": "Patrol Baton now edits %s",
   "commands.emergentstealth.patrol.updated": "Updated patrol route %s",
-  "commands.emergentstealth.routine.updated": "Updated the routine of %s NPC(s)"
+  "commands.emergentstealth.routine.updated": "Updated the routine of %s NPC(s)",
+  "emergentstealth.configuration.visual_lighting": "Visual Lighting",
+  "emergentstealth.configuration.dynamicLights": "Dynamic Lights",
+  "emergentstealth.configuration.dynamicLightRange": "Dynamic Light Range",
+  "emergentstealth.configuration.dynamicLightInterval": "Dynamic Light Update Interval (ticks)",
+  "emergentstealth.configuration.itemEntityLights": "Dropped Items Glow",
+  "emergentstealth.configuration.shadowedBlockLight": "Shadow-Casting Block Light",
+  "emergentstealth.configuration.shadowBounce": "Shadow Bounce Light",
+  "emergentstealth.configuration.darkIsDark": "Dark Is Dark",
+  "emergentstealth.configuration.darkMaxBrightness": "Dark Is Dark: Max Brightness",
+  "emergentstealth.configuration.darkAmbientScale": "Dark Is Dark: Ambient Light",
+  "emergentstealth.configuration.darkIsDarkWithShaders": "Dark Is Dark With Shader Packs"
 }
