@@ -14,6 +14,39 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Stage 6: Hearing & distractions 🧪
+
+Guards now **hear** (design doc [16](design/16-sound.md)). Sound goes round corners and through open doors, and walls muffle it. Your footsteps depend on how you move. Rain, thunder, running water and music mask noise, and you can **throw any item** to distract. Screenshots are in `docs/screenshots/sound/`.
+
+**Automated checks (already passing):** 8 more GameTests (44 total):
+- a stone wall muffles a noise, while the same noise is heard through an open doorway
+- sprinting is heard where sneaking isn't
+- rain masks a footstep that's heard in clear weather
+- a thrown item landing behind a guard is heard
+- opening a chest is silent; opening a door is heard and gives you away
+- glass shatters and leaves nothing; stone drops where it lands
+- over the per-tick node budget, a noise still arrives a few ticks later
+- a worst-case timing check
+
+**Verified here in a real client:** the throw key (tap and hold), creative keeps the item, survival uses one up, glass shatters, the noise rings and hearing lines, and a guard investigating a glass impact behind it ("What was that noise?", `heard: impact 0.64`).
+
+**Tip:** `/esdebug on` shows the noise view: a ring at each noise, sized by its loudness, for 2 seconds. The ring is red if the noise gives a player away, yellow if it only points at a spot. Lines go to every NPC that heard it, coloured from blue (barely) through green to red (loud and clear), labelled with the kind, the intensity and the propagation cost. Guards ignore creative players, so test footsteps and doors in **survival** (`/difficulty peaceful` keeps mobs away; guards still fight back).
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| 6.1 | Footsteps by stance | Survival, `/esdebug on`. Walk, sprint and sneak around a guard that faces away | Footstep rings every ~1.5 blocks: sneak 2, walk 6, sprint 12 (×1.25 on gravel/metal/glass, ×0.8 on wool/carpet/moss/snow/grass). A sprint behind it makes it turn and come to check; sneaking right behind it doesn't |
+| 6.2 | Landing | Jump down 3–4 blocks near a guard; then the same while sneaking | A landing ring (4 + 1.5 × fall, max 16). Sneaking halves it. Stepping down stairs or slabs makes none |
+| 6.3 | Walls and doorways | Build a stone room with a wooden door. Stand a guard inside, then open and close the door, or sprint outside | The noise line bends round through the door with a higher cost. A closed door muffles a little (+3), stone a lot (+8), wool most (+16) |
+| 6.4 | Silent actions | Open a chest or barrel, drop items, shoot a bow, eat | No ring at all |
+| 6.5 | Doors, blocks, combat | Open a door, break and place blocks, hit a pig, near a guard | Rings: door 8, break 10, place 6, hits and deaths 10. Your own doors and hits are red (they give you away) |
+| 6.6 | Throw key | Hold any item and tap **G** (Controls → Emergent Stealth) | A short lob. **Hold** G to charge (a bar shows), release for a long throw. 0.5 s cooldown. Survival uses one item; creative doesn't |
+| 6.7 | Distraction | Throw cobblestone behind a guard that faces away | Yellow "impact 10" ring and a line to the guard. It turns, says something like "What was that noise?", and walks over to look (S4) |
+| 6.8 | Glass and sharp items | Throw glass, a pane or a glass bottle; then a sword at a pig | Glass shatters with particles and sound and leaves nothing (impact 14). The sword nicks the pig (1 damage), then drops. Everything else drops where it lands |
+| 6.9 | Masking | `/weather rain`, then `/weather thunder`; also stand by a waterfall or a playing jukebox | A footstep that was heard at the edge of range no longer is. Rain masks 25%, thunder 50%, flowing water within 6 blocks 30%, a jukebox within 16 blocks 40% (they combine) |
+| 6.10 | Snuffing fizz | Snuff a torch (empty hand) right next to a guard | A tiny ring (2): a guard right beside you may glance over, one further away doesn't |
+| 6.11 | Datapacks | Copy `data/emergentstealth/emergentstealth/noise_source/block_open.json` into a datapack, set `"loudness": 0`, restart the world | Doors are silent. Tags `emergentstealth:muffles_sound_light/heavy`, `loud_surfaces`, `quiet_surfaces`, `shatters_on_impact` and `sharp_throwables` retune blocks and items |
+| 6.12 | Multiplayer | `runServer` + `runClient` + `runClient2`; both players throw and walk near a guard | Throws and noises work for both; only ops see the noise rings |
+
 ## Stage 4: Behaviour core (search groups, attack tokens, barks, behaviour trees) 🧪
 
 **Automated checks (already passing):** 5 more GameTests:

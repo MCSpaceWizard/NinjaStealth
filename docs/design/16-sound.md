@@ -1,4 +1,6 @@
-# 16 — Hearing & distractions (Stage 6) 📄
+# 16 — Hearing & distractions (Stage 6) ✅ implemented
+
+> **Status (2026-10-06):** implemented as designed and covered by 8 GameTests (`gametest/SoundTests`). Additions while building it: noise sources take an optional `from_npcs` flag (default off, so guards opening doors don't alarm each other; on for combat), the default sources also cover lightning, note blocks, goat horns and primed TNT, and diagonal steps between two blocks that only touch at an edge are charged as if through the cheaper of them, so diagonal walls still muffle. Performance: a worst-case sprint footstep (listener sealed off, nothing reachable) floods about 1,600 nodes in 0.5–1 ms; `soundNodesPerTick` defaults to 8,000.
 
 Guards can now **hear**. Sound travels through open space and doorways and is muffled by walls (S-01). Footsteps depend on how you move (S-02). Rain, thunder, water and music mask noise (S-04). **You can throw any item** to distract (S-05). All of this is server-side and data-driven.
 
