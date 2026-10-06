@@ -42,6 +42,8 @@ This is a living list of what's implemented and how to test it. It's updated wit
 | 3.12 | Unlit drops | Break an unlit torch or lantern | It drops the normal torch or lantern |
 | 3.13 | Guards fetch torches | At night, get a guard to investigate or search (let the meter pass 50%, then hide) | In the dark, the guard pulls a torch into its off-hand while searching, lighting itself and the area. It's put away once the guard calms down |
 | 3.14 | Gem toggle | Config → HUD → Show Light Gem off | The gem disappears |
+| 3.15 | Light debug view | `/esdebug light` (or **sneak + right-click** the Debug Lens), as op / singleplayer host | A floor heatmap around you: dark blue = hidden, purple = dim, yellow = lit. Your body points are coloured dots. A line from every nearby light to your chest: green = clear, yellow = partial, red = blocked (thin lines are carried lights). Above you: total exposure with blocks/sky/sky-access. An arrow toward the sun or moon (yellow = reaching you, grey = you're in its shadow) |
+| 3.16 | Shadows in the debug view | Torch on one side of a wall at night, stand on the other side | The heatmap shows a dark "shadow" strip behind the wall while squares around its ends glow; the torch's line to you is red |
 
 **Known:** vanilla doesn't *render* held-torch light or our shadows; the light gem is the truth (agreed in Q2). Visual dynamic lights and shadow rendering come later, in Track E.
 

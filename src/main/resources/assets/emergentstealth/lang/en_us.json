@@ -22,5 +22,7 @@
   "subtitles.emergentstealth.stinger.suspicious": "Someone grows suspicious",
   "subtitles.emergentstealth.stinger.detected": "You've been spotted",
   "emergentstealth.configuration.showDetectionIndicators": "Show Detection Indicators",
-  "emergentstealth.configuration.playAlertSounds": "Play Alert Sounds"
+  "emergentstealth.configuration.playAlertSounds": "Play Alert Sounds",
+  "message.emergentstealth.debug.light_on": "Light debug view: ON (requires op / singleplayer host)",
+  "message.emergentstealth.debug.light_off": "Light debug view: OFF"
 }

@@ -13,6 +13,7 @@ import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 import com.mcspacewizard.emergentstealth.network.DetectionSync;
 import com.mcspacewizard.emergentstealth.stealth.LightSampler;
 import com.mcspacewizard.emergentstealth.stealth.light.ExposureModel;
+import com.mcspacewizard.emergentstealth.stealth.light.LightDebugSync;
 import com.mcspacewizard.emergentstealth.stealth.light.LightGemSync;
 
 import net.minecraft.server.level.ServerLevel;
@@ -80,6 +81,7 @@ public final class PerceptionScheduler {
         long now = level.getGameTime();
         List<ServerPlayer> players = level.players();
         LightGemSync.tick(level, players, now);
+        LightDebugSync.tick(level, players, now);
 
         Set<StealthNpc> npcs = NPCS.get(level);
         if (npcs == null || npcs.isEmpty()) {

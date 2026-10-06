@@ -62,7 +62,18 @@ Stage 3 makes light and **cast shadows** the core of visibility (L-01, L-10). Th
 
 A guard who is investigating, hunting or searching somewhere dark (exposure at its eyes < 0.25) **takes out a torch** in its off-hand. That torch is a dynamic light, so it lights up the guard *and* anyone nearby. The guard puts it away when it calms down.
 
-## 5. Not in this stage
+## 5. Light debug view
+
+`/esdebug light`, or sneak + right-click the Debug Lens. Op / singleplayer host only, via a vanilla debug subscription. It shows:
+- an exposure heatmap on the floor around you
+- your body points' exposure
+- every light reaching you, with its shadow-ray result
+- the exposure breakdown (blocks / sky / sky access)
+- the sun or moon direction
+
+It's meant for level design ("where are the shadows?") and for tuning.
+
+## 6. Not in this stage
 
 - **Visual** dynamic lights, a "dark is dark" post-process, and rendered shadows: Track E R&D. Until then, the light gem is the truth. A dynamic-lights mod in the pack helps the visuals.
 - Lamplighter routine (S5, Q10).

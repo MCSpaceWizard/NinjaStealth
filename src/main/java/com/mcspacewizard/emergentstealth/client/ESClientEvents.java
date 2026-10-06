@@ -2,6 +2,7 @@ package com.mcspacewizard.emergentstealth.client;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
 import com.mcspacewizard.emergentstealth.client.debug.ClientDebugState;
+import com.mcspacewizard.emergentstealth.client.debug.LightDebugRenderer;
 import com.mcspacewizard.emergentstealth.client.debug.NpcDebugRenderer;
 import com.mcspacewizard.emergentstealth.client.hud.ClientDetection;
 import com.mcspacewizard.emergentstealth.client.hud.LightGemHud;
@@ -10,6 +11,7 @@ import com.mcspacewizard.emergentstealth.client.render.NpcRenderer;
 import com.mcspacewizard.emergentstealth.registry.ESDebugSubscriptions;
 import com.mcspacewizard.emergentstealth.registry.ESEntities;
 import com.mcspacewizard.emergentstealth.network.DetectionSyncPayload;
+import com.mcspacewizard.emergentstealth.network.LightDebugPayload;
 import com.mcspacewizard.emergentstealth.network.LightGemPayload;
 import com.mcspacewizard.emergentstealth.registry.ESItems;
 
@@ -48,12 +50,14 @@ public final class ESClientEvents {
     @SubscribeEvent
     static void onRegisterDebugRenderers(RegisterDebugRenderersEvent event) {
         event.register(new NpcDebugRenderer());
+        event.register(new LightDebugRenderer());
     }
 
     @SubscribeEvent
     static void onRegisterClientPayloadHandlers(RegisterClientPayloadHandlersEvent event) {
         event.register(DetectionSyncPayload.TYPE, ClientDetection::handle);
         event.register(LightGemPayload.TYPE, LightGemHud::handle);
+        event.register(LightDebugPayload.TYPE, LightDebugRenderer::handle);
     }
 
     @SubscribeEvent
@@ -67,12 +71,14 @@ public final class ESClientEvents {
     static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientDetection.clear();
         LightGemHud.reset();
+        LightDebugRenderer.clear();
     }
 
     /** Request our debug data from the server only while the debug view is on. */
     @SubscribeEvent
     static void onAddDebugSubscriptionFlags(AddDebugSubscriptionFlagsEvent event) {
         event.addFlag(ESDebugSubscriptions.NPC.get(), ClientDebugState.isEnabled());
+        event.addFlag(ESDebugSubscriptions.LIGHT.get(), ClientDebugState.isLightEnabled());
     }
 
     /** {@code /esdebug [on|off]}: toggles the debug view. Client-side, so it works without op. */
@@ -90,14 +96,31 @@ public final class ESClientEvents {
                 .then(Commands.literal("off").executes(ctx -> {
                     ClientDebugState.setEnabled(false);
                     return 1;
-                })));
+                }))
+                .then(Commands.literal("light")
+                        .executes(ctx -> {
+                            ClientDebugState.toggleLight();
+                            return 1;
+                        })
+                        .then(Commands.literal("on").executes(ctx -> {
+                            ClientDebugState.setLightEnabled(true);
+                            return 1;
+                        }))
+                        .then(Commands.literal("off").executes(ctx -> {
+                            ClientDebugState.setLightEnabled(false);
+                            return 1;
+                        }))));
     }
 
-    /** Right-clicking the Debug Lens toggles the debug view. */
+    /** Right-clicking the Debug Lens toggles the AI debug view; sneak + right-click toggles the light view. */
     @SubscribeEvent
     static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
         if (event.getLevel().isClientSide() && event.getItemStack().is(ESItems.DEBUG_LENS.get())) {
-            ClientDebugState.toggle();
+            if (event.getEntity().isShiftKeyDown()) {
+                ClientDebugState.toggleLight();
+            } else {
+                ClientDebugState.toggle();
+            }
             event.setCancellationResult(InteractionResult.SUCCESS);
             event.setCanceled(true);
         }

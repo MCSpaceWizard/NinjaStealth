@@ -4,6 +4,7 @@ import com.mcspacewizard.emergentstealth.EmergentStealth;
 import com.mcspacewizard.emergentstealth.debug.NpcDebugInfo;
 
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.util.debug.DebugSubscription;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -21,4 +22,11 @@ public final class ESDebugSubscriptions {
     /** Per-NPC snapshot. Expiry 0: values live as long as the entity is tracked. */
     public static final DeferredHolder<DebugSubscription<?>, DebugSubscription<NpcDebugInfo>> NPC =
             DEBUG_SUBSCRIPTIONS.register("npc", () -> new DebugSubscription<>(NpcDebugInfo.STREAM_CODEC, 0));
+
+    /**
+     * Light debug view. Only used as a permission-checked "I want light debug data" flag: the data itself is
+     * sent by LightDebugSync as a custom payload to players whose subscriptions include this.
+     */
+    public static final DeferredHolder<DebugSubscription<?>, DebugSubscription<Boolean>> LIGHT =
+            DEBUG_SUBSCRIPTIONS.register("light", () -> new DebugSubscription<>(ByteBufCodecs.BOOL, 0));
 }
