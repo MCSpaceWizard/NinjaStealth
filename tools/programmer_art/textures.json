@@ -1,0 +1,14 @@
+{
+  "_comment": "Placeholder texture specs. Paths are relative to assets/emergentstealth/textures/. The generator never overwrites an existing PNG unless --force is given, so real art dropped in at the same path wins.",
+  "palette": {
+    "ink": "#1b1a20",
+    "paper": "#e8dcc0",
+    "lacquer": "#a8322d",
+    "steel": "#9aa3ad",
+    "wood": "#7a5534",
+    "jade": "#4f8a6b"
+  },
+  "textures": [
+    { "path": "item/debug_lens", "shape": "lens", "colors": ["ink", "jade", "wood"] }
+  ]
+}

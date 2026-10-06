@@ -1,0 +1,10 @@
+{
+  "itemGroup.emergentstealth": "Emergent Stealth",
+  "item.emergentstealth.debug_lens": "Debug Lens",
+
+  "emergentstealth.configuration.title": "Emergent Stealth Configuration",
+  "emergentstealth.configuration.debug": "Debug",
+  "emergentstealth.configuration.debugToolsRequireOp": "Debug Tools Require Op",
+  "emergentstealth.configuration.hud": "HUD",
+  "emergentstealth.configuration.showLightGem": "Show Light Gem"
+}
