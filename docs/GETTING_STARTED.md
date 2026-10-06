@@ -37,6 +37,8 @@ From the repo folder (on Windows use `gradlew.bat` instead of `./gradlew`):
 | `./gradlew runServer` | Starts a dedicated server (accept the EULA in `run/eula.txt` the first time) |
 | `./gradlew runClient2` | Second client "Dev2", for co-op tests against `runServer` (connect to `localhost`) |
 | `./gradlew runGameTestServer` | Runs the automated in-game tests headlessly |
+| `./gradlew runClient -PwithSodium` | Client with **Sodium** added (renderer compat testing; downloads from Modrinth's maven) |
+| `./gradlew runClient -PwithIris` | Client with **Sodium + Iris**. Put a shader pack zip in `run/shaderpacks/` and pick it in Video Settings → Shader Packs |
 
 The **first build takes a while** (5–15 min): it downloads Minecraft, NeoForge and libraries. Later builds are much faster.
 
@@ -65,8 +67,10 @@ So Claude can compile and run tests inside cloud sessions, the environment needs
    ```
    It installs a checksum-verified JDK 25, points Gradle at it, and adds a cloud-only Gradle init script that pulls Maven Central artifacts from Google's mirror (the main Maven Central hosts often rate-limit shared cloud IPs with HTTP 429). Your local builds are unaffected.
 2. **Network access** (environment settings → *Network access* → **Custom**). Keep the default package-manager list and add these allowed domains:
+   (`api.modrinth.com` and `cdn.modrinth.com` are only needed for `-PwithSodium` / `-PwithIris`.)
    ```
    maven.neoforged.net
+   cdn.modrinth.com
    piston-meta.mojang.com
    piston-data.mojang.com
    launchermeta.mojang.com

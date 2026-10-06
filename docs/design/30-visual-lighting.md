@@ -1,5 +1,10 @@
 # 30 — Visual lighting: dynamic lights, baked shadows, "dark is dark" (Track E) 📄
 
+> **Status (2026-10-06):** implemented on `claude/visual-lighting` as designed.
+> - Checked in a real client with vanilla rendering, Sodium 0.9.2, and Sodium + Iris 1.11.4 with a shader pack (screenshots below).
+> - 2 new GameTests; all 23 pass.
+> - The dedicated server still boots.
+
 Track E R&D (Q2, L-01, L-02, L-07 b, L-10). The server's `ExposureModel` (doc 13) is the gameplay truth: it ray-traces cast shadows from every light source and counts held lights. Vanilla *rendering* disagrees in three ways, and this doc fixes each:
 
 | Problem | Fix |
@@ -43,7 +48,11 @@ Behaviour-preserving refactors, so client and server run the same code:
 - `LightSourceIndex.scanSection(section, sx, sy, sz)` becomes a public pure function. The server index and the client index both use it.
 - `DynamicLights.lightPosition(entity)` is now public. `emission`/`itemEmission` were already public. The client puts each light at exactly the spot the server uses.
 
-A GameTest (`visual/matches_gameplay`) checks that `15 × ExposureModel.blockExposure(p)` equals the visual light level computed by the shared path, behind a wall and in view of a torch.
+Two GameTests check that, for every air cell of a test room, `round(15 × ExposureModel.blockExposureUncached(p))` equals the visual light level computed by the client's path:
+- `visual/shadow_matches_gameplay`: a torch, a wall and glass
+- `visual/held_light_matches_gameplay`: a player holding a torch next to a wall
+
+`VisualLightTests` registers them itself, so `ESGameTests` is unchanged.
 
 ## 3. Shadowed block light (baked)
 
@@ -117,8 +126,9 @@ Toggling a lighting option rebuilds all chunks (`levelRenderer.allChanged()`).
 - **No light sources near a section:** cost ≈ 0. The source union is empty, so vanilla's value passes through.
 - **Section near lights:**
   - ≤ 8 rays per position, each ≤ 15 blocks, cached per position per thread
-  - a typical 16³ torch-lit room costs a few ms on a worker thread
-  - nothing runs on the main thread except entity probes, which are cached per tick
+  - **measured:** ~11–14 µs per uncached cell with a warm JIT (GameTest timing log, one torch plus a held torch); ~80–100 µs on a cold JIT
+  - only cells within a light's reach pay this. A section with ~1,000 lit cells costs ~10–15 ms on one worker thread the first time, then hits the cache
+  - nothing runs on the main thread except entity, block-entity and particle probes, which are cached per cell
 - **Dense emitters** (lava lakes, glowstone walls): if more than 256 sources overlap a section's neighbourhood, that section uses vanilla light. Documented delta.
 - **Dynamic lights:**
   - ≤ 27 sections per moving light, every `dynamicLightInterval` ticks
@@ -128,9 +138,10 @@ Toggling a lighting option rebuilds all chunks (`levelRenderer.allChanged()`).
 
 ## 8. Compatibility
 
-- **Sodium 0.9.2:** works through the shared hook above; no Sodium classes are referenced. Verified in a dev client with `-PwithSodium`.
-- **Iris:**
+- **Sodium 0.9.2:** works through the shared hook above; no Sodium classes are referenced. Verified in a dev client with `-PwithSodium`: shadows, held lights, and re-baking after a block change.
+- **Iris 1.11.4** (verified with `-PwithIris` and the MakeUp Ultra Fast pack):
   - baked lights and shadows flow into `lmcoord`, which packs read
+  - shader detection works; the log says `Iris shader pack active: dark-is-dark paused`
   - packs that add their own held-light glow will double up with our dynamic lights, so set `dynamicLights = false` if that looks wrong
   - "dark is dark" is skipped with packs by default
 - **LambDynamicLights:** both mods hook the same lambda. Don't run both; use ours, since it matches the gameplay model.
@@ -146,4 +157,15 @@ Toggling a lighting option rebuilds all chunks (`levelRenderer.allChanged()`).
 
 ## Screenshots
 
-Night scene: torch behind a wall, and a player holding a torch. Vanilla, ours, and ours with Sodium. The screenshots are in `docs/screenshots/visual-lighting/`, and the testing section lists them.
+All shots are taken on a new-moon night with the brightness slider at "Bright", in software GL, in `docs/screenshots/visual-lighting/`. The "shadows" panels have dark-is-dark off; the "full" panels have everything on.
+
+| File | Shows (left → right) |
+|---|---|
+| `torch_wall_vanilla_shadows_full.png` | Torch beside a wall: vanilla, shadows only, full |
+| `behind_wall_vanilla_vs_shadows.png` | Far side of the wall: vanilla leaks torchlight along its foot and onto its face; ours doesn't |
+| `pillar_sodium_vanilla_shadows_full.png` | **Sodium**: a pillar placed next to a torch casts a shadow wedge, re-baked live |
+| `sodium_behind_wall_shadows_vs_vanilla.png` | **Sodium**: far side of the wall, shadows vs vanilla |
+| `held_torch_off_vs_on.png` | Player holding a torch: dynamic lights off vs on |
+| `sodium_held_torch.png` | **Sodium**: held torch after teleporting; the light follows |
+| `npc_carried_torch.png` | A stealth NPC with a torch in its off-hand lights its surroundings |
+| `iris_shaderpack_pillar.png` | **Iris** + a shader pack: our baked block-light shadows show through the pack |
