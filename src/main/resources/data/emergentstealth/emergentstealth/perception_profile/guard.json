@@ -1,0 +1,10 @@
+{
+  "central": { "half_angle": 35, "range": 24 },
+  "peripheral": { "half_angle": 75, "range": 12 },
+  "peripheral_rate": 0.3,
+  "vertical_half_angle": 50,
+  "gain_per_second": 1.6,
+  "decay_per_second": 0.25,
+  "decay_delay_seconds": 3.0,
+  "min_detection_seconds": 0.6
+}

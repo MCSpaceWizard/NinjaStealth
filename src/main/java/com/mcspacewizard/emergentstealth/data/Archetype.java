@@ -21,6 +21,7 @@ import net.minecraft.world.item.ItemStackTemplate;
  * @param outfit    outfit registry id drawn over the body
  * @param stats     base attribute values
  * @param equipment starting equipment per slot
+ * @param perception perception profile id (default {@code emergentstealth:default})
  */
 public record Archetype(
         NpcRole role,
@@ -28,7 +29,8 @@ public record Archetype(
         List<Identifier> bodies,
         Optional<Identifier> outfit,
         Stats stats,
-        Map<EquipmentSlot, ItemStackTemplate> equipment) {
+        Map<EquipmentSlot, ItemStackTemplate> equipment,
+        Optional<Identifier> perception) {
 
     public static final Codec<Archetype> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             NpcRole.CODEC.fieldOf("role").forGetter(Archetype::role),
@@ -37,7 +39,8 @@ public record Archetype(
             Identifier.CODEC.optionalFieldOf("outfit").forGetter(Archetype::outfit),
             Stats.CODEC.optionalFieldOf("stats", Stats.DEFAULT).forGetter(Archetype::stats),
             Codec.unboundedMap(EquipmentSlot.CODEC, ItemStackTemplate.CODEC)
-                    .optionalFieldOf("equipment", Map.of()).forGetter(Archetype::equipment)
+                    .optionalFieldOf("equipment", Map.of()).forGetter(Archetype::equipment),
+            Identifier.CODEC.optionalFieldOf("perception").forGetter(Archetype::perception)
     ).apply(instance, Archetype::new));
 
     /** Base attribute values applied when an NPC takes this archetype. */

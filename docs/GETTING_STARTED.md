@@ -63,7 +63,7 @@ So Claude can compile and run tests inside cloud sessions, the environment needs
    ```bash
    bash scripts/cloud-setup.sh
    ```
-   It installs a checksum-verified JDK 25 and points Gradle at it.
+   It installs a checksum-verified JDK 25, points Gradle at it, and adds a cloud-only Gradle init script that pulls Maven Central artifacts from Google's mirror (the main Maven Central hosts often rate-limit shared cloud IPs with HTTP 429). Your local builds are unaffected.
 2. **Network access** (environment settings → *Network access* → **Custom**). Keep the default package-manager list and add these allowed domains:
    ```
    maven.neoforged.net

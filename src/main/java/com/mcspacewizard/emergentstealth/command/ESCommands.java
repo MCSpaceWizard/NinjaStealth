@@ -21,6 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 /** Server commands: {@code /emergentstealth ...}, aliased as {@code /es}. */
@@ -61,7 +62,7 @@ public final class ESCommands {
         }
         npc.snapTo(pos, source.getRotation().y, 0.0F);
         npc.setArchetypeId(archetype);
-        npc.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.COMMAND, null);
+        EventHooks.finalizeMobSpawn(npc, level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.COMMAND, null);
         level.addFreshEntityWithPassengers(npc);
 
         source.sendSuccess(() -> Component.translatable("commands.emergentstealth.npc.spawned", archetype.toString()), true);

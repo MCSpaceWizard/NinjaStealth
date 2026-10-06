@@ -5,11 +5,14 @@ import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 import com.mcspacewizard.emergentstealth.command.ESCommands;
 import com.mcspacewizard.emergentstealth.config.ESConfig;
+import com.mcspacewizard.emergentstealth.gametest.ESGameTests;
 import com.mcspacewizard.emergentstealth.registry.ESCreativeTabs;
 import com.mcspacewizard.emergentstealth.registry.ESDebugSubscriptions;
 import com.mcspacewizard.emergentstealth.registry.ESEntities;
 import com.mcspacewizard.emergentstealth.registry.ESItems;
+import com.mcspacewizard.emergentstealth.registry.ESNetwork;
 import com.mcspacewizard.emergentstealth.registry.ESRegistries;
+import com.mcspacewizard.emergentstealth.registry.ESSounds;
 
 import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
@@ -32,12 +35,17 @@ public final class EmergentStealth {
         ESItems.ITEMS.register(modEventBus);
         ESCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         ESDebugSubscriptions.DEBUG_SUBSCRIPTIONS.register(modEventBus);
+        ESSounds.SOUND_EVENTS.register(modEventBus);
+        ESGameTests.TEST_FUNCTIONS.register(modEventBus);
 
         modEventBus.addListener(ESRegistries::onNewDataPackRegistries);
         modEventBus.addListener(ESEntities::onAttributeCreation);
+        modEventBus.addListener(ESNetwork::onRegisterPayloads);
+        modEventBus.addListener(ESGameTests::onRegisterGameTests);
 
         NeoForge.EVENT_BUS.addListener(ESCommands::onRegisterCommands);
 
+        modContainer.registerConfig(ModConfig.Type.SERVER, ESConfig.SERVER_SPEC);
         modContainer.registerConfig(ModConfig.Type.CLIENT, ESConfig.CLIENT_SPEC);
     }
 

@@ -26,4 +26,24 @@ touch "${props}"
 grep -q '^org.gradle.java.installations.paths=' "${props}" \
   || echo "org.gradle.java.installations.paths=${JDK_DIR}" >> "${props}"
 
+# Maven Central (repo.maven.apache.org / repo1) often rate-limits shared cloud IPs (HTTP 429).
+# Prefer Google's Maven Central mirror for cloud sessions only; local builds are unaffected.
+mkdir -p "${HOME}/.gradle/init.d"
+cat > "${HOME}/.gradle/init.d/central-mirror.gradle" <<'GRADLE'
+def centralMirror = 'https://maven-central.storage-download.googleapis.com/maven2/'
+beforeSettings { settings ->
+    settings.pluginManagement.repositories {
+        maven { name = 'CentralMirror'; url = centralMirror }
+    }
+}
+allprojects {
+    buildscript.repositories {
+        maven { name = 'CentralMirror'; url = centralMirror }
+    }
+    repositories {
+        maven { name = 'CentralMirror'; url = centralMirror }
+    }
+}
+GRADLE
+
 "${JDK_DIR}/bin/java" -version

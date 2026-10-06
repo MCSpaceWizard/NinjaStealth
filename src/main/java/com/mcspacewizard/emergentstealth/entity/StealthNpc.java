@@ -6,6 +6,11 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
+import com.mcspacewizard.emergentstealth.ai.brain.StealthActionGoal;
+import com.mcspacewizard.emergentstealth.ai.brain.StealthBrain;
+import com.mcspacewizard.emergentstealth.ai.perception.NpcPerception;
+import com.mcspacewizard.emergentstealth.ai.perception.PerceptionProfile;
+import com.mcspacewizard.emergentstealth.ai.perception.TargetAwareness;
 import com.mcspacewizard.emergentstealth.data.Archetype;
 import com.mcspacewizard.emergentstealth.debug.NpcDebugInfo;
 import com.mcspacewizard.emergentstealth.registry.ESDebugSubscriptions;
@@ -19,6 +24,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.debug.DebugValueSource;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -30,10 +36,9 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
@@ -42,7 +47,8 @@ import net.minecraft.world.level.storage.ValueOutput;
 
 /**
  * The single entity type behind every human NPC. Its {@link Archetype} (datapack) decides role, looks,
- * stats and gear. Stage 1 only has placeholder vanilla goals; the stealth brain replaces them in S4.
+ * stats, gear and how it perceives. Perception ({@link NpcPerception}, run by the perception scheduler)
+ * feeds the {@link StealthBrain}, which picks an alert state that the goals act out.
  */
 public class StealthNpc extends PathfinderMob {
     public static final Identifier DEFAULT_ARCHETYPE = EmergentStealth.id("ashigaru");
@@ -52,13 +58,23 @@ public class StealthNpc extends PathfinderMob {
     private static final EntityDataAccessor<Integer> DATA_BODY_VARIANT =
             SynchedEntityData.defineId(StealthNpc.class, EntityDataSerializers.INT);
 
-    // Placeholder perception numbers shown by the debug overlay until S2 defines real perception profiles.
-    private static final float PLACEHOLDER_VIEW_RANGE = 16.0F;
-    private static final float PLACEHOLDER_FOV_DEGREES = 110.0F;
+    public static final Identifier DEFAULT_PERCEPTION = EmergentStealth.id("default");
+
+    private final NpcPerception perception = new NpcPerception(this);
+    private final StealthBrain brain = new StealthBrain(this);
 
     public StealthNpc(EntityType<? extends StealthNpc> type, Level level) {
         super(type, level);
         this.setPersistenceRequired();
+        this.getNavigation().setCanOpenDoors(true);
+    }
+
+    public NpcPerception perception() {
+        return perception;
+    }
+
+    public StealthBrain stealthBrain() {
+        return brain;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -78,11 +94,29 @@ public class StealthNpc extends PathfinderMob {
 
     @Override
     protected void registerGoals() {
-        // Placeholder behaviour until the S4 behaviour-tree brain takes over.
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        // Combat: vanilla melee follows getTarget(), which the brain only sets while the target is seen.
+        this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.2, false));
+        this.goalSelector.addGoal(2, new StealthActionGoal(this));
+        // Idle placeholders until patrols and routines (S5). No "look at nearby player" goal: that would be
+        // free information (D-08) - NPCs only turn to what they perceive.
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.6));
-        this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+    }
+
+    @Override
+    protected void customServerAiStep(ServerLevel level) {
+        brain.tick(level);
+        super.customServerAiStep(level);
+    }
+
+    @Override
+    public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
+        boolean hurt = super.hurtServer(level, source, damage);
+        if (hurt && this.isAlive()) {
+            brain.onHurt(level, source);
+        }
+        return hurt;
     }
 
     // ------------------------------------------------------------------------------------------------
@@ -96,6 +130,18 @@ public class StealthNpc extends PathfinderMob {
     /** Looks the archetype up in this side's registry access (works on the client too: the registry is synced). */
     public Optional<Archetype> getArchetype() {
         return Optional.ofNullable(this.level().registryAccess().lookupOrThrow(ESRegistries.ARCHETYPE).getValue(getArchetypeId()));
+    }
+
+    /** Guards fight when alerted; everyone else flees. */
+    public boolean isCombatant() {
+        return getArchetype().map(a -> a.role().isGuard()).orElse(true);
+    }
+
+    /** The NPC's perception profile from its archetype (server registry), or the built-in default. */
+    public PerceptionProfile getPerceptionProfile() {
+        Identifier id = getArchetype().flatMap(Archetype::perception).orElse(DEFAULT_PERCEPTION);
+        PerceptionProfile profile = this.level().registryAccess().lookupOrThrow(ESRegistries.PERCEPTION_PROFILE).getValue(id);
+        return profile != null ? profile : PerceptionProfile.DEFAULT;
     }
 
     public int getBodyVariant() {
@@ -158,11 +204,13 @@ public class StealthNpc extends PathfinderMob {
         super.addAdditionalSaveData(output);
         output.putString("Archetype", this.entityData.get(DATA_ARCHETYPE));
         output.putInt("BodyVariant", getBodyVariant());
+        brain.save(output);
     }
 
     @Override
     public void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
+        brain.load(input);
         this.entityData.set(DATA_BODY_VARIANT, input.getIntOr("BodyVariant", 0));
         input.getString("Archetype").ifPresent(value -> {
             Identifier id = Identifier.tryParse(value);
@@ -183,12 +231,19 @@ public class StealthNpc extends PathfinderMob {
 
     private NpcDebugInfo createDebugInfo() {
         Optional<Archetype> archetype = getArchetype();
+        PerceptionProfile profile = getPerceptionProfile();
+        java.util.UUID focusId = brain.alertTarget() != null ? brain.alertTarget() : perception.focus();
+        TargetAwareness focus = focusId == null ? null : perception.get(focusId);
         return new NpcDebugInfo(
                 getArchetypeId().toString(),
                 archetype.map(a -> a.role().getSerializedName()).orElse("?"),
                 archetype.map(a -> a.faction().toString()).orElse("?"),
-                "idle",
-                PLACEHOLDER_VIEW_RANGE,
-                PLACEHOLDER_FOV_DEGREES);
+                brain.state().name().toLowerCase(java.util.Locale.ROOT),
+                perception.tier(),
+                focus == null ? 0.0F : focus.awareness(),
+                new NpcDebugInfo.Cones(profile.central().halfAngle(), profile.central().range(),
+                        profile.peripheral().halfAngle(), profile.peripheral().range(), profile.verticalHalfAngle()),
+                Optional.ofNullable(focus == null ? null : focus.lastKnownPos()),
+                perception.debugRays().stream().map(r -> new NpcDebugInfo.Ray(r.point(), r.transmittance())).toList());
     }
 }

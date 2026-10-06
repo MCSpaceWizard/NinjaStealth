@@ -1,4 +1,6 @@
-# 12 — Perception: sight (Stage 2) 📄 for review
+# 12 — Perception: sight (Stage 2) ✅ implemented
+
+> **Status (2026-10-06):** implemented as designed, with your default answers to P1/P2 (the default numbers; torches wait for S3). Covered by 14 GameTests (`./gradlew runGameTestServer`). The NPC reactions built on top are described in [14-detection-v0](14-detection-v0.md).
 
 This stage makes NPCs **see**. Sight produces an **awareness** value per NPC per target, plus a remembered **last known position**. The behaviour layer (S4) turns awareness into states (curious, suspicious, …). Light is a placeholder input until S3 swaps in the real exposure model. Hearing (S6) and evidence (S7) later feed the same awareness and memory.
 

@@ -1,0 +1,10 @@
+{
+  "stinger.suspicious": {
+    "subtitle": "subtitles.emergentstealth.stinger.suspicious",
+    "sounds": [{ "name": "minecraft:block.note_block.chime", "type": "event", "pitch": 1.2, "volume": 0.6 }]
+  },
+  "stinger.detected": {
+    "subtitle": "subtitles.emergentstealth.stinger.detected",
+    "sounds": [{ "name": "minecraft:block.note_block.bell", "type": "event", "pitch": 0.6, "volume": 0.8 }]
+  }
+}

@@ -14,9 +14,43 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
-## Stage 1: Stealth NPCs & debug view 🧪
+## Stage 2: Sight, awareness & detection (+ reactions v0) 🧪
 
-**Compile status:** not yet compiled. The first build is the first real check, so please send any build errors.
+**Automated checks (already passing):** 14 GameTests cover cones, nothing-behind, stone/glass/leaves, crawling in grass, deep water, the grace period, decay, and hit reactions. Run them with `./gradlew runGameTestServer`, or in game with `/test runall emergentstealth`.
+
+**Setup:** **survival** mode (NPCs ignore creative players; switch with `/gamemode survival`). Spawn a guard with `/es npc spawn emergentstealth:ashigaru` and a civilian with `/es npc spawn emergentstealth:townsfolk`. The Debug Lens view helps a lot here.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| 2.1 | Nothing behind | Walk up behind a guard (any speed) in daylight | No indicator and no reaction, even right behind it. Turn on the debug view: rays only appear when you're inside its cones |
+| 2.2 | Central cone | Stand ~10 blocks in front of a guard in daylight, still | The above-head **"? ■■□□□"** meter fills white → yellow → orange. A **chime** plays at half, then a **red "!"** and a low **bell**, and the guard comes at you |
+| 2.3 | Grace period | Sprint straight at a guard from the front | Even at point blank it takes ~0.6 s to go from nothing to "!" |
+| 2.4 | Peripheral vision | Stand off to the side (~60°) at ~6–10 blocks | It fills much more slowly than straight ahead; beyond ~75° nothing happens |
+| 2.5 | Movement matters | Same spot: stand still vs. walk vs. sneak vs. sprint | Sprint ≫ walk > still ≈ sneak (sneak is slower to notice) |
+| 2.6 | Darkness (placeholder) | Repeat 2.2 at night or in a dark room | Much slower to fill (about 6× slower in full darkness). Proper shadows come with Stage 3 |
+| 2.7 | Cover | Put glass, leaves, a fence and a stone wall between you and a guard | Glass: like open air. Leaves/fence: slower. Stone: nothing. Debug rays turn green/yellow/red |
+| 2.8 | Crawling in grass | Crawl (lie under a trapdoor first; a crawl key comes later) inside tall grass in front of a guard | Hidden. Standing up in the same grass → visible |
+| 2.9 | Curious / suspicious | Let the meter reach ~30%, then hide | The guard stops and looks toward where it saw you ("curious"). Past 50% it stares, then **walks over to investigate**, looks around, and gives up after a while |
+| 2.10 | Last known position | Get detected ("!"), then break line of sight and move away | The guard runs to where it **last saw** you (debug: magenta box), not to where you are now. Then it searches nearby (orange "?") for ~25 s |
+| 2.11 | Heightened alert | After a search ends, approach the same guard again | Its debug state is `heightened`; it notices you noticeably faster than a fresh guard |
+| 2.12 | Melee hit | Hit an unaware guard from behind | It turns and fights immediately |
+| 2.13 | Arrow hit | Shoot an unaware guard from hiding | It doesn't know exactly where you are: it gets suspicious and walks toward a spot roughly where the arrow came from |
+| 2.14 | Civilians flee | Get detected by a townsfolk NPC, or hit one | It runs away instead of fighting |
+| 2.15 | Detected → combat → lose them | Get detected, then escape around corners | Combat while it sees you, hunting once you vanish, searching, then back to calm(ish) |
+| 2.16 | Debug view | Debug Lens on | Labels show `state`, `tier`, `awareness`. Rays to your body points (green/yellow/red). Magenta box at your last known position |
+| 2.17 | HUD toggles | Mods → Emergent Stealth → Config → HUD: turn off detection indicators / alert sounds | Indicators and sounds stop |
+| 2.18 | Co-op: no free info | `runServer` + 2 clients. Player A gets detected by a guard while B stays hidden nearby | B sees no indicator for that guard (it's not aware of **B**), though B can watch it chase A |
+| 2.19 | Lots of NPCs (perf) | Spawn ~40 guards (`/es npc spawn` repeatedly) around you | No noticeable lag. In debug, the closest ~20 show `tier 1`, the rest `tier 2` |
+
+**Tuning:** everything above is adjustable.
+- Server config: `world/serverconfig/emergentstealth-server.toml` (perception tiers and budget, thresholds, search time, a global gain multiplier).
+- Datapack perception profiles: `data/emergentstealth/emergentstealth/perception_profile/*.json` (cones, ranges, gain, decay, grace).
+
+Tell me what feels too easy or too hard and I'll retune the defaults.
+
+## Stage 1: Stealth NPCs & debug view ✅
+
+Verified by you on 2026-10-06. Rows 1.6, 1.9 and 1.10 behave differently since Stage 2; see the notes in those rows.
 
 | # | Feature | How to test | Expected |
 |---|---|---|---|
@@ -25,11 +59,11 @@ This is a living list of what's implemented and how to test it. It's updated wit
 | 1.3 | Spawn command + archetypes | `/es npc spawn emergentstealth:` then press **Tab** | Suggests the six archetypes: `ashigaru`, `samurai`, `taisho`, `townsfolk`, `labourer`, `daimyo` |
 | 1.4 | Archetype looks | Spawn one of each | Visibly different outfits (placeholder art): dark samurai armour, red/gold taisho, beige townsfolk kimono, straw-hatted labourer, purple daimyo. Skin tones vary between NPCs of the same type |
 | 1.5 | Archetype stats | Hit a samurai and an ashigaru with the same weapon | The samurai takes more hits (40 hp vs 24 hp) |
-| 1.6 | Placeholder behaviour | Stand near them | They wander slowly, look at you when close, and look around. No hostility yet (comes in Stage 4) |
+| 1.6 | Idle behaviour | Stand **behind** them | They wander slowly and look around. *(Since Stage 2 they no longer turn to look at you unless they actually perceive you.)* |
 | 1.7 | List command | `/es npc list` | A total count plus a count per archetype |
 | 1.8 | Debug view toggle | Right-click the **Debug Lens** (or type `/esdebug`) | Action-bar message "debug view: ON" |
-| 1.9 | Debug labels | With debug on, look at NPCs | Above each NPC, 3 lines: `archetype [role]`, faction, `state: idle` |
-| 1.10 | Debug vision cone | With debug on | A red facing line and a yellow cone outline in front of each NPC that **follows its head** as it looks around |
+| 1.9 | Debug labels | With debug on, look at NPCs | Above each NPC, 3 lines: `archetype [role]`, `state: … tier N`, `awareness: 0.00` *(Stage 2 format)* |
+| 1.10 | Debug vision cone | With debug on | Red facing line, yellow central cone, blue-ish flat peripheral fan; all follow the head *(Stage 2: real sizes per NPC type)* |
 | 1.11 | Debug off | `/esdebug off` or right-click the lens again | Overlays disappear |
 | 1.12 | Persistence | Spawn a few NPCs, then save & quit and reload the world | Same NPCs, same outfits, skin tones and gear. They don't despawn when you walk far away and come back |
 | 1.13 | Multiplayer: debug is op-only | `runServer` + `runClient` + `runClient2`. Op only one player (`/op Dev` in the server console). Both toggle debug | The op sees the overlay; the non-op sees **nothing** even with it toggled on |
@@ -37,7 +71,7 @@ This is a living list of what's implemented and how to test it. It's updated wit
 | 1.15 | Datapack override (optional) | Copy `src/main/resources/data/emergentstealth/emergentstealth/archetype/ashigaru.json` into a world datapack at the same path (`<world>/datapacks/test/data/emergentstealth/emergentstealth/archetype/ashigaru.json`, plus a `pack.mcmeta`). Change `max_health` or `outfit`, then **save & quit and reopen the world** (archetype/outfit files load with the world; `/reload` doesn't pick them up) and spawn a new ashigaru | The new NPC uses the changed values |
 | 1.16 | Texture swap (optional) | Replace `textures/entity/npc/outfit/ashigaru_armor.png` with any 64×64 skin PNG, then **F3+T** | The ashigaru armour layer shows the new texture |
 
-## Stage 0: Project scaffold 🧪
+## Stage 0: Project scaffold ✅
 
 | # | Feature | How to test | Expected |
 |---|---|---|---|
