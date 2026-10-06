@@ -33,6 +33,18 @@ public final class ESConfig {
     public static final ModConfigSpec.BooleanValue SHOW_DETECTION_INDICATORS;
     public static final ModConfigSpec.BooleanValue PLAY_ALERT_SOUNDS;
 
+    // --- Client: visual lighting (doc 30) ---
+    public static final ModConfigSpec.BooleanValue DYNAMIC_LIGHTS;
+    public static final ModConfigSpec.IntValue DYNAMIC_LIGHT_RANGE;
+    public static final ModConfigSpec.IntValue DYNAMIC_LIGHT_INTERVAL;
+    public static final ModConfigSpec.BooleanValue ITEM_ENTITY_LIGHTS;
+    public static final ModConfigSpec.BooleanValue SHADOWED_BLOCK_LIGHT;
+    public static final ModConfigSpec.DoubleValue SHADOW_BOUNCE;
+    public static final ModConfigSpec.BooleanValue DARK_IS_DARK;
+    public static final ModConfigSpec.DoubleValue DARK_MAX_BRIGHTNESS;
+    public static final ModConfigSpec.DoubleValue DARK_AMBIENT_SCALE;
+    public static final ModConfigSpec.BooleanValue DARK_IS_DARK_WITH_SHADERS;
+
     static {
         ModConfigSpec.Builder server = new ModConfigSpec.Builder();
         server.push("perception");
@@ -72,6 +84,29 @@ public final class ESConfig {
                 .define("showDetectionIndicators", true);
         PLAY_ALERT_SOUNDS = client.comment("Play a stinger sound when an NPC becomes suspicious of you or detects you.")
                 .define("playAlertSounds", true);
+        client.pop();
+
+        client.push("visual_lighting");
+        DYNAMIC_LIGHTS = client.comment("Held light items (torches, lanterns, ...) and burning entities light up the world around them.")
+                .define("dynamicLights", true);
+        DYNAMIC_LIGHT_RANGE = client.comment("Only entities this close to the camera (blocks) give off dynamic light.")
+                .defineInRange("dynamicLightRange", 48, 8, 256);
+        DYNAMIC_LIGHT_INTERVAL = client.comment("Minimum ticks between terrain updates for a moving light. Higher = smoother FPS, choppier light.")
+                .defineInRange("dynamicLightInterval", 2, 1, 20);
+        ITEM_ENTITY_LIGHTS = client.comment("Dropped light items glow too. Visual only: guards don't count dropped items as lights.")
+                .define("itemEntityLights", false);
+        SHADOWED_BLOCK_LIGHT = client.comment("Block light casts real shadows (the same model guards use), instead of leaking around walls.")
+                .define("shadowedBlockLight", true);
+        SHADOW_BOUNCE = client.comment("How much of vanilla's leaking light is kept as soft bounce light in shadows. 0 = shadows exactly match gameplay.")
+                .defineInRange("shadowBounce", 0.15, 0.0, 1.0);
+        DARK_IS_DARK = client.comment("Darkness renders genuinely dark regardless of the brightness slider. Turn off for accessibility.")
+                .define("darkIsDark", true);
+        DARK_MAX_BRIGHTNESS = client.comment("With darkIsDark: the highest brightness-slider value that takes effect (0 = Moody, 1 = Bright).")
+                .defineInRange("darkMaxBrightness", 0.0, 0.0, 1.0);
+        DARK_AMBIENT_SCALE = client.comment("With darkIsDark: multiplier on the ambient light floor seen in total darkness.")
+                .defineInRange("darkAmbientScale", 0.35, 0.0, 1.0);
+        DARK_IS_DARK_WITH_SHADERS = client.comment("Also apply darkIsDark while an Iris shader pack is active (packs usually do their own tonemapping).")
+                .define("darkIsDarkWithShaders", false);
         client.pop();
         CLIENT_SPEC = client.build();
     }

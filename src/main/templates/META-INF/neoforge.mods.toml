@@ -9,6 +9,10 @@ description='''
 ${mod_description}
 '''
 
+# Client-only visual lighting hooks (doc 30). Each mixin documents why no event suffices.
+[[mixins]]
+    config="${mod_id}.mixins.json"
+
 [[dependencies.${mod_id}]]
     modId="neoforge"
     type="required"

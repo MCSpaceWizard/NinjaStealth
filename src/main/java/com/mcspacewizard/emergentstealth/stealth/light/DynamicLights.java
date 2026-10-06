@@ -54,7 +54,8 @@ public final class DynamicLights {
         return 0;
     }
 
-    private static Vec3 lightPosition(Entity entity) {
+    /** Where an entity's light sits. Public so the client renders it at the same spot (doc 30). */
+    public static Vec3 lightPosition(Entity entity) {
         if (entity.isOnFire() || !(entity instanceof LivingEntity)) {
             return entity.getBoundingBox().getCenter();
         }
