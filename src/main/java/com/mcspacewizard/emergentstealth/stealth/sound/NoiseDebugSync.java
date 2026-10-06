@@ -7,10 +7,10 @@ import java.util.WeakHashMap;
 
 import com.mcspacewizard.emergentstealth.network.NoiseDebugPayload;
 import com.mcspacewizard.emergentstealth.registry.ESDebugSubscriptions;
+import com.mcspacewizard.emergentstealth.registry.ESNetwork;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
  * Sends resolved noises to players with the AI debug view on (design doc 16 §6). Rides on the
@@ -62,7 +62,7 @@ public final class NoiseDebugSync {
                 }
             }
             if (!near.isEmpty()) {
-                PacketDistributor.sendToPlayer(player, new NoiseDebugPayload(near));
+                ESNetwork.sendIfSupported(player, new NoiseDebugPayload(near));
             }
         }
     }

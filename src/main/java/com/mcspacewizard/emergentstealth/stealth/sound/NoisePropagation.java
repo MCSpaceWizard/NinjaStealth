@@ -8,7 +8,6 @@ import org.jspecify.annotations.Nullable;
 import it.unimi.dsi.fastutil.objects.Reference2FloatOpenHashMap;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.EmptyBlockGetter;
@@ -111,45 +110,51 @@ public final class NoisePropagation {
     // ------------------------------------------------------------------------------------------------
     // Block access without loading chunks
 
-    /** Reads block states with a one-section cache. Returns null for unloaded chunks. */
+    /**
+     * Reads block states through a small direct-mapped chunk cache (a flood crosses chunk borders all the time,
+     * which would thrash a single-entry cache). Returns null for unloaded chunks.
+     */
     static final class BlockReader {
+        private static final int SLOTS = 16;
+        private static final BlockState AIR = Blocks.AIR.defaultBlockState();
+
         private final ServerLevel level;
         private final int minY;
         private final int maxY;
-        private long cachedChunkKey = Long.MIN_VALUE;
-        private @Nullable LevelChunk cachedChunk;
-        private int cachedSectionIndex = Integer.MIN_VALUE;
-        private @Nullable LevelChunkSection cachedSection;
+        private final int minSectionY;
+        private final long[] keys = new long[SLOTS];
+        private final @Nullable LevelChunk[] chunks = new LevelChunk[SLOTS];
 
         BlockReader(ServerLevel level) {
             this.level = level;
             this.minY = level.getMinY();
             this.maxY = level.getMaxY();
+            this.minSectionY = level.getMinSectionY();
+            Arrays.fill(keys, Long.MIN_VALUE);
         }
 
         @Nullable BlockState get(int x, int y, int z) {
             if (y < minY || y > maxY) {
-                return Blocks.AIR.defaultBlockState();
+                return AIR;
             }
-            int cx = SectionPos.blockToSectionCoord(x);
-            int cz = SectionPos.blockToSectionCoord(z);
+            int cx = x >> 4;
+            int cz = z >> 4;
             long key = ((long) cx << 32) ^ (cz & 0xFFFFFFFFL);
-            if (key != cachedChunkKey) {
-                cachedChunkKey = key;
-                cachedChunk = level.getChunkSource().getChunkNow(cx, cz);
-                cachedSectionIndex = Integer.MIN_VALUE;
+            int slot = (cx & 3) | ((cz & 3) << 2);
+            LevelChunk chunk;
+            if (keys[slot] == key) {
+                chunk = chunks[slot];
+            } else {
+                chunk = level.getChunkSource().getChunkNow(cx, cz);
+                keys[slot] = key;
+                chunks[slot] = chunk;
             }
-            if (cachedChunk == null) {
+            if (chunk == null) {
                 return null;
             }
-            int sectionIndex = level.getSectionIndex(y);
-            if (sectionIndex != cachedSectionIndex) {
-                cachedSectionIndex = sectionIndex;
-                cachedSection = cachedChunk.getSection(sectionIndex);
-            }
-            LevelChunkSection section = cachedSection;
-            if (section == null || section.hasOnlyAir()) {
-                return Blocks.AIR.defaultBlockState();
+            LevelChunkSection section = chunk.getSection((y >> 4) - minSectionY);
+            if (section.hasOnlyAir()) {
+                return AIR;
             }
             return section.getBlockState(x & 15, y & 15, z & 15);
         }
@@ -307,6 +312,8 @@ public final class NoisePropagation {
         private int sizeY;
         private int sizeZ;
         private float bound;
+        /** Index delta of each of the 26 neighbour directions for the current box. */
+        private final int[] offsets = new int[26];
         private boolean done;
         private int visited;
 
@@ -331,6 +338,9 @@ public final class NoisePropagation {
             this.sizeY = sizeY;
             this.sizeZ = sizeZ;
             this.bound = bound;
+            for (int d = 0; d < 26; d++) {
+                offsets[d] = (DY[d] * sizeZ + DZ[d]) * sizeX + DX[d];
+            }
             this.done = false;
             this.visited = 0;
             this.heapSize = 0;
@@ -427,31 +437,30 @@ public final class NoisePropagation {
                 int rest = node / sizeX;
                 int z = minZ + rest % sizeZ;
                 int y = minY + rest / sizeZ;
+                boolean interior = x > minX && x < minX + sizeX - 1 && y > minY && y < minY + sizeY - 1
+                        && z > minZ && z < minZ + sizeZ - 1;
                 for (int d = 0; d < 26; d++) {
                     int nx = x + DX[d];
                     int ny = y + DY[d];
                     int nz = z + DZ[d];
-                    if (!inBox(nx, ny, nz)) {
+                    if (!interior && !inBox(nx, ny, nz)) {
                         continue;
                     }
-                    int next = index(nx, ny, nz);
+                    int next = node + offsets[d];
                     touch(next, nx, ny, nz);
-                    float enter = cost[next];
-                    if (enter == BLOCKED) {
+                    float total = key + STEP[d] + cost[next];
+                    // Cheap rejects first (also covers BLOCKED = +inf): the squeeze check below only adds cost.
+                    if (total > bound || total >= dist[next]) {
                         continue;
                     }
-                    float squeeze = 0.0F;
                     if (STEP[d] > 1.0F) {
-                        squeeze = squeezeCost(x, y, z, DX[d], DY[d], DZ[d]);
-                        if (squeeze == BLOCKED) {
+                        total += squeezeCost(x, y, z, DX[d], DY[d], DZ[d]);
+                        if (total > bound || total >= dist[next]) {
                             continue;
                         }
                     }
-                    float total = key + STEP[d] + enter + squeeze;
-                    if (total <= bound && total < dist[next]) {
-                        dist[next] = total;
-                        push(next, total);
-                    }
+                    dist[next] = total;
+                    push(next, total);
                 }
             }
             if (heapSize == 0) {

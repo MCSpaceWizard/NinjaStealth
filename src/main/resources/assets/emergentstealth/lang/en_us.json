@@ -96,5 +96,8 @@
   "emergentstealth.configuration.skyShadowAngleStep": "Sun Shadow Update Step (degrees)",
   "emergentstealth.configuration.skySectionsPerTick": "Sun Shadow Sections Per Tick",
   "emergentstealth.configuration.skyShadowsWithShaders": "Sun & Moon Shadows With Shader Packs",
-  "emergentstealth.configuration.heldLightWithShaders": "Own Held Light With Shader Packs"
+  "emergentstealth.configuration.heldLightWithShaders": "Own Held Light With Shader Packs",
+  "key.category.emergentstealth.main": "Emergent Stealth",
+  "key.emergentstealth.throw": "Throw Held Item",
+  "entity.emergentstealth.thrown_item": "Thrown Item"
 }

@@ -129,7 +129,10 @@ public final class Snuffing {
 
         if (held.isEmpty() && canSnuff(state) && !player.isSecondaryUseActive()) {
             if (level instanceof ServerLevel serverLevel) {
-                snuff(serverLevel, pos, player);
+                if (snuff(serverLevel, pos, player)) {
+                    // The fizz (design doc 16 §1): quiet and unattributed, so a guard right next to you may glance over.
+                    com.mcspacewizard.emergentstealth.stealth.sound.Noises.emit(serverLevel, com.mcspacewizard.emergentstealth.stealth.sound.NoiseEvent.of(net.minecraft.world.phys.Vec3.atCenterOf(pos), 2.0F, com.mcspacewizard.emergentstealth.stealth.sound.NoiseKind.OTHER));
+                }
             }
             event.setCancellationResult(InteractionResult.SUCCESS);
             event.setCanceled(true);

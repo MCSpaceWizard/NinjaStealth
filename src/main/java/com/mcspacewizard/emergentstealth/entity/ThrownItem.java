@@ -71,8 +71,8 @@ public class ThrownItem extends net.minecraft.world.entity.projectile.throwablei
     @Override
     protected void onHitEntity(EntityHitResult hitResult) {
         super.onHitEntity(hitResult);
-        if (this.level() instanceof ServerLevel && sharp() && hitResult.getEntity() instanceof LivingEntity target) {
-            target.hurt(this.damageSources().thrown(this, this.getOwner()), SHARP_DAMAGE);
+        if (this.level() instanceof ServerLevel level && sharp() && hitResult.getEntity() instanceof LivingEntity target) {
+            target.hurtServer(level, this.damageSources().thrown(this, this.getOwner()), SHARP_DAMAGE);
         }
     }
 

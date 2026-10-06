@@ -12,7 +12,9 @@ import com.mcspacewizard.emergentstealth.ai.perception.PerceptionProfile;
 import com.mcspacewizard.emergentstealth.config.ESConfig;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 import com.mcspacewizard.emergentstealth.registry.ESEntities;
+import com.mcspacewizard.emergentstealth.registry.ESRegistries;
 
+import net.minecraft.core.Registry;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -60,6 +62,8 @@ public final class Noises {
     /** Upper bound for a synchronous {@link #hearers} query. */
     private static final int SYNC_NODE_LIMIT = 2_000_000;
 
+    private static int lastQueryNodes;
+    private static int budgetOverride = -1;
     private static final List<Observer> OBSERVERS = new CopyOnWriteArrayList<>();
     private static final Map<ServerLevel, LevelState> STATES = new WeakHashMap<>();
 
@@ -129,8 +133,10 @@ public final class Noises {
         if (job == null) {
             return List.of();
         }
+        lastQueryNodes = 0;
         if (job.flood != null) {
             job.flood.run(SYNC_NODE_LIMIT);
+            lastQueryNodes = job.flood.visited();
             job.finish();
         }
         return List.copyOf(job.hearers);
@@ -144,6 +150,16 @@ public final class Noises {
     /** Heard intensity for a propagation cost (0 or less = not heard). */
     public static float intensity(float cost, float effectiveLoudness) {
         return effectiveLoudness <= 0.0F ? 0.0F : 1.0F - cost / effectiveLoudness;
+    }
+
+    /** Flood nodes settled by the last {@link #hearers} query (0 when no flood was needed); for perf checks. */
+    public static int lastQueryNodes() {
+        return lastQueryNodes;
+    }
+
+    /** Tests only: replaces {@code soundNodesPerTick} from the next tick on; 0 or less restores the config value. */
+    public static void setNodeBudgetOverride(int nodesPerTick) {
+        budgetOverride = nodesPerTick;
     }
 
     /** Flood jobs waiting for budget in this level (debug / tests). */
@@ -160,6 +176,23 @@ public final class Noises {
                 + state.queue.size() + " pending";
     }
 
+    private static Registry<PerceptionProfile> hearingRegistry;
+    private static float maxHearing = 1.0F;
+
+    /** The keenest {@code hearing} of any loaded perception profile (bounds the listener search). */
+    static float maxHearing(ServerLevel level) {
+        Registry<PerceptionProfile> registry = level.registryAccess().lookupOrThrow(ESRegistries.PERCEPTION_PROFILE);
+        if (registry != hearingRegistry) {
+            float max = PerceptionProfile.DEFAULT.hearing();
+            for (PerceptionProfile profile : registry) {
+                max = Math.max(max, profile.hearing());
+            }
+            maxHearing = max;
+            hearingRegistry = registry;
+        }
+        return maxHearing;
+    }
+
     // ------------------------------------------------------------------------------------------------
     // Scheduling
 
@@ -168,7 +201,7 @@ public final class Noises {
         long now = level.getGameTime();
         if (state.budgetTick != now) {
             state.budgetTick = now;
-            state.budgetLeft = ESConfig.SOUND_NODES_PER_TICK.get();
+            state.budgetLeft = budgetOverride > 0 ? budgetOverride : ESConfig.SOUND_NODES_PER_TICK.get();
         }
         return state;
     }
@@ -210,10 +243,8 @@ public final class Noises {
     }
 
     @SubscribeEvent
-    static void onTagsUpdated(TagsUpdatedEvent event) {
-        if (event.getUpdateCause() == TagsUpdatedEvent.UpdateCause.SERVER_DATA_LOAD) {
-            NoisePropagation.invalidateCostCache();
-        }
+    static void onTagsUpdated(TagsUpdatedEvent.ServerDataLoad event) {
+        NoisePropagation.invalidateCostCache();
     }
 
     private static void deliver(ServerLevel level, Hearer hearer) {
@@ -253,7 +284,7 @@ public final class Noises {
         /** Null when nobody is in range at all. */
         static Job create(ServerLevel level, NoiseEvent noise, boolean includeNoAi, MaskingSource masking) {
             Vec3 origin = noise.pos();
-            double reach = noise.loudness() * PerceptionProfile.MAX_HEARING;
+            double reach = noise.loudness() * maxHearing(level);
             List<StealthNpc> candidates = level.getEntities(ESEntities.STEALTH_NPC.get(),
                     AABB.ofSize(origin, reach * 2, reach * 2, reach * 2),
                     npc -> npc.isAlive() && (includeNoAi || !npc.isNoAi()) && !npc.getUUID().equals(noise.source()));
@@ -272,7 +303,7 @@ public final class Noises {
                 if (straight >= noise.loudness() * hearing) {
                     continue;
                 }
-                float loudness = effectiveLoudness(npc, noise, masking.masking(npc));
+                float loudness = noise.loudness() * hearing * (1.0F - masking.masking(npc));
                 if (straight >= loudness) {
                     continue;
                 }
