@@ -103,4 +103,4 @@ Built on vanilla's 26.1 **debug subscription** system:
 5. `/esdebug off` hides it again.
 6. Save, quit and reload: NPCs keep their archetype, body variant and gear.
 7. Co-op: `runServer` + `runClient` + `runClient2`. A non-op player toggling debug should see **nothing**; an op should see the overlay.
-8. Datapack override: copy `data/emergentstealth/emergentstealth/archetype/ashigaru.json` into a world datapack, change `max_health`/`outfit`, then `/reload` and spawn a new one.
+8. Datapack override: copy `data/emergentstealth/emergentstealth/archetype/ashigaru.json` into a world datapack, change `max_health`/`outfit`, then reopen the world (datapack registries load with the world, not on `/reload`) and spawn a new one.

@@ -34,7 +34,7 @@ This is a living list of what's implemented and how to test it. It's updated wit
 | 1.12 | Persistence | Spawn a few NPCs, then save & quit and reload the world | Same NPCs, same outfits, skin tones and gear. They don't despawn when you walk far away and come back |
 | 1.13 | Multiplayer: debug is op-only | `runServer` + `runClient` + `runClient2`. Op only one player (`/op Dev` in the server console). Both toggle debug | The op sees the overlay; the non-op sees **nothing** even with it toggled on |
 | 1.14 | Multiplayer: NPCs sync | Same setup, both players near the NPCs | Both see the same outfits and movement |
-| 1.15 | Datapack override (optional) | Copy `src/main/resources/data/emergentstealth/emergentstealth/archetype/ashigaru.json` into a world datapack at the same path (`<world>/datapacks/test/data/emergentstealth/emergentstealth/archetype/ashigaru.json`, plus a `pack.mcmeta`). Change `max_health` or `outfit`, then `/reload` and spawn a new ashigaru | The new NPC uses the changed values |
+| 1.15 | Datapack override (optional) | Copy `src/main/resources/data/emergentstealth/emergentstealth/archetype/ashigaru.json` into a world datapack at the same path (`<world>/datapacks/test/data/emergentstealth/emergentstealth/archetype/ashigaru.json`, plus a `pack.mcmeta`). Change `max_health` or `outfit`, then **save & quit and reopen the world** (archetype/outfit files load with the world; `/reload` doesn't pick them up) and spawn a new ashigaru | The new NPC uses the changed values |
 | 1.16 | Texture swap (optional) | Replace `textures/entity/npc/outfit/ashigaru_armor.png` with any 64×64 skin PNG, then **F3+T** | The ashigaru armour layer shows the new texture |
 
 ## Stage 0: Project scaffold 🧪
