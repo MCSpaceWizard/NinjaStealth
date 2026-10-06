@@ -72,8 +72,8 @@ Precedents:
    - `lmcoord` bake
    - dark-is-dark that pauses under packs
 2. **Next, small:**
-   - test with Complementary and BSL
-   - add a `dynamicLightsWithShaders` toggle (or skip the *local player's* held light only), since packs add their own `heldItemLightValue` glow and it doubles up
+   - test with Complementary and BSL. **Complementary r5.9.3: done.** It loads, its sun shadows match ours in direction and length, and our sky bake and dark-is-dark pause. BSL isn't freely downloadable (All Rights Reserved), so it's untested
+   - ~~add a toggle for the local player's held light~~ **done:** `heldLightWithShaders` (default off) skips only your own held light under a pack, since packs add their own `heldItemLightValue` glow
    - document recommended packs
 3. **Optional, medium:**
    - publish the `emergentstealth:dynamic/stealth_data` texture contract (dynamic lights, player exposure, dark-is-dark settings), versioned
