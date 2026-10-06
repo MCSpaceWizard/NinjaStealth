@@ -22,6 +22,12 @@ sourceSets.main.resources {
 repositories {
     // Optional-dependency mavens (Curios, GeckoLib, EMI, Jade, ...) are added here as each
     // integration lands. Keep them commented until used so offline/limited networks still build.
+
+    // Modrinth maven: only resolved when -PwithSodium / -PwithIris is passed (compat testing, doc 30).
+    exclusiveContent {
+        forRepository { maven { name = 'Modrinth'; url = 'https://api.modrinth.com/maven' } }
+        filter { includeGroup 'maven.modrinth' }
+    }
 }
 
 base {
@@ -93,6 +99,15 @@ configurations {
 }
 
 dependencies {
+    // Renderer compat testing (doc 30). Never required at runtime; nothing compiles against them.
+    //   ./gradlew runClient -PwithSodium          (Sodium)
+    //   ./gradlew runClient -PwithIris            (Sodium + Iris)
+    if (project.hasProperty('withSodium') || project.hasProperty('withIris')) {
+        localRuntime 'maven.modrinth:sodium:mc26.1.2-0.9.2-neoforge'
+    }
+    if (project.hasProperty('withIris')) {
+        localRuntime 'maven.modrinth:iris:1.11.4+26.1-neoforge'
+    }
 }
 
 var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {

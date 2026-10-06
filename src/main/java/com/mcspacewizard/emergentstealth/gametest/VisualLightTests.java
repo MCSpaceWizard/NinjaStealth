@@ -86,12 +86,16 @@ public final class VisualLightTests {
     }
 
     static int gameplayLevel(ServerLevel level, BlockPos cell) {
-        return Math.round(15.0F * ExposureModel.exposureUncached(level, Vec3.atCenterOf(cell)));
+        // Block term only: sky light is left to vanilla (doc 30 §3), and this keeps the test independent of
+        // how fast vanilla's light engine darkens the freshly sealed box.
+        return Math.round(15.0F * ExposureModel.blockExposureUncached(level, Vec3.atCenterOf(cell)));
     }
 
     /** Every air cell of the sealed box: visual level == gameplay level. */
     private static void assertBoxMatches(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
+        long nanos = 0;
+        int cells = 0;
         for (int x = 1; x <= 7; x++) {
             for (int y = 1; y <= 4; y++) {
                 for (int z = 1; z <= 12; z++) {
@@ -99,13 +103,18 @@ public final class VisualLightTests {
                     if (!level.getBlockState(cell).isAir()) {
                         continue;
                     }
+                    long start = System.nanoTime();
                     int visual = visualLevel(level, cell);
+                    nanos += System.nanoTime() - start;
+                    cells++;
                     int gameplay = gameplayLevel(level, cell);
                     helper.assertTrue(visual == gameplay,
                             "Visual light " + visual + " != gameplay " + gameplay + " at " + x + "," + y + "," + z);
                 }
             }
         }
+        // Uncached cost of one baked cell (the client caches per cell); a budget reference for doc 30 §7.
+        EmergentStealth.LOGGER.info("Visual light: {} cells, {} µs per cell (uncached)", cells, cells == 0 ? 0 : nanos / 1000 / cells);
     }
 
     /** A torch behind a wall: the far side renders dark (vanilla leaks light there), matching gameplay. */
@@ -118,7 +127,8 @@ public final class VisualLightTests {
             }
         }
         helper.setBlock(new BlockPos(6, 1, 10), Blocks.GLASS);
-        helper.runAfterDelay(DELAY, () -> {
+        // Retried every tick until it holds: the vanilla-leak sanity check waits on vanilla's light engine.
+        helper.succeedWhen(() -> {
             ServerLevel level = helper.getLevel();
             BlockPos hidden = helper.absolutePos(new BlockPos(5, 1, 6));
             BlockPos lit = helper.absolutePos(new BlockPos(2, 1, 9));
@@ -127,7 +137,6 @@ public final class VisualLightTests {
             helper.assertTrue(visualLevel(level, hidden) == 0, "Behind the wall should render dark, got " + visualLevel(level, hidden));
             helper.assertTrue(visualLevel(level, lit) >= 8, "In view of the torch should render lit, got " + visualLevel(level, lit));
             assertBoxMatches(helper);
-            helper.succeed();
         });
     }
 

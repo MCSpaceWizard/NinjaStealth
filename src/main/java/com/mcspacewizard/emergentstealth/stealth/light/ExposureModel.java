@@ -75,6 +75,11 @@ public final class ExposureModel implements LightSampler {
         return compute(level, point);
     }
 
+    /** Block and dynamic light only (no sky), uncached: the term visual lighting bakes into terrain (doc 30). */
+    public static float blockExposureUncached(ServerLevel level, Vec3 point) {
+        return blockExposure(level, point);
+    }
+
     private static float compute(ServerLevel level, Vec3 point) {
         float blocks = blockExposure(level, point);
         float sky = skyExposure(level, point);

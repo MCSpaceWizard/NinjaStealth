@@ -136,7 +136,8 @@ public final class VisualLighting {
         if (current.dynamicLights()) {
             Vec3 center = Vec3.atCenterOf(pos);
             for (ClientDynamicLights.Light light : ClientDynamicLights.snapshot().lights()) {
-                if (light.pos().distanceToSqr(center) < (double) light.emission() * light.emission()) {
+                double reach = light.emission() + 1.0;
+                if (light.pos().distanceToSqr(center) < reach * reach) {
                     SectionRebuilds.markSphere(light.pos(), light.emission());
                     relevant = true;
                 }

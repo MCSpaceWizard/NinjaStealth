@@ -97,7 +97,10 @@ final class ClientLightSources {
         return result;
     }
 
-    /** Sources whose light reaches {@code pos} (main thread: block-change handling). */
+    /**
+     * Sources whose light could pass through {@code pos} (main thread: block-change handling). One block of
+     * margin: a ray can clip a block whose centre is slightly further away than the ray's end.
+     */
     static List<Source> reaching(ClientLevel level, BlockPos pos) {
         List<Source> result = new ArrayList<>();
         int sx = SectionPos.blockToSectionCoord(pos.getX());
@@ -107,7 +110,8 @@ final class ClientLightSources {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     for (Source source : section(level, sx + dx, sy + dy, sz + dz)) {
-                        if (source.pos().distSqr(pos) < (double) source.emission() * source.emission()) {
+                        double reach = source.emission() + 1.0;
+                        if (source.pos().distSqr(pos) < reach * reach) {
                             result.add(source);
                         }
                     }
