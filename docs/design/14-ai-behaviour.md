@@ -1,4 +1,6 @@
-# 14 — Behaviour core (Stage 4) 📄
+# 14 — Behaviour core (Stage 4) ✅ implemented
+
+> **Status (2026-10-06):** implemented and covered by 5 GameTests. The node list below is what shipped; the default trees are `data/emergentstealth/emergentstealth/behaviour/{guard,civilian}.json`. `/es npc behaviour <npcs> <tree>|reset` sets one NPC's tree.
 
 Stage 4a ([14-detection-v0](14-detection-v0.md)) gave NPCs states and hard-coded reactions. Stage 4 turns that into the layered AI from A-01/A-02: guards **remember**, **search together**, **take turns attacking**, **talk**, and react to **sound** (S6). Map makers can **author what each NPC does** as JSON.
 
@@ -32,9 +34,13 @@ Stage 4a ([14-detection-v0](14-detection-v0.md)) gave NPCs states and hard-coded
 | Kind | Nodes |
 |---|---|
 | Composites | `sequence`, `selector`, `random` (weighted) |
-| Decorators | `cooldown` (seconds), `timeout` (seconds), `chance`, `invert`, `once_per_state` |
+| Decorators | `cooldown` (seconds, survives state changes), `timeout` (seconds), `chance`, `invert`, `optional` (never fails), `once_per_state` |
 | Conditions | `state` (one of), `cause` (seen/heard/hurt/shout), `can_see_target`, `has_attack_token`, `near_poi` (distance), `role` |
-| Actions | `move_to` (poi / search_point / home / away_from_poi; speed), `look_at_poi`, `look_around` (seconds), `wait`, `attack`, `hold_ring` (surround the target), `bark` (situation), `shout`, `routine`, `draw_torch` |
+| Actions | `move_to` (poi / home / away_from_poi; speed, arrive), `look_at_poi`, `look_around` (seconds), `wait`, `stop`, `attack`, `hold_ring` (min, max), `search` (the coordinated search step), `bark` (situation), `shout` (loudness) |
+
+The torch logic (L-04) stays automatic, and calm NPCs keep their S5 routine, so there are no `routine` or `draw_torch` nodes.
+
+**Sequences:** a sequence remembers its running child but re-checks the condition nodes before it every tick. A combat branch stops the moment the state isn't `combat` any more.
 
 Example (the core of `guard.json`):
 ```json
@@ -42,18 +48,19 @@ Example (the core of `guard.json`):
   { "type": "sequence", "children": [
     { "type": "state", "states": ["combat"] },
     { "type": "once_per_state", "child": { "type": "bark", "situation": "spotted" } },
-    { "type": "cooldown", "seconds": 4, "child": { "type": "shout" } },
+    { "type": "optional", "child": { "type": "cooldown", "seconds": 4, "child": { "type": "shout" } } },
     { "type": "selector", "children": [
       { "type": "sequence", "children": [ { "type": "has_attack_token" }, { "type": "attack" } ] },
       { "type": "hold_ring", "min": 4, "max": 6 } ] } ] },
   { "type": "sequence", "children": [
     { "type": "state", "states": ["searching"] },
-    { "type": "move_to", "target": "search_point", "speed": 0.9 },
-    { "type": "look_around", "seconds": 2 } ] }
+    { "type": "search", "speed": 0.8, "look_seconds": 2 } ] }
 ] }
 ```
 
-The two default trees reproduce today's v0 behaviour plus the new group, bark and sound features. A broken file logs an error and the NPC falls back to the default tree.
+The two default trees reproduce today's v0 behaviour plus the new group, bark and sound features.
+
+**Broken files:** a broken tree file fails datapack loading with an error naming the node, like any datapack JSON. A missing tree logs an error once, and NPCs using it change state but don't act.
 
 ## 4. Coordinated search (A-07, A-08)
 
@@ -76,7 +83,7 @@ The two default trees reproduce today's v0 behaviour plus the new group, bark an
 
 - **Barks** (A-16): short text above the head, e.g. "Hm? Who's there?", "Must have been the wind…", "Intruder!". There's a set per situation:
   - `curious`, `suspicious`, `investigate`, `spotted`, `lost`, `search`, `give_up`, `heard`, `flee`
-  - Lines are lang keys `bark.emergentstealth.<situation>.<n>`, so writers can add lines in the lang file.
+  - Lines are lang keys `bark.emergentstealth.<situation>.<n>`, numbered from 0 with no gaps, so writers can add lines in the lang file. Extra situations used by the default trees: `heard`, `shout`, `civilian_curious`.
   - Sent to players within 16 blocks and shown for about 3 seconds.
   - Toggle: client config `showBarks`.
 - **Shouts** are **noises** (S6, loudness 24). NPCs who hear one come to the *shouter's* position; nothing about you is shared (D-08).
@@ -88,8 +95,8 @@ The two default trees reproduce today's v0 behaviour plus the new group, bark an
 
 The AI debug view now also shows:
 - the label lines `cause:` and `bt:` (the running action path, e.g. `combat > ring`)
-- search points: a claimed point in the NPC's colour, unclaimed points grey
-- a small crown on attack-token holders
+- search points: the NPC's claimed point as a tall orange box, the others as small grey boxes
+- `[token]` on attack-token holders
 
 ## 8. Tests (GameTests)
 

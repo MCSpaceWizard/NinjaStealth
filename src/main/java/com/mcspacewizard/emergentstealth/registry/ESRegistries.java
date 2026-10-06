@@ -19,11 +19,14 @@ public final class ESRegistries {
 
     public static final ResourceKey<Registry<Outfit>> OUTFIT = ResourceKey.createRegistryKey(EmergentStealth.id("outfit"));
     public static final ResourceKey<Registry<Archetype>> ARCHETYPE = ResourceKey.createRegistryKey(EmergentStealth.id("archetype"));
+    public static final ResourceKey<Registry<com.mcspacewizard.emergentstealth.ai.behaviour.BehaviourTree>> BEHAVIOUR =
+            ResourceKey.createRegistryKey(EmergentStealth.id("behaviour"));
     public static final ResourceKey<Registry<PerceptionProfile>> PERCEPTION_PROFILE = ResourceKey.createRegistryKey(EmergentStealth.id("perception_profile"));
 
     public static void onNewDataPackRegistries(DataPackRegistryEvent.NewRegistry event) {
         event.dataPackRegistry(OUTFIT, Outfit.CODEC, Outfit.CODEC);
         event.dataPackRegistry(ARCHETYPE, Archetype.CODEC, Archetype.CODEC);
         event.dataPackRegistry(PERCEPTION_PROFILE, PerceptionProfile.CODEC);
+        event.dataPackRegistry(BEHAVIOUR, com.mcspacewizard.emergentstealth.ai.behaviour.BehaviourTree.CODEC);
     }
 }

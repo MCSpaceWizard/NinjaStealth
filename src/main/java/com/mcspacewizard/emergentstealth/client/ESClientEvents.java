@@ -62,6 +62,8 @@ public final class ESClientEvents {
         event.register(LightGemPayload.TYPE, LightGemHud::handle);
         event.register(LightDebugPayload.TYPE, LightDebugRenderer::handle);
         event.register(RouteSyncPayload.TYPE, RouteRenderer::handle);
+        event.register(com.mcspacewizard.emergentstealth.network.BarkPayload.TYPE,
+                com.mcspacewizard.emergentstealth.client.hud.ClientBarks::handle);
     }
 
     @SubscribeEvent
@@ -77,6 +79,7 @@ public final class ESClientEvents {
         LightGemHud.reset();
         LightDebugRenderer.clear();
         RouteRenderer.clear();
+        com.mcspacewizard.emergentstealth.client.hud.ClientBarks.clear();
     }
 
     /** Request our debug data from the server only while the debug view is on. */

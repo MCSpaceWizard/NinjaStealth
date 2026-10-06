@@ -28,7 +28,26 @@ import net.minecraft.world.phys.Vec3;
  * @param path       remaining nodes of the current navigation path (up to 24)
  */
 public record NpcDebugInfo(String archetype, String role, String faction, String state, int tier, float awareness,
-                           Cones cones, Optional<Vec3> lastKnown, List<Ray> rays, String activity, List<BlockPos> path) {
+                           Cones cones, Optional<Vec3> lastKnown, List<Ray> rays, String activity, List<BlockPos> path,
+                           Behaviour behaviour) {
+
+    /**
+     * Behaviour-core state (design doc 14 §7): why the NPC is interested, the running behaviour-tree action,
+     * the last noise heard, whether it holds an attack token, and its search group's points ({@code mine} is the
+     * index of the one it has claimed, -1 for none).
+     */
+    public record Behaviour(String cause, String action, String heard, boolean token, List<BlockPos> searchPoints, int mine) {
+        public static final Behaviour EMPTY = new Behaviour("none", "-", "", false, List.of(), -1);
+
+        public static final StreamCodec<ByteBuf, Behaviour> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8, Behaviour::cause,
+                ByteBufCodecs.STRING_UTF8, Behaviour::action,
+                ByteBufCodecs.STRING_UTF8, Behaviour::heard,
+                ByteBufCodecs.BOOL, Behaviour::token,
+                BlockPos.STREAM_CODEC.apply(ByteBufCodecs.list(16)), Behaviour::searchPoints,
+                ByteBufCodecs.VAR_INT, Behaviour::mine,
+                Behaviour::new);
+    }
 
     public record Cones(float centralHalfAngle, float centralRange, float peripheralHalfAngle, float peripheralRange,
                         float verticalHalfAngle) {
@@ -61,5 +80,6 @@ public record NpcDebugInfo(String archetype, String role, String faction, String
             Ray.STREAM_CODEC.apply(ByteBufCodecs.list(8)), NpcDebugInfo::rays,
             ByteBufCodecs.STRING_UTF8, NpcDebugInfo::activity,
             BlockPos.STREAM_CODEC.apply(ByteBufCodecs.list(32)), NpcDebugInfo::path,
+            Behaviour.STREAM_CODEC, NpcDebugInfo::behaviour,
             NpcDebugInfo::new);
 }

@@ -51,7 +51,8 @@ public class NpcRenderer extends HumanoidMobRenderer<StealthNpc, NpcRenderState,
         state.outfitLayers.clear();
         state.body = DEFAULT_BODY;
         state.indicator = ESConfig.SHOW_DETECTION_INDICATORS.get() ? DetectionIndicator.build(ClientDetection.get(npc.getId())) : null;
-        state.indicatorAttachment = state.indicator == null ? null
+        state.bark = ESConfig.SHOW_BARKS.get() ? com.mcspacewizard.emergentstealth.client.hud.ClientBarks.get(npc.getId()) : null;
+        state.indicatorAttachment = state.indicator == null && state.bark == null ? null
                 : npc.getAttachments().getNullable(EntityAttachment.NAME_TAG, 0, npc.getYRot(partialTick));
 
         Archetype archetype = npc.getArchetype().orElse(null);
@@ -72,10 +73,15 @@ public class NpcRenderer extends HumanoidMobRenderer<StealthNpc, NpcRenderState,
     @Override
     protected void submitNameDisplay(NpcRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {
         super.submitNameDisplay(state, poseStack, collector, camera);
+        // Stacked above the name tag when there is one (negative offset = higher): indicator, then the bark.
+        int offset = state.nameTag != null ? -12 : 0;
         if (state.indicator != null) {
-            // Sits above the name tag when there is one (negative offset = higher).
-            int offset = state.nameTag != null ? -12 : 0;
             collector.submitNameTag(poseStack, state.indicatorAttachment, offset, state.indicator, true,
+                    state.lightCoords, state.distanceToCameraSq, camera);
+            offset -= 12;
+        }
+        if (state.bark != null) {
+            collector.submitNameTag(poseStack, state.indicatorAttachment, offset, state.bark, false,
                     state.lightCoords, state.distanceToCameraSq, camera);
         }
     }

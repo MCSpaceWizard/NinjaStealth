@@ -13,7 +13,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 /** Sends nearby patrol routes to game masters holding a Patrol Baton, so they can see what they author. */
 public final class RouteSync {
@@ -31,9 +30,9 @@ public final class RouteSync {
             ItemStack baton = heldBaton(player);
             boolean holding = baton != null && player.canUseGameMasterBlocks();
             if (holding) {
-                PacketDistributor.sendToPlayer(player, build(level, player, baton));
+                com.mcspacewizard.emergentstealth.registry.ESNetwork.sendIfSupported(player, build(level, player, baton));
             } else if (WAS_HOLDING.getOrDefault(player, false)) {
-                PacketDistributor.sendToPlayer(player, new RouteSyncPayload("", List.of()));
+                com.mcspacewizard.emergentstealth.registry.ESNetwork.sendIfSupported(player, new RouteSyncPayload("", List.of()));
             }
             WAS_HOLDING.put(player, holding);
         }

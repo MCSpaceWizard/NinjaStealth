@@ -30,7 +30,8 @@ public record Archetype(
         Optional<Identifier> outfit,
         Stats stats,
         Map<EquipmentSlot, ItemStackTemplate> equipment,
-        Optional<Identifier> perception) {
+        Optional<Identifier> perception,
+        Optional<Identifier> behaviour) {
 
     public static final Codec<Archetype> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             NpcRole.CODEC.fieldOf("role").forGetter(Archetype::role),
@@ -40,7 +41,8 @@ public record Archetype(
             Stats.CODEC.optionalFieldOf("stats", Stats.DEFAULT).forGetter(Archetype::stats),
             Codec.unboundedMap(EquipmentSlot.CODEC, ItemStackTemplate.CODEC)
                     .optionalFieldOf("equipment", Map.of()).forGetter(Archetype::equipment),
-            Identifier.CODEC.optionalFieldOf("perception").forGetter(Archetype::perception)
+            Identifier.CODEC.optionalFieldOf("perception").forGetter(Archetype::perception),
+            Identifier.CODEC.optionalFieldOf("behaviour").forGetter(Archetype::behaviour)
     ).apply(instance, Archetype::new));
 
     /** Base attribute values applied when an NPC takes this archetype. */

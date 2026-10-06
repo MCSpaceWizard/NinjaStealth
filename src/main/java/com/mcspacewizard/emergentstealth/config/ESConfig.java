@@ -28,10 +28,16 @@ public final class ESConfig {
     public static final ModConfigSpec.DoubleValue SUSPICIOUS_THRESHOLD;
     public static final ModConfigSpec.IntValue SEARCH_SECONDS;
 
+    // --- Server: behaviour (doc 14) ---
+    public static final ModConfigSpec.IntValue ATTACKERS_PER_TARGET;
+    public static final ModConfigSpec.DoubleValue HEARING_GAIN;
+    public static final ModConfigSpec.DoubleValue HEARING_AWARENESS_CAP;
+
     // --- Client: HUD ---
     public static final ModConfigSpec.BooleanValue SHOW_LIGHT_GEM;
     public static final ModConfigSpec.BooleanValue SHOW_DETECTION_INDICATORS;
     public static final ModConfigSpec.BooleanValue PLAY_ALERT_SOUNDS;
+    public static final ModConfigSpec.BooleanValue SHOW_BARKS;
 
     // --- Client: visual lighting (doc 30) ---
     public static final ModConfigSpec.BooleanValue DYNAMIC_LIGHTS;
@@ -74,6 +80,15 @@ public final class ESConfig {
         SEARCH_SECONDS = server.comment("How long alerted NPCs search after losing their target.")
                 .defineInRange("searchSeconds", 25, 1, 600);
         server.pop();
+
+        server.push("behaviour");
+        ATTACKERS_PER_TARGET = server.comment("How many guards may attack one target at once. The others surround it.")
+                .defineInRange("attackersPerTarget", 2, 1, 16);
+        HEARING_GAIN = server.comment("Awareness gained from hearing a player, per unit of heard intensity.")
+                .defineInRange("hearingGain", 0.5, 0.0, 5.0);
+        HEARING_AWARENESS_CAP = server.comment("Hearing alone never raises awareness above this: only sight detects.")
+                .defineInRange("hearingAwarenessCap", 0.65, 0.0, 0.99);
+        server.pop();
         SERVER_SPEC = server.build();
 
         ModConfigSpec.Builder client = new ModConfigSpec.Builder();
@@ -84,6 +99,8 @@ public final class ESConfig {
                 .define("showDetectionIndicators", true);
         PLAY_ALERT_SOUNDS = client.comment("Play a stinger sound when an NPC becomes suspicious of you or detects you.")
                 .define("playAlertSounds", true);
+        SHOW_BARKS = client.comment("Show what NPCs say (barks) as text above their heads.")
+                .define("showBarks", true);
         client.pop();
 
         client.push("visual_lighting");

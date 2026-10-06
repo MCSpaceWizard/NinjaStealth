@@ -17,6 +17,8 @@ public class NpcRenderState extends HumanoidRenderState {
     public final List<Identifier> outfitLayers = new ArrayList<>();
     /** Detection indicator above the head (null = none). */
     public @Nullable Component indicator;
+    /** What the NPC is saying (null = nothing). */
+    public @Nullable Component bark;
     /** Where the indicator attaches (the name-tag attachment point). */
     public @Nullable Vec3 indicatorAttachment;
 }

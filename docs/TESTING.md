@@ -14,6 +14,27 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Stage 4: Behaviour core (search groups, attack tokens, barks, behaviour trees) 🧪
+
+**Automated checks (already passing):** 5 more GameTests:
+- a custom behaviour tree written as JSON drives an NPC
+- a quiet noise makes a guard curious; a loud one makes it investigate the spot
+- a shout brings a second guard who saw nothing
+- two searching guards split up and search longer than one
+- with three guards on one target, two attack and the third holds the ring
+
+**Tip:** `/esdebug on`. NPC labels now show `cause:` (seen/heard/hurt/shout), `bt:` (what the behaviour tree is doing) and `heard:`. Search points appear as boxes: the guard's own point is tall and orange, the others small and grey.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| 4.1 | Barks | Get noticed by a guard, then hide | Short lines above its head: "Hm?", "Someone there?", "Intruder!", "Where did they go?", "Must have been the wind...". Civilians cry "Help! Guards!". Client config `showBarks` turns them off |
+| 4.2 | Shouts bring help | Two guards 15–20 blocks apart, one facing away. Get spotted by the first | The first shouts. The second walks over to **where the shout came from**, not to you, and only fights you once it sees you |
+| 4.3 | Coordinated search | Get 2–3 guards hunting you, then break line of sight and hide | They spread out to different spots, favouring dark corners, bushes and cover. With more guards the search lasts longer (25 s alone, about 32 s with two, 40 s with three or more) |
+| 4.4 | Attack tokens | Fight 3–4 guards at once (survival) | Only two attack at a time; the others stand 4–6 blocks away around you, on the far side, facing you. When an attacker is badly hurt or loses sight of you, someone else steps in |
+| 4.5 | Noises draw guards | Throw an item behind a guard *(Stage 6 throw key; until then `/es` has no noise command, so try 4.6)* | A light thud makes it look; a loud one makes it walk over and look around |
+| 4.6 | Heard, not seen | Sprint past behind a guard (it can't see behind) | It turns around and comes to check where it **heard** you (Stage 6 footsteps). Hearing alone never fully detects you |
+| 4.7 | Custom behaviour | Copy `data/emergentstealth/emergentstealth/behaviour/guard.json` into a datapack as `mypack:behaviour/x.json`, change it (e.g. remove the `shout`), `/reload`, then `/es npc behaviour @e[type=emergentstealth:stealth_npc,limit=1,sort=nearest] mypack:x` | That NPC follows your tree. `/es npc behaviour <npcs> reset` restores the default |
+
 ## Track E: Visual lighting (shadows you can see, dynamic lights, dark is dark) 🧪
 
 What you **see** now follows the same light model the guards use (design doc [30](design/30-visual-lighting.md)). Screenshots are in `docs/screenshots/visual-lighting/`.

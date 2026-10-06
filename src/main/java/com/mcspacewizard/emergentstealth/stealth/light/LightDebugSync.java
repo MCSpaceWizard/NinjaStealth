@@ -12,7 +12,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
  * Sends the light debug view's data to players who requested the {@link ESDebugSubscriptions#LIGHT} debug
@@ -33,7 +32,7 @@ public final class LightDebugSync {
         }
         for (ServerPlayer player : players) {
             if (player.debugSubscriptions().contains(ESDebugSubscriptions.LIGHT.get())) {
-                PacketDistributor.sendToPlayer(player, build(level, player));
+                com.mcspacewizard.emergentstealth.registry.ESNetwork.sendIfSupported(player, build(level, player));
             }
         }
     }

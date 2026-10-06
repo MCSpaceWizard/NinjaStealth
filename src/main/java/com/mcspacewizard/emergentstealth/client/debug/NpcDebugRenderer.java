@@ -30,6 +30,8 @@ public class NpcDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
     private static final int COLOR_RAY_BLOCKED = 0xFFFF4040;
     private static final int COLOR_LAST_KNOWN = 0xFFFF40FF;
     private static final int COLOR_PATH = 0xFF40E0FF;
+    private static final int COLOR_SEARCH = 0xFF909090;
+    private static final int COLOR_SEARCH_MINE = 0xFFFF9020;
     private static final int CONE_SEGMENTS = 12;
     private static final float TEXT_SCALE = 0.3F;
 
@@ -45,6 +47,7 @@ public class NpcDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
             }
             emitLabel(entity, info, partialTicks);
             emitPath(entity, info, partialTicks);
+            emitSearchPoints(info);
             emitCones(entity, info, partialTicks);
             for (NpcDebugInfo.Ray ray : info.rays()) {
                 int color = ray.transmittance() >= 0.99F ? COLOR_RAY_CLEAR : ray.transmittance() > 0.0F ? COLOR_RAY_PARTIAL : COLOR_RAY_BLOCKED;
@@ -62,11 +65,26 @@ public class NpcDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
                 info.archetype() + " [" + info.role() + "]",
                 "state: " + info.state() + "   tier " + info.tier(),
                 "routine: " + info.activity(),
+                "cause: " + info.behaviour().cause() + "   bt: " + info.behaviour().action()
+                        + (info.behaviour().token() ? "   [token]" : ""),
+                info.behaviour().heard().isEmpty() ? "heard: -" : "heard: " + info.behaviour().heard(),
                 String.format(java.util.Locale.ROOT, "awareness: %.2f", info.awareness())
         };
         for (int i = 0; i < lines.length; i++) {
             Gizmos.billboardText(lines[i], top.add(0.0, (lines.length - 1 - i) * 0.25, 0.0),
                     TextGizmo.Style.forColorAndCentered(COLOR_TEXT).withScale(TEXT_SCALE)).setAlwaysOnTop();
+        }
+    }
+
+    /** Search group points (design doc 14 §7): the NPC's claimed point in orange, the others grey. */
+    private static void emitSearchPoints(NpcDebugInfo info) {
+        java.util.List<net.minecraft.core.BlockPos> points = info.behaviour().searchPoints();
+        for (int i = 0; i < points.size(); i++) {
+            Vec3 bottom = Vec3.atBottomCenterOf(points.get(i));
+            boolean mine = i == info.behaviour().mine();
+            int color = mine ? COLOR_SEARCH_MINE : COLOR_SEARCH;
+            Gizmos.cuboid(new AABB(bottom.subtract(0.25, 0.0, 0.25), bottom.add(0.25, mine ? 0.8 : 0.3, 0.25)),
+                    GizmoStyle.stroke(color, mine ? 2.0F : 1.0F));
         }
     }
 
