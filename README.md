@@ -17,6 +17,11 @@ Stage 0, foundations. See the design docs:
 - [Architecture](docs/design/10-architecture.md)
 - [Assets & programmer art](docs/assets.md)
 
+## Guides
+
+- **[Getting started](docs/GETTING_STARTED.md):** clone, install JDK 25, build and run (plus cloud-session setup)
+- **[What to test](docs/TESTING.md):** every implemented feature with test steps and status
+
 ## Building & running
 
 Requirements: **JDK 25** (Gradle can auto-provision it via the foojay toolchain resolver if it's missing) and an internet connection for the first build.
