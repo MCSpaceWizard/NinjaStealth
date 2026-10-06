@@ -1,0 +1,8 @@
+{
+  "role": "patrol_guard",
+  "faction": "emergentstealth:shogunate",
+  "bodies": ["emergentstealth:textures/entity/npc/body/body_1.png", "emergentstealth:textures/entity/npc/body/body_2.png", "emergentstealth:textures/entity/npc/body/body_3.png", "emergentstealth:textures/entity/npc/body/body_4.png"],
+  "outfit": "emergentstealth:ashigaru",
+  "stats": { "max_health": 24.0, "movement_speed": 0.28, "attack_damage": 4.0 },
+  "equipment": { "mainhand": { "id": "minecraft:iron_sword" } }
+}

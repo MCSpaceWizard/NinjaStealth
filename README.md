@@ -32,4 +32,10 @@ Requirements: **JDK 25** (Gradle can auto-provision it via the foojay toolchain 
 
 On Windows use `gradlew.bat`. In IntelliJ, open the folder as a Gradle project; run configurations are generated on sync.
 
+## In-game (dev) quick reference
+
+- `/es npc spawn <archetype>` spawns a stealth NPC (op). `/es npc list` counts them. `/es` is short for `/emergentstealth`.
+- `/esdebug [on|off]` or right-clicking the **Debug Lens** toggles the AI debug view. Only ops and the singleplayer host receive debug data.
+- Archetypes and outfits are datapack JSON under `data/<namespace>/emergentstealth/{archetype,outfit}/`.
+
 When reporting a build problem, paste the first error block from the Gradle output (or `build/reports/problems/problems-report.html`).

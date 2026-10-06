@@ -1,0 +1,80 @@
+package com.mcspacewizard.emergentstealth.client;
+
+import com.mcspacewizard.emergentstealth.EmergentStealth;
+import com.mcspacewizard.emergentstealth.client.debug.ClientDebugState;
+import com.mcspacewizard.emergentstealth.client.debug.NpcDebugRenderer;
+import com.mcspacewizard.emergentstealth.client.render.ESModelLayers;
+import com.mcspacewizard.emergentstealth.client.render.NpcRenderer;
+import com.mcspacewizard.emergentstealth.registry.ESDebugSubscriptions;
+import com.mcspacewizard.emergentstealth.registry.ESEntities;
+import com.mcspacewizard.emergentstealth.registry.ESItems;
+
+import net.minecraft.commands.Commands;
+import net.minecraft.world.InteractionResult;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.AddDebugSubscriptionFlagsEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
+import net.neoforged.neoforge.client.event.RegisterDebugRenderersEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+
+/** Client-only event handlers (both mod-bus and game-bus events; the bus is picked per event type). */
+@EventBusSubscriber(modid = EmergentStealth.MODID, value = Dist.CLIENT)
+public final class ESClientEvents {
+    private ESClientEvents() {}
+
+    // --- Mod bus ---
+
+    @SubscribeEvent
+    static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ESEntities.STEALTH_NPC.get(), NpcRenderer::new);
+    }
+
+    @SubscribeEvent
+    static void onRegisterLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        ESModelLayers.onRegisterLayerDefinitions(event);
+    }
+
+    @SubscribeEvent
+    static void onRegisterDebugRenderers(RegisterDebugRenderersEvent event) {
+        event.register(new NpcDebugRenderer());
+    }
+
+    // --- Game bus ---
+
+    /** Request our debug data from the server only while the debug view is on. */
+    @SubscribeEvent
+    static void onAddDebugSubscriptionFlags(AddDebugSubscriptionFlagsEvent event) {
+        event.addFlag(ESDebugSubscriptions.NPC.get(), ClientDebugState.isEnabled());
+    }
+
+    /** {@code /esdebug [on|off]}: toggles the debug view. Client-side, so it works without op. */
+    @SubscribeEvent
+    static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("esdebug")
+                .executes(ctx -> {
+                    ClientDebugState.toggle();
+                    return 1;
+                })
+                .then(Commands.literal("on").executes(ctx -> {
+                    ClientDebugState.setEnabled(true);
+                    return 1;
+                }))
+                .then(Commands.literal("off").executes(ctx -> {
+                    ClientDebugState.setEnabled(false);
+                    return 1;
+                })));
+    }
+
+    /** Right-clicking the Debug Lens toggles the debug view. */
+    @SubscribeEvent
+    static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        if (event.getLevel().isClientSide() && event.getItemStack().is(ESItems.DEBUG_LENS.get())) {
+            ClientDebugState.toggle();
+            event.setCancellationResult(InteractionResult.SUCCESS);
+            event.setCanceled(true);
+        }
+    }
+}

@@ -1,0 +1,4 @@
+{
+  "layers": ["emergentstealth:textures/entity/npc/outfit/ashigaru_under.png", "emergentstealth:textures/entity/npc/outfit/ashigaru_armor.png"],
+  "disguise_group": "emergentstealth:shogunate_soldier"
+}

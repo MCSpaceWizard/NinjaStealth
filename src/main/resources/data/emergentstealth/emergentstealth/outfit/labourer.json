@@ -1,0 +1,4 @@
+{
+  "layers": ["emergentstealth:textures/entity/npc/outfit/labourer.png"],
+  "disguise_group": "emergentstealth:labourer"
+}

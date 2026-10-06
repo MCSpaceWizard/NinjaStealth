@@ -221,6 +221,8 @@ Each entry is **Decided**, **Proposed** (my reading or extension of your answers
 
 ## Open questions
 
+> **2026-10-06:** you approved the proposals ("everything is looking good"), so **Q1–Q4 and Q6–Q11 are accepted as proposed**: 26.1.2, the light-gem-as-truth shadow split, a crawl toggle, the spyglass/goggles UI split, the compound command post, our own combat system, the Bloodlust/Serenity working names, the stage placement, the lamplighter, and the teppo as an NPC-only siege weapon. **Q5 (factions) is still open.** It isn't needed until S9/S11.
+
 Answer these with their IDs (Q1, Q2, …), the same way as before. A one-word "agree" is fine where there's a proposal.
 
 **Q1 ★ Exact version: 26.1.2 vs 26.3.** You guessed right that 26.1 has more libraries, specifically **26.1.2**, which the ecosystem has gathered around:

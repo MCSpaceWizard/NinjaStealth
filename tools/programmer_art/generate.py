@@ -19,7 +19,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[2]
 SPEC = Path(__file__).resolve().parent / "textures.json"
 OUT = ROOT / "src/main/resources/assets/emergentstealth/textures"
-SIZE = 16
+SIZE = 16  # default; entries may override with "size"
 
 # 3x5 pixel font for "badge" placeholders (A-Z, 0-9).
 FONT = {
@@ -43,6 +43,77 @@ def rgba(hex_color, alpha=255):
 def shade(color, factor):
     r, g, b, a = color
     return (min(255, int(r * factor)), min(255, int(g * factor)), min(255, int(b * factor)), a)
+
+
+def shape_egg(img, base, spots, outline):
+    """Spawn-egg style oval with spots."""
+    cx, cy = 7.5, 8.5
+    for y in range(SIZE):
+        for x in range(SIZE):
+            dx, dy = (x - cx) / 5.5, (y - cy) / (7.0 if y < cy else 6.0)
+            d = dx * dx + dy * dy
+            if d <= 0.78:
+                spot = (x * 7 + y * 13) % 11 == 0 or (x * 3 + y * 5) % 13 == 0
+                img.putpixel((x, y), spots if spot else (shade(base, 1.15) if x + y < 12 else base))
+            elif d <= 1.0:
+                img.putpixel((x, y), outline)
+
+
+# --- 64x64 player skin layout -------------------------------------------------------------------
+# (u, v, w, h, d) for each part in the standard skin layout; overlay parts use the second-layer UVs.
+SKIN_PARTS = {
+    "head": (0, 0, 8, 8, 8), "hat": (32, 0, 8, 8, 8),
+    "body": (16, 16, 8, 12, 4), "jacket": (16, 32, 8, 12, 4),
+    "right_arm": (40, 16, 4, 12, 4), "right_sleeve": (40, 32, 4, 12, 4),
+    "left_arm": (32, 48, 4, 12, 4), "left_sleeve": (48, 48, 4, 12, 4),
+    "right_leg": (0, 16, 4, 12, 4), "right_pants": (0, 32, 4, 12, 4),
+    "left_leg": (16, 48, 4, 12, 4), "left_pants": (0, 48, 4, 12, 4),
+}
+# Convenience groups: "arms" paints both arms, "legs" both legs, etc.
+SKIN_GROUPS = {
+    "arms": ["right_arm", "left_arm"], "sleeves": ["right_sleeve", "left_sleeve"],
+    "legs": ["right_leg", "left_leg"], "pants": ["right_pants", "left_pants"],
+}
+
+
+def paint_box(img, box, color, rows=(0.0, 1.0), seed=0):
+    """Paint a cube's UV net. rows=(from, to) limits side faces to a vertical band (0 = top, 1 = bottom)."""
+    u, v, w, h, d = box
+    rnd = random.Random(seed)
+    lo, hi = int(round(rows[0] * h)), int(round(rows[1] * h))
+
+    def fill(x0, y0, fw, fh):
+        for y in range(y0, y0 + fh):
+            for x in range(x0, x0 + fw):
+                img.putpixel((x, y), shade(color, rnd.uniform(0.92, 1.06)))
+
+    if lo == 0:
+        fill(u + d, v, w, d)              # top
+    if hi == h:
+        fill(u + d + w, v, w, d)          # bottom
+    for (x0, fw) in ((u, d), (u + d, w), (u + d + w, d), (u + d + w + d, w)):  # right, front, left, back
+        fill(x0, v + d + lo, fw, hi - lo)
+
+
+def shape_skin(img, *_colors, parts=None, palette=None, face=False, hair=None, seed=0):
+    """Paint a 64x64 skin (or outfit layer) from a part -> colour spec. Unpainted pixels stay transparent."""
+    for i, (name, spec) in enumerate((parts or {}).items()):
+        if isinstance(spec, str):
+            spec = {"color": spec}
+        color = rgba(palette.get(spec["color"], spec["color"]))
+        rows = (spec.get("from", 0.0), spec.get("to", 1.0))
+        for part in SKIN_GROUPS.get(name, [name]):
+            paint_box(img, SKIN_PARTS[part], color, rows, seed + i)
+    if hair:
+        hc = rgba(palette.get(hair, hair))
+        paint_box(img, SKIN_PARTS["head"], hc, (0.0, 0.25), seed)
+        for y in range(8, 16):            # back of head fully
+            for x in range(24, 32):
+                img.putpixel((x, y), hc)
+    if face:
+        white, pupil = (240, 236, 228, 255), (30, 28, 34, 255)
+        for x, c in ((9, white), (10, pupil), (13, pupil), (14, white)):
+            img.putpixel((x, 12), c)
 
 
 def shape_lens(img, outline, glass, handle):
@@ -84,7 +155,7 @@ def shape_badge(img, ink, paper, accent, letter="?"):
                             img.putpixel((5 + gx * 2 + sx, 3 + gy * 2 + sy), accent)
 
 
-SHAPES = {"lens": shape_lens, "noise": shape_noise, "badge": shape_badge}
+SHAPES = {"lens": shape_lens, "noise": shape_noise, "badge": shape_badge, "egg": shape_egg, "skin": shape_skin}
 
 
 def main():
@@ -107,8 +178,11 @@ def main():
         colors = [rgba(palette.get(c, c)) for c in entry.get("colors", ["ink", "paper", "lacquer"])]
         while len(colors) < 3:
             colors.append(colors[-1])
-        img = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-        extra = {k: v for k, v in entry.items() if k in ("letter", "seed")}
+        size = entry.get("size", 64 if entry["shape"] == "skin" else SIZE)
+        img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        extra = {k: v for k, v in entry.items() if k in ("letter", "seed", "parts", "face", "hair")}
+        if entry["shape"] == "skin":
+            extra["palette"] = palette
         SHAPES[entry["shape"]](img, *colors[:3], **extra)
         target.parent.mkdir(parents=True, exist_ok=True)
         img.save(target)

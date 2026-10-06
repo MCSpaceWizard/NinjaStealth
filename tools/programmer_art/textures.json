@@ -1,14 +1,62 @@
 {
-  "_comment": "Placeholder texture specs. Paths are relative to assets/emergentstealth/textures/. The generator never overwrites an existing PNG unless --force is given, so real art dropped in at the same path wins.",
+  "_comment": "Placeholder texture specs. Paths are relative to assets/emergentstealth/textures/. The generator never overwrites an existing PNG unless --force is given, so real art dropped in at the same path wins. Skin parts: head, hat, body, jacket, right_arm/left_arm (or arms), right_sleeve/left_sleeve (or sleeves), right_leg/left_leg (or legs), right_pants/left_pants (or pants). A part value is a colour or {color, from, to} where from/to (0-1) limit the side faces to a vertical band.",
   "palette": {
     "ink": "#1b1a20",
     "paper": "#e8dcc0",
     "lacquer": "#a8322d",
+    "lacquer_dark": "#5c1c1a",
     "steel": "#9aa3ad",
+    "dark_steel": "#3b3f46",
     "wood": "#7a5534",
-    "jade": "#4f8a6b"
+    "jade": "#4f8a6b",
+    "indigo": "#2d3a5c",
+    "indigo_light": "#4a5d8a",
+    "gold": "#c9a227",
+    "hemp": "#a8956b",
+    "earth": "#6b4f35",
+    "plum": "#5d2f5a",
+    "straw": "#c8ad6a",
+    "skin_1": "#f1c9a5",
+    "skin_2": "#dcae86",
+    "skin_3": "#c08d64",
+    "skin_4": "#94653f"
   },
   "textures": [
-    { "path": "item/debug_lens", "shape": "lens", "colors": ["ink", "jade", "wood"] }
+    { "path": "item/debug_lens", "shape": "lens", "colors": ["ink", "jade", "wood"] },
+    { "path": "item/stealth_npc_spawn_egg", "shape": "egg", "colors": ["indigo", "lacquer", "ink"] },
+
+    { "path": "entity/npc/body/body_1", "shape": "skin", "face": true, "hair": "ink",
+      "parts": { "head": "skin_1", "body": "skin_1", "arms": "skin_1", "legs": "skin_1" } },
+    { "path": "entity/npc/body/body_2", "shape": "skin", "face": true, "hair": "ink",
+      "parts": { "head": "skin_2", "body": "skin_2", "arms": "skin_2", "legs": "skin_2" } },
+    { "path": "entity/npc/body/body_3", "shape": "skin", "face": true, "hair": "ink",
+      "parts": { "head": "skin_3", "body": "skin_3", "arms": "skin_3", "legs": "skin_3" } },
+    { "path": "entity/npc/body/body_4", "shape": "skin", "face": true, "hair": "earth",
+      "parts": { "head": "skin_4", "body": "skin_4", "arms": "skin_4", "legs": "skin_4" } },
+
+    { "path": "entity/npc/outfit/ashigaru_under", "shape": "skin",
+      "parts": { "body": "indigo", "arms": { "color": "indigo", "to": 0.75 }, "legs": "indigo_light",
+                 "pants": { "color": "ink", "from": 0.8 } } },
+    { "path": "entity/npc/outfit/ashigaru_armor", "shape": "skin",
+      "parts": { "jacket": { "color": "lacquer", "to": 0.75 }, "hat": { "color": "ink", "to": 0.25 } } },
+
+    { "path": "entity/npc/outfit/samurai_under", "shape": "skin",
+      "parts": { "body": "ink", "arms": "ink", "legs": "indigo", "pants": { "color": "ink", "from": 0.8 } } },
+    { "path": "entity/npc/outfit/samurai_armor", "shape": "skin",
+      "parts": { "jacket": "lacquer_dark", "sleeves": { "color": "lacquer_dark", "to": 0.4 },
+                 "pants": { "color": "dark_steel", "to": 0.45 }, "hat": { "color": "dark_steel", "to": 0.35 } } },
+    { "path": "entity/npc/outfit/taisho_armor", "shape": "skin",
+      "parts": { "jacket": "lacquer", "sleeves": { "color": "gold", "to": 0.4 },
+                 "pants": { "color": "lacquer_dark", "to": 0.45 }, "hat": { "color": "gold", "to": 0.35 } } },
+
+    { "path": "entity/npc/outfit/kimono_plain", "shape": "skin",
+      "parts": { "body": "hemp", "arms": { "color": "hemp", "to": 0.8 }, "legs": "hemp",
+                 "jacket": { "color": "earth", "from": 0.55, "to": 0.7 } } },
+    { "path": "entity/npc/outfit/labourer", "shape": "skin",
+      "parts": { "body": "earth", "arms": { "color": "earth", "to": 0.3 }, "legs": "straw",
+                 "hat": { "color": "straw", "to": 0.25 } } },
+    { "path": "entity/npc/outfit/kimono_noble", "shape": "skin",
+      "parts": { "body": "plum", "arms": "plum", "legs": "plum",
+                 "jacket": { "color": "gold", "from": 0.55, "to": 0.7 }, "hat": { "color": "ink", "to": 0.25 } } }
   ]
 }

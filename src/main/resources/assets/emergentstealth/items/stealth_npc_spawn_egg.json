@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "emergentstealth:item/stealth_npc_spawn_egg"
+  }
+}

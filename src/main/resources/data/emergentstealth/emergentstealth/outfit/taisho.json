@@ -1,0 +1,4 @@
+{
+  "layers": ["emergentstealth:textures/entity/npc/outfit/samurai_under.png", "emergentstealth:textures/entity/npc/outfit/taisho_armor.png"],
+  "disguise_group": "emergentstealth:shogunate_officer"
+}
