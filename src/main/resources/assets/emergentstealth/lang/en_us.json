@@ -47,5 +47,11 @@
   "emergentstealth.configuration.darkIsDark": "Dark Is Dark",
   "emergentstealth.configuration.darkMaxBrightness": "Dark Is Dark: Max Brightness",
   "emergentstealth.configuration.darkAmbientScale": "Dark Is Dark: Ambient Light",
-  "emergentstealth.configuration.darkIsDarkWithShaders": "Dark Is Dark With Shader Packs"
+  "emergentstealth.configuration.darkIsDarkWithShaders": "Dark Is Dark With Shader Packs",
+  "emergentstealth.configuration.skyShadows": "Sun & Moon Shadows",
+  "emergentstealth.configuration.skyShadowRadius": "Sun & Moon Shadow Radius",
+  "emergentstealth.configuration.skyShadowAngleStep": "Sun Shadow Update Step (degrees)",
+  "emergentstealth.configuration.skySectionsPerTick": "Sun Shadow Sections Per Tick",
+  "emergentstealth.configuration.skyShadowsWithShaders": "Sun & Moon Shadows With Shader Packs",
+  "emergentstealth.configuration.heldLightWithShaders": "Own Held Light With Shader Packs"
 }

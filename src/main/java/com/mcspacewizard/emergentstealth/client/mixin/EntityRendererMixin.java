@@ -22,4 +22,10 @@ public abstract class EntityRendererMixin<T extends Entity> {
     private int emergentstealth$visualBlockLight(int light, T entity, BlockPos pos) {
         return VisualLighting.entityBlockLight(entity, pos, light);
     }
+
+    /** Same for sky light, so an entity standing in a sun or moon shadow is shaded like the ground (doc 30 §10). */
+    @ModifyReturnValue(method = "getSkyLightLevel", at = @At("RETURN"))
+    private int emergentstealth$visualSkyLight(int light, T entity, BlockPos pos) {
+        return VisualLighting.entitySkyLight(entity, pos, light);
+    }
 }

@@ -44,6 +44,12 @@ public final class ESConfig {
     public static final ModConfigSpec.DoubleValue DARK_MAX_BRIGHTNESS;
     public static final ModConfigSpec.DoubleValue DARK_AMBIENT_SCALE;
     public static final ModConfigSpec.BooleanValue DARK_IS_DARK_WITH_SHADERS;
+    public static final ModConfigSpec.BooleanValue SKY_SHADOWS;
+    public static final ModConfigSpec.IntValue SKY_SHADOW_RADIUS;
+    public static final ModConfigSpec.DoubleValue SKY_SHADOW_ANGLE_STEP;
+    public static final ModConfigSpec.IntValue SKY_SECTIONS_PER_TICK;
+    public static final ModConfigSpec.BooleanValue SKY_SHADOWS_WITH_SHADERS;
+    public static final ModConfigSpec.BooleanValue HELD_LIGHT_WITH_SHADERS;
 
     static {
         ModConfigSpec.Builder server = new ModConfigSpec.Builder();
@@ -107,6 +113,18 @@ public final class ESConfig {
                 .defineInRange("darkAmbientScale", 0.35, 0.0, 1.0);
         DARK_IS_DARK_WITH_SHADERS = client.comment("Also apply darkIsDark while an Iris shader pack is active (packs usually do their own tonemapping).")
                 .define("darkIsDarkWithShaders", false);
+        SKY_SHADOWS = client.comment("Sun and moon cast shadows on the terrain (the same model guards use): walls shade sideways in the morning and evening.")
+                .define("skyShadows", true);
+        SKY_SHADOW_RADIUS = client.comment("Sun/moon shadows are drawn within this many blocks of you; further out the sky light is vanilla.")
+                .defineInRange("skyShadowRadius", 64, 16, 256);
+        SKY_SHADOW_ANGLE_STEP = client.comment("Sun/moon shadows are re-drawn each time the sun moves this many degrees (1 degree is about 3.3 s of game time).")
+                .defineInRange("skyShadowAngleStep", 2.0, 0.5, 15.0);
+        SKY_SECTIONS_PER_TICK = client.comment("How many terrain sections are re-drawn per tick when the sun moves. Lower = smoother FPS, slower update.")
+                .defineInRange("skySectionsPerTick", 6, 1, 64);
+        SKY_SHADOWS_WITH_SHADERS = client.comment("Keep sun/moon shadows while an Iris shader pack is active (packs draw their own sun shadows).")
+                .define("skyShadowsWithShaders", false);
+        HELD_LIGHT_WITH_SHADERS = client.comment("Keep your own held-light glow while an Iris shader pack is active (most packs add their own held light).")
+                .define("heldLightWithShaders", false);
         client.pop();
         CLIENT_SPEC = client.build();
     }

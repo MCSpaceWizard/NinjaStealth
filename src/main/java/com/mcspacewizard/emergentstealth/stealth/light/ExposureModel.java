@@ -6,16 +6,13 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import com.mcspacewizard.emergentstealth.stealth.LightSampler;
-import com.mcspacewizard.emergentstealth.stealth.SightRay;
 
 import it.unimi.dsi.fastutil.longs.Long2FloatMap;
 import it.unimi.dsi.fastutil.longs.Long2FloatOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
-import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.MoonPhase;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -34,10 +31,6 @@ public final class ExposureModel implements LightSampler {
     public static final float FLOOR = 0.12F;
 
     private static final int SOURCE_RADIUS = LightTransport.SOURCE_RADIUS;
-    private static final double SKY_RAY_LENGTH = 64.0;
-    private static final float SHADE_FRACTION = 0.3F;
-    private static final float NIGHT_BASE = 0.03F;
-    private static final float MOONLIGHT = 0.25F;
 
     private final Map<ServerLevel, TickCache> caches = new WeakHashMap<>();
 
@@ -111,39 +104,20 @@ public final class ExposureModel implements LightSampler {
         if (skyAccess <= 0.0F) {
             return 0.0F;
         }
-        float skyLevel = level.environmentAttributes().getDimensionValue(EnvironmentAttributes.SKY_LIGHT_LEVEL);
-        float day = Mth.clamp((skyLevel - 4.0F) / 11.0F, 0.0F, 1.0F);
         float weather = 1.0F - 0.4F * level.getRainLevel(1.0F) - 0.3F * level.getThunderLevel(1.0F);
-
-        float direct = 0.0F;
-        if (day > 0.0F) {
-            Vec3 sun = celestialDirection(level.environmentAttributes().getValue(EnvironmentAttributes.SUN_ANGLE, point));
-            float sunClear = sun.y > 0.05 ? rayToSky(level, point, sun) : 0.0F;
-            direct += day * (SHADE_FRACTION + (1.0F - SHADE_FRACTION) * sunClear);
-        }
-        if (day < 1.0F) {
-            Vec3 moon = celestialDirection(level.environmentAttributes().getValue(EnvironmentAttributes.MOON_ANGLE, point));
-            float moonClear = moon.y > 0.05 ? rayToSky(level, point, moon) : 0.0F;
-            MoonPhase phase = level.environmentAttributes().getValue(EnvironmentAttributes.MOON_PHASE, point);
-            direct += (1.0F - day) * (NIGHT_BASE + MOONLIGHT * moonBrightness(phase) * moonClear);
-        }
+        // Shared with the client's sky shadows (doc 30 §10).
+        float direct = skyDirect(level, point, LightTransport.SkyState.of(level, point));
         return Mth.clamp(skyAccess * direct * weather, 0.0F, 1.0F);
+    }
+
+    /** Direct sun/moon light at a point for a given sky state, before sky access and weather. */
+    public static float skyDirect(ServerLevel level, Vec3 point, LightTransport.SkyState sky) {
+        return LightTransport.skyDirect(level, point, sky, level.getMaxY(), null);
     }
 
     /** Direction toward a celestial body from its angle in degrees (0 = overhead; rises in the east, +X). */
     static Vec3 celestialDirection(float angleDegrees) {
-        double rad = Math.toRadians(angleDegrees);
-        return new Vec3(-Math.sin(rad), Math.cos(rad), 0.0);
-    }
-
-    /** 1 when the full moon, 0 at new moon. */
-    static float moonBrightness(MoonPhase phase) {
-        int index = phase.index();
-        return 1.0F - Math.min(index, 8 - index) / 4.0F;
-    }
-
-    private static float rayToSky(ServerLevel level, Vec3 point, Vec3 direction) {
-        return SightRay.transmittance(level, point, point.add(direction.scale(SKY_RAY_LENGTH)), false);
+        return LightTransport.celestialDirection(angleDegrees);
     }
 
     private static long quantise(Vec3 point) {
