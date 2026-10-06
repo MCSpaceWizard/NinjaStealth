@@ -28,6 +28,11 @@ public final class ESConfig {
     public static final ModConfigSpec.DoubleValue SUSPICIOUS_THRESHOLD;
     public static final ModConfigSpec.IntValue SEARCH_SECONDS;
 
+    // --- Server: behaviour (doc 14) ---
+    public static final ModConfigSpec.IntValue ATTACKERS_PER_TARGET;
+    public static final ModConfigSpec.DoubleValue HEARING_GAIN;
+    public static final ModConfigSpec.DoubleValue HEARING_AWARENESS_CAP;
+
     // --- Server: sound (doc 16) ---
     public static final ModConfigSpec.IntValue SOUND_NODES_PER_TICK;
 
@@ -35,6 +40,7 @@ public final class ESConfig {
     public static final ModConfigSpec.BooleanValue SHOW_LIGHT_GEM;
     public static final ModConfigSpec.BooleanValue SHOW_DETECTION_INDICATORS;
     public static final ModConfigSpec.BooleanValue PLAY_ALERT_SOUNDS;
+    public static final ModConfigSpec.BooleanValue SHOW_BARKS;
 
     // --- Client: visual lighting (doc 30) ---
     public static final ModConfigSpec.BooleanValue DYNAMIC_LIGHTS;
@@ -47,6 +53,12 @@ public final class ESConfig {
     public static final ModConfigSpec.DoubleValue DARK_MAX_BRIGHTNESS;
     public static final ModConfigSpec.DoubleValue DARK_AMBIENT_SCALE;
     public static final ModConfigSpec.BooleanValue DARK_IS_DARK_WITH_SHADERS;
+    public static final ModConfigSpec.BooleanValue SKY_SHADOWS;
+    public static final ModConfigSpec.IntValue SKY_SHADOW_RADIUS;
+    public static final ModConfigSpec.DoubleValue SKY_SHADOW_ANGLE_STEP;
+    public static final ModConfigSpec.IntValue SKY_SECTIONS_PER_TICK;
+    public static final ModConfigSpec.BooleanValue SKY_SHADOWS_WITH_SHADERS;
+    public static final ModConfigSpec.BooleanValue HELD_LIGHT_WITH_SHADERS;
 
     static {
         ModConfigSpec.Builder server = new ModConfigSpec.Builder();
@@ -78,9 +90,18 @@ public final class ESConfig {
                 .defineInRange("searchSeconds", 25, 1, 600);
         server.pop();
 
+        server.push("behaviour");
+        ATTACKERS_PER_TARGET = server.comment("How many guards may attack one target at once. The others surround it.")
+                .defineInRange("attackersPerTarget", 2, 1, 16);
+        HEARING_GAIN = server.comment("Awareness gained from hearing a player, per unit of heard intensity.")
+                .defineInRange("hearingGain", 0.5, 0.0, 5.0);
+        HEARING_AWARENESS_CAP = server.comment("Hearing alone never raises awareness above this: only sight detects.")
+                .defineInRange("hearingAwarenessCap", 0.65, 0.0, 0.99);
+        server.pop();
+
         server.push("sound");
         SOUND_NODES_PER_TICK = server.comment("Max sound flood-fill nodes per tick per dimension (design doc 16 §2). Work over budget waits for the next tick, which reads as a short sound delay.")
-                .defineInRange("soundNodesPerTick", 20000, 500, 1000000);
+                .defineInRange("soundNodesPerTick", 8000, 500, 1000000);
         server.pop();
         SERVER_SPEC = server.build();
 
@@ -92,6 +113,8 @@ public final class ESConfig {
                 .define("showDetectionIndicators", true);
         PLAY_ALERT_SOUNDS = client.comment("Play a stinger sound when an NPC becomes suspicious of you or detects you.")
                 .define("playAlertSounds", true);
+        SHOW_BARKS = client.comment("Show what NPCs say (barks) as text above their heads.")
+                .define("showBarks", true);
         client.pop();
 
         client.push("visual_lighting");
@@ -115,6 +138,18 @@ public final class ESConfig {
                 .defineInRange("darkAmbientScale", 0.35, 0.0, 1.0);
         DARK_IS_DARK_WITH_SHADERS = client.comment("Also apply darkIsDark while an Iris shader pack is active (packs usually do their own tonemapping).")
                 .define("darkIsDarkWithShaders", false);
+        SKY_SHADOWS = client.comment("Sun and moon cast shadows on the terrain (the same model guards use): walls shade sideways in the morning and evening.")
+                .define("skyShadows", true);
+        SKY_SHADOW_RADIUS = client.comment("Sun/moon shadows are drawn within this many blocks of you; further out the sky light is vanilla.")
+                .defineInRange("skyShadowRadius", 64, 16, 256);
+        SKY_SHADOW_ANGLE_STEP = client.comment("Sun/moon shadows are re-drawn each time the sun moves this many degrees (1 degree is about 3.3 s of game time).")
+                .defineInRange("skyShadowAngleStep", 2.0, 0.5, 15.0);
+        SKY_SECTIONS_PER_TICK = client.comment("How many terrain sections are re-drawn per tick when the sun moves. Lower = smoother FPS, slower update.")
+                .defineInRange("skySectionsPerTick", 6, 1, 64);
+        SKY_SHADOWS_WITH_SHADERS = client.comment("Keep sun/moon shadows while an Iris shader pack is active (packs draw their own sun shadows).")
+                .define("skyShadowsWithShaders", false);
+        HELD_LIGHT_WITH_SHADERS = client.comment("Keep your own held-light glow while an Iris shader pack is active (most packs add their own held light).")
+                .define("heldLightWithShaders", false);
         client.pop();
         CLIENT_SPEC = client.build();
     }

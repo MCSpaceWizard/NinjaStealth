@@ -9,9 +9,12 @@ import com.mcspacewizard.emergentstealth.config.ESConfig;
  */
 record VisualSettings(boolean dynamicLights, int dynamicLightRange, int dynamicLightInterval, boolean itemEntityLights,
         boolean shadowedBlockLight, float shadowBounce,
-        boolean darkIsDark, float darkMaxBrightness, float darkAmbientScale, boolean darkIsDarkWithShaders) {
+        boolean darkIsDark, float darkMaxBrightness, float darkAmbientScale, boolean darkIsDarkWithShaders,
+        boolean skyShadows, int skyShadowRadius, float skyShadowAngleStep, int skySectionsPerTick,
+        boolean skyShadowsWithShaders, boolean heldLightWithShaders) {
 
-    static final VisualSettings OFF = new VisualSettings(false, 48, 2, false, false, 0.15F, false, 0.0F, 0.35F, false);
+    static final VisualSettings OFF = new VisualSettings(false, 48, 2, false, false, 0.15F, false, 0.0F, 0.35F, false,
+            false, 64, 2.0F, 6, false, false);
 
     static VisualSettings read() {
         if (!ESConfig.CLIENT_SPEC.isLoaded()) {
@@ -27,17 +30,24 @@ record VisualSettings(boolean dynamicLights, int dynamicLightRange, int dynamicL
                 ESConfig.DARK_IS_DARK.get(),
                 ESConfig.DARK_MAX_BRIGHTNESS.get().floatValue(),
                 ESConfig.DARK_AMBIENT_SCALE.get().floatValue(),
-                ESConfig.DARK_IS_DARK_WITH_SHADERS.get());
+                ESConfig.DARK_IS_DARK_WITH_SHADERS.get(),
+                ESConfig.SKY_SHADOWS.get(),
+                ESConfig.SKY_SHADOW_RADIUS.get(),
+                ESConfig.SKY_SHADOW_ANGLE_STEP.get().floatValue(),
+                ESConfig.SKY_SECTIONS_PER_TICK.get(),
+                ESConfig.SKY_SHADOWS_WITH_SHADERS.get(),
+                ESConfig.HELD_LIGHT_WITH_SHADERS.get());
     }
 
-    /** Whether anything changes the light baked into terrain. */
-    boolean altersTerrain() {
+    /** Whether anything changes the block light baked into terrain. */
+    boolean altersBlockLight() {
         return dynamicLights || shadowedBlockLight;
     }
 
-    /** Whether switching from {@code other} to this changes baked terrain light (so all chunks must be rebuilt). */
+    /** Whether switching from {@code other} to this changes baked block light (so all chunks must be rebuilt). */
     boolean terrainDiffers(VisualSettings other) {
         return dynamicLights != other.dynamicLights || itemEntityLights != other.itemEntityLights
-                || shadowedBlockLight != other.shadowedBlockLight || shadowBounce != other.shadowBounce;
+                || shadowedBlockLight != other.shadowedBlockLight || shadowBounce != other.shadowBounce
+                || heldLightWithShaders != other.heldLightWithShaders;
     }
 }

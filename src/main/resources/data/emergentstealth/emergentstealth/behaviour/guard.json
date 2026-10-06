@@ -1,0 +1,66 @@
+{
+  "type": "selector",
+  "children": [
+    {
+      "type": "sequence",
+      "children": [
+        { "type": "state", "states": ["combat"] },
+        { "type": "once_per_state", "child": { "type": "bark", "situation": "spotted" } },
+        { "type": "optional", "child": { "type": "cooldown", "seconds": 4, "child": { "type": "shout" } } },
+        { "type": "selector", "children": [
+          { "type": "sequence", "children": [ { "type": "has_attack_token" }, { "type": "attack" } ] },
+          { "type": "hold_ring", "min": 4, "max": 6 }
+        ] }
+      ]
+    },
+    {
+      "type": "sequence",
+      "children": [
+        { "type": "state", "states": ["hunting"] },
+        { "type": "once_per_state", "child": { "type": "bark", "situation": "lost" } },
+        { "type": "move_to", "target": "poi", "speed": 1.0, "arrive": 2.0 },
+        { "type": "look_around", "seconds": 3 }
+      ]
+    },
+    {
+      "type": "sequence",
+      "children": [
+        { "type": "state", "states": ["searching"] },
+        { "type": "once_per_state", "child": { "type": "chance", "chance": 0.7, "child": { "type": "bark", "situation": "search" } } },
+        { "type": "search", "speed": 0.8, "look_seconds": 2 }
+      ]
+    },
+    {
+      "type": "sequence",
+      "children": [
+        { "type": "state", "states": ["investigating"] },
+        { "type": "once_per_state", "child": { "type": "selector", "children": [
+          { "type": "sequence", "children": [ { "type": "cause", "causes": ["heard"] }, { "type": "bark", "situation": "heard" } ] },
+          { "type": "sequence", "children": [ { "type": "cause", "causes": ["shout"] }, { "type": "bark", "situation": "shout" } ] },
+          { "type": "bark", "situation": "investigate" }
+        ] } },
+        { "type": "selector", "children": [
+          { "type": "move_to", "target": "poi", "speed": 0.7, "arrive": 2.0 },
+          { "type": "look_around", "seconds": 1 }
+        ] },
+        { "type": "look_around", "seconds": 30 }
+      ]
+    },
+    {
+      "type": "sequence",
+      "children": [
+        { "type": "state", "states": ["suspicious"] },
+        { "type": "once_per_state", "child": { "type": "bark", "situation": "suspicious" } },
+        { "type": "look_at_poi" }
+      ]
+    },
+    {
+      "type": "sequence",
+      "children": [
+        { "type": "state", "states": ["curious"] },
+        { "type": "once_per_state", "child": { "type": "chance", "chance": 0.6, "child": { "type": "bark", "situation": "curious" } } },
+        { "type": "look_at_poi" }
+      ]
+    }
+  ]
+}

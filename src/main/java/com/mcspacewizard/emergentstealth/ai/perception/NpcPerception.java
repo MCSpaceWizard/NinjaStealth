@@ -156,7 +156,7 @@ public final class NpcPerception {
             awareness.seenNow = false;
             awareness.lastVisibility = 0.0F;
             decay(awareness, profile, now, dt);
-            if (awareness.awareness <= 0.0F && awareness.ticksSincePerceived(now) > FORGET_TICKS) {
+            if (awareness.awareness <= 0.0F && now - awareness.lastClueTick() > FORGET_TICKS) {
                 it.remove();
             }
         }
@@ -215,7 +215,8 @@ public final class NpcPerception {
     }
 
     private static void decay(TargetAwareness awareness, PerceptionProfile profile, long now, float dt) {
-        if (awareness.ticksSincePerceived(now) > profile.decayDelaySeconds() * 20.0F) {
+        long sinceClue = awareness.lastClueTick() < 0 ? Long.MAX_VALUE : now - awareness.lastClueTick();
+        if (sinceClue > profile.decayDelaySeconds() * 20.0F) {
             awareness.awareness = Math.max(0.0F, awareness.awareness - profile.decayPerSecond() * dt);
         }
     }

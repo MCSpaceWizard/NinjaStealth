@@ -1,0 +1,22 @@
+{
+  "type": "selector",
+  "children": [
+    {
+      "type": "sequence",
+      "children": [
+        { "type": "state", "states": ["fleeing"] },
+        { "type": "once_per_state", "child": { "type": "bark", "situation": "flee" } },
+        { "type": "optional", "child": { "type": "cooldown", "seconds": 5, "child": { "type": "shout", "loudness": 20 } } },
+        { "type": "move_to", "target": "away_from_poi", "speed": 1.3 }
+      ]
+    },
+    {
+      "type": "sequence",
+      "children": [
+        { "type": "state", "states": ["curious", "suspicious", "investigating"] },
+        { "type": "once_per_state", "child": { "type": "chance", "chance": 0.5, "child": { "type": "bark", "situation": "civilian_curious" } } },
+        { "type": "look_at_poi" }
+      ]
+    }
+  ]
+}

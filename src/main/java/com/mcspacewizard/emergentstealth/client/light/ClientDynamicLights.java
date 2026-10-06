@@ -8,6 +8,7 @@ import com.mcspacewizard.emergentstealth.stealth.light.DynamicLights;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -52,8 +53,10 @@ final class ClientDynamicLights {
         boolean changed = false;
         if (settings.dynamicLights()) {
             double rangeSqr = (double) settings.dynamicLightRange() * settings.dynamicLightRange();
+            // Shader packs light the local player's held item themselves (Iris's heldItemLightValue); don't double it.
+            Entity skip = !settings.heldLightWithShaders() && ShaderPacks.inUse() ? Minecraft.getInstance().player : null;
             for (Entity entity : level.entitiesForRendering()) {
-                if (entity.isRemoved() || entity.isSpectator() || entity.distanceToSqr(camera) > rangeSqr) {
+                if (entity == skip || entity.isRemoved() || entity.isSpectator() || entity.distanceToSqr(camera) > rangeSqr) {
                     continue;
                 }
                 int emission = emission(entity, settings);

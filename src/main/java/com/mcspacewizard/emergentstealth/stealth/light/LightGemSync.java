@@ -9,7 +9,6 @@ import com.mcspacewizard.emergentstealth.stealth.BodySample;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 /** Sends each player their own exposure for the light gem (design doc 13 §2). */
 public final class LightGemSync {
@@ -31,7 +30,7 @@ public final class LightGemSync {
             Float last = LAST_SENT.get(player);
             if (last == null || Math.abs(last - exposure) >= MIN_CHANGE) {
                 LAST_SENT.put(player, exposure);
-                PacketDistributor.sendToPlayer(player, new LightGemPayload(exposure));
+                com.mcspacewizard.emergentstealth.registry.ESNetwork.sendIfSupported(player, new LightGemPayload(exposure));
             }
         }
     }

@@ -59,6 +59,11 @@ public final class ESGameTests {
         test("brain/melee_hit_starts_combat", PerceptionTests::meleeHitStartsCombat);
         test("brain/civilian_hit_flees", PerceptionTests::civilianHitFlees);
         test("brain/unseen_stays_unaware", PerceptionTests::unseenStaysUnaware);
+        test("behaviour/custom_tree_drives_npc", BehaviourTests::customTreeDrivesNpc);
+        test("behaviour/noise_curious_then_investigate", BehaviourTests::noiseCuriousThenInvestigate);
+        test("behaviour/shout_brings_guard", BehaviourTests::shoutBringsGuard, 400);
+        test("behaviour/search_group_splits", BehaviourTests::searchGroupSplits, 200);
+        test("behaviour/attack_tokens_limit", BehaviourTests::attackTokensLimit);
     }
 
     private static void test(String name, Consumer<GameTestHelper> function, int maxTicks) {

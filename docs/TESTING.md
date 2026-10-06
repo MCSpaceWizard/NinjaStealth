@@ -14,17 +14,41 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Stage 4: Behaviour core (search groups, attack tokens, barks, behaviour trees) 🧪
+
+**Automated checks (already passing):** 5 more GameTests:
+- a custom behaviour tree written as JSON drives an NPC
+- a quiet noise makes a guard curious; a loud one makes it investigate the spot
+- a shout brings a second guard who saw nothing
+- two searching guards split up and search longer than one
+- with three guards on one target, two attack and the third holds the ring
+
+**Tip:** `/esdebug on`. NPC labels now show `cause:` (seen/heard/hurt/shout), `bt:` (what the behaviour tree is doing) and `heard:`. Search points appear as boxes: the guard's own point is tall and orange, the others small and grey.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| 4.1 | Barks | Get noticed by a guard, then hide | Short lines above its head: "Hm?", "Someone there?", "Intruder!", "Where did they go?", "Must have been the wind...". Civilians cry "Help! Guards!". Client config `showBarks` turns them off |
+| 4.2 | Shouts bring help | Two guards 15–20 blocks apart, one facing away. Get spotted by the first | The first shouts. The second walks over to **where the shout came from**, not to you, and only fights you once it sees you |
+| 4.3 | Coordinated search | Get 2–3 guards hunting you, then break line of sight and hide | They spread out to different spots, favouring dark corners, bushes and cover. With more guards the search lasts longer (25 s alone, about 32 s with two, 40 s with three or more) |
+| 4.4 | Attack tokens | Fight 3–4 guards at once (survival) | Only two attack at a time; the others stand 4–6 blocks away around you, on the far side, facing you. When an attacker is badly hurt or loses sight of you, someone else steps in |
+| 4.5 | Noises draw guards | Throw an item behind a guard *(Stage 6 throw key; until then `/es` has no noise command, so try 4.6)* | A light thud makes it look; a loud one makes it walk over and look around |
+| 4.6 | Heard, not seen | Sprint past behind a guard (it can't see behind) | It turns around and comes to check where it **heard** you (Stage 6 footsteps). Hearing alone never fully detects you |
+| 4.7 | Custom behaviour | Copy `data/emergentstealth/emergentstealth/behaviour/guard.json` into a datapack as `mypack:behaviour/x.json`, change it (e.g. remove the `shout`), `/reload`, then `/es npc behaviour @e[type=emergentstealth:stealth_npc,limit=1,sort=nearest] mypack:x` | That NPC follows your tree. `/es npc behaviour <npcs> reset` restores the default |
+
 ## Track E: Visual lighting (shadows you can see, dynamic lights, dark is dark) 🧪
 
 What you **see** now follows the same light model the guards use (design doc [30](design/30-visual-lighting.md)). Screenshots are in `docs/screenshots/visual-lighting/`.
 
-**Automated checks:** 2 more GameTests (29 total). For every air cell of a test room, the light baked for rendering equals the gameplay light:
+**Automated checks:** 4 GameTests (31 total with Stage 5). For every air cell of a test room, the light baked for rendering equals the gameplay light:
 - a torch with a wall and glass
 - a player holding a torch next to a wall
+- sun 30° high in the east and in the west, and overhead (fixed sun positions, the world's time isn't touched)
+- a full moon and a new moon
 
 **Verified here in a real client** (software GL):
 - vanilla renderer, **Sodium 0.9.2**, and **Sodium + Iris 1.11.4** with a shader pack
 - shadows behind walls, a pillar's shadow updating live, held-torch light following the player, an NPC's torch, and dark-is-dark
+- sun shadows at morning/noon/evening (vanilla and Sodium), a full-moon shadow, and the light gem agreeing with the shade; with Complementary the pack's sun shadow replaces ours
 
 **Setup:** night (`/time set 18000`; `/time set 114000` for a new moon), creative. Options are in Mods → Emergent Stealth → Config → **Visual Lighting**. Changes apply immediately (chunks rebuild).
 
@@ -42,9 +66,14 @@ What you **see** now follows the same light model the guards use (design doc [30
 | V.10 | Sodium | `./gradlew runClient -PwithSodium`, then repeat V.1–V.5 | Same results as vanilla rendering |
 | V.11 | Performance | Walk through a torch-lit area holding a torch, with ~20 torches around | No stutter on a normal GPU/CPU. If chunks lag behind, raise *Dynamic Light Update Interval* |
 | V.12 | Dedicated server | `./gradlew runServer` | Starts normally (all visual code is client-only) |
+| V.13 | Sun shadows move | Build a tall wall running north–south. `/gamerule advance_time false`, then `/time set 1500` (morning), `6000` (noon), `10500` (evening); wait a few seconds after each | Morning: a soft shadow on the **west** side. Noon: almost none. Evening: on the **east** side. Turn off *Sun & Moon Shadows* → vanilla (no shadow) |
+| V.14 | Sun shadow ↔ light gem | Survival, morning: stand in the wall's shadow, then step into the sun | Gem dim in the shadow, lit in the sun; the ground, wall face and your hand look darker in the shadow too |
+| V.15 | Moon shadows | Full-moon night (`/time set 14500` on day 0), same wall | Moonlit ground on one side, a darker moon shadow on the other. On a new moon (`/time set 110500`) there's no moon shadow |
+| V.16 | Sun moving live | `/gamerule advance_time true`, stand near the wall for a minute | The shadow creeps in small steps (every ~2° of sun, ~7 s); no stutter. Slower PCs: lower *Sun Shadow Sections Per Tick* |
+| V.17 | Shader packs + sun | With an Iris pack | The pack's own sun shadows; ours pause (no double shadows). Your own held torch uses the pack's glow (no double glow) unless *Own Held Light With Shader Packs* is on |
 
 **Known differences from gameplay** (doc 30 §9):
-- sky and sun shadows aren't baked; that's vanilla sky light
+- sun and moon shadows step every 2° of sun movement and only within 64 blocks of you (configurable)
 - lava lakes and very dense light clusters use vanilla light
 - light pools are round rather than diamond-shaped
 

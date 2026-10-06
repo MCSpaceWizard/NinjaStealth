@@ -2,6 +2,7 @@ package com.mcspacewizard.emergentstealth.client.light;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
 import com.mcspacewizard.emergentstealth.stealth.light.LightSourceIndex.Source;
+import com.mcspacewizard.emergentstealth.stealth.light.LightTransport;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -60,7 +61,8 @@ public final class VisualLighting {
      */
     public static int adjustPackedLight(BlockAndLightGetter view, BlockPos pos, int packed) {
         VisualSettings current = settings;
-        if (!current.altersTerrain() || !CLIENT_VIEW.get(view.getClass())) {
+        SkyShadows.Bake bake = SkyShadows.bake();
+        if ((!current.altersBlockLight() && !bake.active()) || !CLIENT_VIEW.get(view.getClass())) {
             return packed;
         }
         ClientLevel level = Minecraft.getInstance().level;
@@ -72,9 +74,11 @@ public final class VisualLighting {
             if (view.getBlockState(pos).isSolidRender()) {
                 return packed;
             }
-            int vanilla = LightCoordsUtil.block(packed);
-            int light = blockLight(level, pos, vanilla, current);
-            return light == vanilla ? packed : LightCoordsUtil.withBlock(packed, light);
+            int vanillaBlock = LightCoordsUtil.block(packed);
+            int vanillaSky = LightCoordsUtil.sky(packed);
+            int block = current.altersBlockLight() ? blockLight(level, pos, vanillaBlock, current) : vanillaBlock;
+            int sky = skyLight(level, pos, vanillaSky, bake);
+            return block == vanillaBlock && sky == vanillaSky ? packed : LightCoordsUtil.pack(block, sky);
         } catch (RuntimeException e) {
             return packed;
         }
@@ -83,7 +87,7 @@ public final class VisualLighting {
     /** Block light for an entity's light probe ({@code EntityRenderer.getBlockLightLevel}). Main thread. */
     public static int entityBlockLight(Entity entity, BlockPos pos, int vanilla) {
         VisualSettings current = settings;
-        if (!current.altersTerrain() || entity.isOnFire() || !(entity.level() instanceof ClientLevel level)) {
+        if (!current.altersBlockLight() || entity.isOnFire() || !(entity.level() instanceof ClientLevel level)) {
             return vanilla;
         }
         try {
@@ -94,6 +98,38 @@ public final class VisualLighting {
         } catch (RuntimeException e) {
             return vanilla;
         }
+    }
+
+    /** Sky light for an entity's light probe ({@code EntityRenderer.getSkyLightLevel}): sun/moon shade. Main thread. */
+    public static int entitySkyLight(Entity entity, BlockPos pos, int vanilla) {
+        SkyShadows.Bake bake = SkyShadows.bake();
+        if (!bake.active() || !(entity.level() instanceof ClientLevel level)) {
+            return vanilla;
+        }
+        try {
+            if (level.getBlockState(pos).isSolidRender()) {
+                return vanilla;
+            }
+            return skyLight(level, pos, vanilla, bake);
+        } catch (RuntimeException e) {
+            return vanilla;
+        }
+    }
+
+    /**
+     * Vanilla sky light scaled by the gameplay sun/moon shade factor (doc 30 §10). The sky channel then means
+     * "sky access × direct-light share"; the lightmap still applies the time of day, so nothing is dimmed twice.
+     */
+    private static int skyLight(ClientLevel level, BlockPos pos, int vanilla, SkyShadows.Bake bake) {
+        if (!bake.active() || vanilla <= 0) {
+            return vanilla;
+        }
+        float weight = bake.weight(pos);
+        if (weight <= 0.0F) {
+            return vanilla;
+        }
+        float factor = ShadowedBlockLight.skyFactor(level, pos, bake);
+        return LightTransport.skyLevelForFactor(vanilla, 1.0F - weight * (1.0F - factor));
     }
 
     private static int blockLight(ClientLevel level, BlockPos pos, int vanilla, VisualSettings current) {
@@ -118,8 +154,15 @@ public final class VisualLighting {
         if (oldEmission != newEmission) {
             ClientLightSources.invalidate(pos);
         }
+        if (oldState.isAir() != newState.isAir()) {
+            ColumnCeilings.invalidate(pos);
+        }
+        if (oldState.getBlock() != newState.getBlock()) {
+            // A different block can block or pass a sun ray differently (state flips like a lit furnace can't).
+            SkyShadows.onBlockChanged(pos);
+        }
         VisualSettings current = settings;
-        if (!current.altersTerrain()) {
+        if (!current.altersBlockLight()) {
             return;
         }
         boolean relevant = false;
@@ -171,6 +214,7 @@ public final class VisualLighting {
         Entity camera = minecraft.getCameraEntity();
         Vec3 cameraPos = camera != null ? camera.position() : minecraft.gameRenderer.getMainCamera().position();
         ClientDynamicLights.tick(level, cameraPos, current);
+        SkyShadows.tick(minecraft, level, cameraPos, current);
         SectionRebuilds.flush(minecraft);
     }
 
@@ -178,6 +222,7 @@ public final class VisualLighting {
     static void onChunkLoad(ChunkEvent.Load event) {
         if (event.getLevel() instanceof ClientLevel level) {
             ClientLightSources.invalidateChunk(level, event.getChunk().getPos().x(), event.getChunk().getPos().z());
+            ColumnCeilings.invalidateChunk(event.getChunk().getPos().x(), event.getChunk().getPos().z());
         }
     }
 
@@ -185,6 +230,7 @@ public final class VisualLighting {
     static void onChunkUnload(ChunkEvent.Unload event) {
         if (event.getLevel() instanceof ClientLevel level) {
             ClientLightSources.invalidateChunk(level, event.getChunk().getPos().x(), event.getChunk().getPos().z());
+            ColumnCeilings.invalidateChunk(event.getChunk().getPos().x(), event.getChunk().getPos().z());
         }
     }
 
@@ -193,5 +239,7 @@ public final class VisualLighting {
         ClientDynamicLights.clear();
         SectionRebuilds.clear();
         ClientLightSources.reset(null);
+        SkyShadows.clear();
+        ColumnCeilings.clear();
     }
 }

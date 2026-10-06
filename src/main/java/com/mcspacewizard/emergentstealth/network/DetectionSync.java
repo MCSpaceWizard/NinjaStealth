@@ -13,7 +13,6 @@ import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 /** Builds and sends {@link DetectionSyncPayload}s. */
 public final class DetectionSync {
@@ -43,7 +42,7 @@ public final class DetectionSync {
             }
             boolean had = HAD_ENTRIES.getOrDefault(player, false);
             if (!entries.isEmpty() || had) {
-                PacketDistributor.sendToPlayer(player, new DetectionSyncPayload(entries));
+                com.mcspacewizard.emergentstealth.registry.ESNetwork.sendIfSupported(player, new DetectionSyncPayload(entries));
             }
             HAD_ENTRIES.put(player, !entries.isEmpty());
         }

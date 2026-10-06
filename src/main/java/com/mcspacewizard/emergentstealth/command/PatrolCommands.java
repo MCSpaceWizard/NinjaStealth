@@ -21,11 +21,14 @@ import com.mcspacewizard.emergentstealth.ai.routine.Schedule;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 import com.mcspacewizard.emergentstealth.registry.ESDataComponents;
 import com.mcspacewizard.emergentstealth.registry.ESItems;
+import com.mcspacewizard.emergentstealth.registry.ESRegistries;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
+import net.minecraft.resources.Identifier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -40,6 +43,9 @@ final class PatrolCommands {
             name -> Component.translatable("commands.emergentstealth.patrol.unknown", String.valueOf(name)));
     private static final DynamicCommandExceptionType BAD_INDEX = new DynamicCommandExceptionType(
             index -> Component.translatable("commands.emergentstealth.patrol.bad_index", String.valueOf(index)));
+
+    private static final DynamicCommandExceptionType UNKNOWN_TREE = new DynamicCommandExceptionType(
+            id -> Component.translatable("commands.emergentstealth.npc.behaviour.unknown", String.valueOf(id)));
 
     private static final SuggestionProvider<CommandSourceStack> ROUTES = (ctx, builder) -> SharedSuggestionProvider.suggest(
             PatrolRoutes.get(ctx.getSource().getLevel()).all().stream().map(PatrolRoute::name), builder);
@@ -78,6 +84,30 @@ final class PatrolCommands {
                         .then(Commands.argument("from", IntegerArgumentType.integer(0, 24))
                                 .then(Commands.argument("to", IntegerArgumentType.integer(0, 24))
                                         .executes(ctx -> assign(ctx, IntegerArgumentType.getInteger(ctx, "from"), IntegerArgumentType.getInteger(ctx, "to"))))))));
+    }
+
+    /** {@code /es npc behaviour <npcs> <tree>|reset} (design doc 14 §3). */
+    static ArgumentBuilder<CommandSourceStack, ?> behaviour() {
+        return Commands.literal("behaviour").then(Commands.argument("npcs", EntityArgument.entities())
+                .then(Commands.literal("reset").executes(ctx -> {
+                    List<StealthNpc> npcs = npcs(ctx);
+                    npcs.forEach(npc -> npc.setBehaviourOverride(null));
+                    ctx.getSource().sendSuccess(() -> Component.translatable("commands.emergentstealth.npc.behaviour.reset", npcs.size()), true);
+                    return npcs.size();
+                }))
+                .then(Commands.argument("tree", IdentifierArgument.id())
+                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(ctx.getSource().registryAccess()
+                                .lookupOrThrow(ESRegistries.BEHAVIOUR).keySet().stream().map(Identifier::toString), builder))
+                        .executes(ctx -> {
+                            Identifier id = IdentifierArgument.getId(ctx, "tree");
+                            if (ctx.getSource().registryAccess().lookupOrThrow(ESRegistries.BEHAVIOUR).getValue(id) == null) {
+                                throw UNKNOWN_TREE.create(id);
+                            }
+                            List<StealthNpc> npcs = npcs(ctx);
+                            npcs.forEach(npc -> npc.setBehaviourOverride(id));
+                            ctx.getSource().sendSuccess(() -> Component.translatable("commands.emergentstealth.npc.behaviour.set", npcs.size(), id.toString()), true);
+                            return npcs.size();
+                        })));
     }
 
     static ArgumentBuilder<CommandSourceStack, ?> routine() {

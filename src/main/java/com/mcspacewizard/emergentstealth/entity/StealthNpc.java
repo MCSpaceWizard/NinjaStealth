@@ -6,8 +6,10 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
+import com.mcspacewizard.emergentstealth.ai.behaviour.BehaviourTree;
 import com.mcspacewizard.emergentstealth.ai.brain.AlertState;
-import com.mcspacewizard.emergentstealth.ai.brain.StealthActionGoal;
+import com.mcspacewizard.emergentstealth.ai.group.AttackTokens;
+import com.mcspacewizard.emergentstealth.ai.group.SearchGroups;
 import com.mcspacewizard.emergentstealth.ai.brain.StealthBrain;
 import com.mcspacewizard.emergentstealth.ai.nav.PassageGoal;
 import com.mcspacewizard.emergentstealth.ai.nav.StealthNavigation;
@@ -84,6 +86,8 @@ public class StealthNpc extends PathfinderMob {
     private Schedule schedule = Schedule.EMPTY;
     /** Waypoint the routine is heading to (debug only). */
     private int currentWaypointIndex = -1;
+    /** Behaviour tree to use instead of the archetype's (set by command or map makers); null = archetype. */
+    private @Nullable Identifier behaviourOverride;
 
     public StealthNpc(EntityType<? extends StealthNpc> type, Level level) {
         super(type, level);
@@ -125,7 +129,8 @@ public class StealthNpc extends PathfinderMob {
         this.goalSelector.addGoal(0, new PassageGoal(this));
         // Combat: vanilla melee follows getTarget(), which the brain only sets while the target is seen.
         this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.2, false));
-        this.goalSelector.addGoal(2, new StealthActionGoal(this));
+        // Alert behaviour isn't a goal: the brain ticks the NPC's behaviour tree (design doc 14) every server
+        // tick, and the routine below stands down while the NPC is alert.
         // Calm time: patrol routes, posts, wandering (design doc 15). There is deliberately no "look at
         // nearby player" goal: that would be free information (D-08).
         this.goalSelector.addGoal(5, new RoutineGoal(this));
@@ -159,6 +164,14 @@ public class StealthNpc extends PathfinderMob {
     }
 
     @Override
+    public void remove(RemovalReason reason) {
+        if (this.level() instanceof ServerLevel level) {
+            brain.onRemoved(level);
+        }
+        super.remove(reason);
+    }
+
+    @Override
     public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
         boolean hurt = super.hurtServer(level, source, damage);
         if (hurt && this.isAlive()) {
@@ -178,6 +191,36 @@ public class StealthNpc extends PathfinderMob {
     /** Looks the archetype up in this side's registry access (works on the client too: the registry is synced). */
     public Optional<Archetype> getArchetype() {
         return Optional.ofNullable(this.level().registryAccess().lookupOrThrow(ESRegistries.ARCHETYPE).getValue(getArchetypeId()));
+    }
+
+    public static final Identifier GUARD_BEHAVIOUR = EmergentStealth.id("guard");
+    public static final Identifier CIVILIAN_BEHAVIOUR = EmergentStealth.id("civilian");
+
+    /**
+     * The behaviour tree (design doc 14 §3): this NPC's override, else its archetype's, else the role default
+     * (guards: {@code emergentstealth:guard}, everyone else: {@code emergentstealth:civilian}).
+     */
+    public BehaviourTree getBehaviourTree() {
+        Identifier id = behaviourOverride != null ? behaviourOverride
+                : getArchetype().flatMap(Archetype::behaviour).orElse(isCombatant() ? GUARD_BEHAVIOUR : CIVILIAN_BEHAVIOUR);
+        BehaviourTree tree = this.level().registryAccess().lookupOrThrow(ESRegistries.BEHAVIOUR).getValue(id);
+        if (tree == null) {
+            if (MISSING_TREES.add(id)) {
+                EmergentStealth.LOGGER.error("Stealth NPC behaviour tree {} is missing; NPCs using it will stand still", id);
+            }
+            return BehaviourTree.EMPTY;
+        }
+        return tree;
+    }
+
+    private static final java.util.Set<Identifier> MISSING_TREES = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    public @Nullable Identifier getBehaviourOverride() {
+        return behaviourOverride;
+    }
+
+    public void setBehaviourOverride(@Nullable Identifier id) {
+        this.behaviourOverride = id;
     }
 
     /** Guards fight when alerted; everyone else flees. */
@@ -312,6 +355,7 @@ public class StealthNpc extends PathfinderMob {
         output.store("Home", BlockPos.CODEC, home);
         output.putFloat("HomeYaw", homeYaw);
         output.store("Schedule", Schedule.CODEC, schedule);
+        output.storeNullable("Behaviour", Identifier.CODEC, behaviourOverride);
     }
 
     @Override
@@ -322,6 +366,7 @@ public class StealthNpc extends PathfinderMob {
         home = input.read("Home", BlockPos.CODEC).orElse(this.blockPosition());
         homeYaw = input.getFloatOr("HomeYaw", this.getYRot());
         schedule = input.read("Schedule", Schedule.CODEC).orElse(Schedule.EMPTY);
+        behaviourOverride = input.read("Behaviour", Identifier.CODEC).orElse(null);
         this.entityData.set(DATA_BODY_VARIANT, input.getIntOr("BodyVariant", 0));
         input.getString("Archetype").ifPresent(value -> {
             Identifier id = Identifier.tryParse(value);
@@ -357,7 +402,33 @@ public class StealthNpc extends PathfinderMob {
                 Optional.ofNullable(focus == null ? null : focus.lastKnownPos()),
                 perception.debugRays().stream().map(r -> new NpcDebugInfo.Ray(r.point(), r.transmittance())).toList(),
                 describeActivity(),
-                currentPathNodes());
+                currentPathNodes(),
+                behaviourDebug(level()));
+    }
+
+    private NpcDebugInfo.Behaviour behaviourDebug(Level level) {
+        if (!(level instanceof ServerLevel server)) {
+            return NpcDebugInfo.Behaviour.EMPTY;
+        }
+        com.mcspacewizard.emergentstealth.stealth.sound.HeardNoise heard = brain.lastHeard(server.getGameTime());
+        String heardText = heard == null ? "" : String.format(java.util.Locale.ROOT, "%s %.2f",
+                heard.event().kind().getSerializedName(), heard.intensity());
+        SearchGroups.Group group = SearchGroups.get(server).groupOf(this);
+        java.util.List<BlockPos> points = new java.util.ArrayList<>();
+        int mine = -1;
+        if (group != null) {
+            for (SearchGroups.Point point : group.points()) {
+                if (points.size() >= 16) {
+                    break;
+                }
+                if (this.getUUID().equals(point.claimedBy())) {
+                    mine = points.size();
+                }
+                points.add(point.pos);
+            }
+        }
+        return new NpcDebugInfo.Behaviour(brain.cause().getSerializedName(), brain.activeBehaviour(), heardText,
+                AttackTokens.get(server).holdsAny(this), points, mine);
     }
 
     private String describeActivity() {
