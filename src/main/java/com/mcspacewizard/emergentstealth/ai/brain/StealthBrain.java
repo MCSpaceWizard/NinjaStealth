@@ -205,6 +205,10 @@ public final class StealthBrain {
         }
     }
 
+    /** Hearing (S6): placeholder until the S4 knowledge layer handles noises. */
+    public void onNoise(ServerLevel level, com.mcspacewizard.emergentstealth.stealth.sound.HeardNoise noise) {
+    }
+
     public void save(ValueOutput output) {
         output.putString("AlertState", state.name());
         output.putLong("HeightenedUntil", heightenedUntil);

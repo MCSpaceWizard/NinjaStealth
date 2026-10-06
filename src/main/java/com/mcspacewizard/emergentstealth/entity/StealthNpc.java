@@ -212,6 +212,11 @@ public class StealthNpc extends PathfinderMob {
         return schedule;
     }
 
+    /** Called by {@link com.mcspacewizard.emergentstealth.stealth.sound.Noises} when this NPC hears something. */
+    public void onNoiseHeard(ServerLevel level, com.mcspacewizard.emergentstealth.stealth.sound.HeardNoise noise) {
+        brain.onNoise(level, noise);
+    }
+
     public void setSchedule(Schedule schedule) {
         this.schedule = schedule;
     }
