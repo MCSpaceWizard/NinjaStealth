@@ -1,0 +1,6 @@
+{
+  "game_event": "minecraft:block_place",
+  "loudness": 6,
+  "kind": "block",
+  "attributable": true
+}

@@ -28,6 +28,9 @@ public final class ESConfig {
     public static final ModConfigSpec.DoubleValue SUSPICIOUS_THRESHOLD;
     public static final ModConfigSpec.IntValue SEARCH_SECONDS;
 
+    // --- Server: sound (doc 16) ---
+    public static final ModConfigSpec.IntValue SOUND_NODES_PER_TICK;
+
     // --- Client: HUD ---
     public static final ModConfigSpec.BooleanValue SHOW_LIGHT_GEM;
     public static final ModConfigSpec.BooleanValue SHOW_DETECTION_INDICATORS;
@@ -73,6 +76,11 @@ public final class ESConfig {
                 .defineInRange("suspiciousThreshold", 0.5, 0.01, 0.99);
         SEARCH_SECONDS = server.comment("How long alerted NPCs search after losing their target.")
                 .defineInRange("searchSeconds", 25, 1, 600);
+        server.pop();
+
+        server.push("sound");
+        SOUND_NODES_PER_TICK = server.comment("Max sound flood-fill nodes per tick per dimension (design doc 16 §2). Work over budget waits for the next tick, which reads as a short sound delay.")
+                .defineInRange("soundNodesPerTick", 20000, 500, 1000000);
         server.pop();
         SERVER_SPEC = server.build();
 

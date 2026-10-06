@@ -1,0 +1,32 @@
+{
+  "values": [
+    "minecraft:gravel",
+    "minecraft:suspicious_gravel",
+    "#minecraft:impermeable",
+    "minecraft:glass_pane",
+    { "id": "#c:glass_blocks", "required": false },
+    { "id": "#c:glass_panes", "required": false },
+    "minecraft:iron_block",
+    "minecraft:iron_trapdoor",
+    "minecraft:iron_bars",
+    "minecraft:iron_chain",
+    "minecraft:gold_block",
+    "minecraft:netherite_block",
+    "minecraft:anvil",
+    "minecraft:chipped_anvil",
+    "minecraft:damaged_anvil",
+    "minecraft:cauldron",
+    "minecraft:hopper",
+    "minecraft:copper_block",
+    "minecraft:exposed_copper",
+    "minecraft:weathered_copper",
+    "minecraft:oxidized_copper",
+    "minecraft:waxed_copper_block",
+    "minecraft:cut_copper",
+    "minecraft:bamboo_block",
+    "minecraft:bamboo_planks",
+    "minecraft:bamboo_mosaic",
+    "minecraft:dead_bush",
+    "minecraft:soul_sand"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "game_event": "minecraft:explode",
+  "loudness": 48,
+  "kind": "explosion",
+  "attributable": false
+}

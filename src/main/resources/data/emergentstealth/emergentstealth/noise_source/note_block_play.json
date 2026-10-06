@@ -1,0 +1,6 @@
+{
+  "game_event": "minecraft:note_block_play",
+  "loudness": 12,
+  "kind": "other",
+  "attributable": false
+}
