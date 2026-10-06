@@ -3,14 +3,24 @@
   "item.emergentstealth.debug_lens": "Debug Lens",
   "item.emergentstealth.stealth_npc_spawn_egg": "Stealth NPC Spawn Egg",
   "entity.emergentstealth.stealth_npc": "Stealth NPC",
-
   "commands.emergentstealth.npc.spawned": "Spawned a stealth NPC (%s)",
   "commands.emergentstealth.npc.unknown_archetype": "Unknown archetype: %s",
   "commands.emergentstealth.npc.list": "%s stealth NPC(s) in this dimension:",
   "message.emergentstealth.debug.on": "Emergent Stealth debug view: ON (requires op / singleplayer host)",
   "message.emergentstealth.debug.off": "Emergent Stealth debug view: OFF",
-
   "emergentstealth.configuration.title": "Emergent Stealth Configuration",
   "emergentstealth.configuration.hud": "HUD",
-  "emergentstealth.configuration.showLightGem": "Show Light Gem"
+  "emergentstealth.configuration.showLightGem": "Show Light Gem",
+  "block.emergentstealth.unlit_torch": "Unlit Torch",
+  "block.emergentstealth.unlit_wall_torch": "Unlit Torch",
+  "block.emergentstealth.unlit_soul_torch": "Unlit Soul Torch",
+  "block.emergentstealth.unlit_soul_wall_torch": "Unlit Soul Torch",
+  "block.emergentstealth.unlit_copper_torch": "Unlit Copper Torch",
+  "block.emergentstealth.unlit_copper_wall_torch": "Unlit Copper Torch",
+  "block.emergentstealth.unlit_lantern": "Unlit Lantern",
+  "block.emergentstealth.unlit_soul_lantern": "Unlit Soul Lantern",
+  "subtitles.emergentstealth.stinger.suspicious": "Someone grows suspicious",
+  "subtitles.emergentstealth.stinger.detected": "You've been spotted",
+  "emergentstealth.configuration.showDetectionIndicators": "Show Detection Indicators",
+  "emergentstealth.configuration.playAlertSounds": "Play Alert Sounds"
 }

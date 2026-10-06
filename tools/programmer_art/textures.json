@@ -19,44 +19,297 @@
     "skin_1": "#f1c9a5",
     "skin_2": "#dcae86",
     "skin_3": "#c08d64",
-    "skin_4": "#94653f"
+    "skin_4": "#94653f",
+    "gem_dark": "#15131c",
+    "gem_dark_hi": "#2a2733",
+    "gem_lit": "#f2a93b",
+    "gem_lit_hi": "#ffe9a8",
+    "gem_rim": "#c9b98f",
+    "charcoal": "#2b2420",
+    "ash": "#5a524c",
+    "stick": "#7a5534",
+    "soul_wood": "#5b4a3a",
+    "copper": "#b46a43",
+    "iron_dark": "#3a3d44",
+    "glass_dark": "#2a3a40"
   },
   "textures": [
-    { "path": "item/debug_lens", "shape": "lens", "colors": ["ink", "jade", "wood"] },
-    { "path": "item/stealth_npc_spawn_egg", "shape": "egg", "colors": ["indigo", "lacquer", "ink"] },
-
-    { "path": "entity/npc/body/body_1", "shape": "skin", "face": true, "hair": "ink",
-      "parts": { "head": "skin_1", "body": "skin_1", "arms": "skin_1", "legs": "skin_1" } },
-    { "path": "entity/npc/body/body_2", "shape": "skin", "face": true, "hair": "ink",
-      "parts": { "head": "skin_2", "body": "skin_2", "arms": "skin_2", "legs": "skin_2" } },
-    { "path": "entity/npc/body/body_3", "shape": "skin", "face": true, "hair": "ink",
-      "parts": { "head": "skin_3", "body": "skin_3", "arms": "skin_3", "legs": "skin_3" } },
-    { "path": "entity/npc/body/body_4", "shape": "skin", "face": true, "hair": "earth",
-      "parts": { "head": "skin_4", "body": "skin_4", "arms": "skin_4", "legs": "skin_4" } },
-
-    { "path": "entity/npc/outfit/ashigaru_under", "shape": "skin",
-      "parts": { "body": "indigo", "arms": { "color": "indigo", "to": 0.75 }, "legs": "indigo_light",
-                 "pants": { "color": "ink", "from": 0.8 } } },
-    { "path": "entity/npc/outfit/ashigaru_armor", "shape": "skin",
-      "parts": { "jacket": { "color": "lacquer", "to": 0.75 }, "hat": { "color": "ink", "to": 0.25 } } },
-
-    { "path": "entity/npc/outfit/samurai_under", "shape": "skin",
-      "parts": { "body": "ink", "arms": "ink", "legs": "indigo", "pants": { "color": "ink", "from": 0.8 } } },
-    { "path": "entity/npc/outfit/samurai_armor", "shape": "skin",
-      "parts": { "jacket": "lacquer_dark", "sleeves": { "color": "lacquer_dark", "to": 0.4 },
-                 "pants": { "color": "dark_steel", "to": 0.45 }, "hat": { "color": "dark_steel", "to": 0.35 } } },
-    { "path": "entity/npc/outfit/taisho_armor", "shape": "skin",
-      "parts": { "jacket": "lacquer", "sleeves": { "color": "gold", "to": 0.4 },
-                 "pants": { "color": "lacquer_dark", "to": 0.45 }, "hat": { "color": "gold", "to": 0.35 } } },
-
-    { "path": "entity/npc/outfit/kimono_plain", "shape": "skin",
-      "parts": { "body": "hemp", "arms": { "color": "hemp", "to": 0.8 }, "legs": "hemp",
-                 "jacket": { "color": "earth", "from": 0.55, "to": 0.7 } } },
-    { "path": "entity/npc/outfit/labourer", "shape": "skin",
-      "parts": { "body": "earth", "arms": { "color": "earth", "to": 0.3 }, "legs": "straw",
-                 "hat": { "color": "straw", "to": 0.25 } } },
-    { "path": "entity/npc/outfit/kimono_noble", "shape": "skin",
-      "parts": { "body": "plum", "arms": "plum", "legs": "plum",
-                 "jacket": { "color": "gold", "from": 0.55, "to": 0.7 }, "hat": { "color": "ink", "to": 0.25 } } }
+    {
+      "path": "item/debug_lens",
+      "shape": "lens",
+      "colors": [
+        "ink",
+        "jade",
+        "wood"
+      ]
+    },
+    {
+      "path": "item/stealth_npc_spawn_egg",
+      "shape": "egg",
+      "colors": [
+        "indigo",
+        "lacquer",
+        "ink"
+      ]
+    },
+    {
+      "path": "entity/npc/body/body_1",
+      "shape": "skin",
+      "face": true,
+      "hair": "ink",
+      "parts": {
+        "head": "skin_1",
+        "body": "skin_1",
+        "arms": "skin_1",
+        "legs": "skin_1"
+      }
+    },
+    {
+      "path": "entity/npc/body/body_2",
+      "shape": "skin",
+      "face": true,
+      "hair": "ink",
+      "parts": {
+        "head": "skin_2",
+        "body": "skin_2",
+        "arms": "skin_2",
+        "legs": "skin_2"
+      }
+    },
+    {
+      "path": "entity/npc/body/body_3",
+      "shape": "skin",
+      "face": true,
+      "hair": "ink",
+      "parts": {
+        "head": "skin_3",
+        "body": "skin_3",
+        "arms": "skin_3",
+        "legs": "skin_3"
+      }
+    },
+    {
+      "path": "entity/npc/body/body_4",
+      "shape": "skin",
+      "face": true,
+      "hair": "earth",
+      "parts": {
+        "head": "skin_4",
+        "body": "skin_4",
+        "arms": "skin_4",
+        "legs": "skin_4"
+      }
+    },
+    {
+      "path": "entity/npc/outfit/ashigaru_under",
+      "shape": "skin",
+      "parts": {
+        "body": "indigo",
+        "arms": {
+          "color": "indigo",
+          "to": 0.75
+        },
+        "legs": "indigo_light",
+        "pants": {
+          "color": "ink",
+          "from": 0.8
+        }
+      }
+    },
+    {
+      "path": "entity/npc/outfit/ashigaru_armor",
+      "shape": "skin",
+      "parts": {
+        "jacket": {
+          "color": "lacquer",
+          "to": 0.75
+        },
+        "hat": {
+          "color": "ink",
+          "to": 0.25
+        }
+      }
+    },
+    {
+      "path": "entity/npc/outfit/samurai_under",
+      "shape": "skin",
+      "parts": {
+        "body": "ink",
+        "arms": "ink",
+        "legs": "indigo",
+        "pants": {
+          "color": "ink",
+          "from": 0.8
+        }
+      }
+    },
+    {
+      "path": "entity/npc/outfit/samurai_armor",
+      "shape": "skin",
+      "parts": {
+        "jacket": "lacquer_dark",
+        "sleeves": {
+          "color": "lacquer_dark",
+          "to": 0.4
+        },
+        "pants": {
+          "color": "dark_steel",
+          "to": 0.45
+        },
+        "hat": {
+          "color": "dark_steel",
+          "to": 0.35
+        }
+      }
+    },
+    {
+      "path": "entity/npc/outfit/taisho_armor",
+      "shape": "skin",
+      "parts": {
+        "jacket": "lacquer",
+        "sleeves": {
+          "color": "gold",
+          "to": 0.4
+        },
+        "pants": {
+          "color": "lacquer_dark",
+          "to": 0.45
+        },
+        "hat": {
+          "color": "gold",
+          "to": 0.35
+        }
+      }
+    },
+    {
+      "path": "entity/npc/outfit/kimono_plain",
+      "shape": "skin",
+      "parts": {
+        "body": "hemp",
+        "arms": {
+          "color": "hemp",
+          "to": 0.8
+        },
+        "legs": "hemp",
+        "jacket": {
+          "color": "earth",
+          "from": 0.55,
+          "to": 0.7
+        }
+      }
+    },
+    {
+      "path": "entity/npc/outfit/labourer",
+      "shape": "skin",
+      "parts": {
+        "body": "earth",
+        "arms": {
+          "color": "earth",
+          "to": 0.3
+        },
+        "legs": "straw",
+        "hat": {
+          "color": "straw",
+          "to": 0.25
+        }
+      }
+    },
+    {
+      "path": "entity/npc/outfit/kimono_noble",
+      "shape": "skin",
+      "parts": {
+        "body": "plum",
+        "arms": "plum",
+        "legs": "plum",
+        "jacket": {
+          "color": "gold",
+          "from": 0.55,
+          "to": 0.7
+        },
+        "hat": {
+          "color": "ink",
+          "to": 0.25
+        }
+      }
+    },
+    {
+      "path": "gui/sprites/hud/light_gem_dark",
+      "shape": "gem",
+      "width": 32,
+      "height": 16,
+      "colors": [
+        "gem_dark",
+        "gem_dark_hi",
+        "ink"
+      ]
+    },
+    {
+      "path": "gui/sprites/hud/light_gem_lit",
+      "shape": "gem",
+      "width": 32,
+      "height": 16,
+      "colors": [
+        "gem_lit",
+        "gem_lit_hi",
+        "ink"
+      ]
+    },
+    {
+      "path": "gui/sprites/hud/light_gem_frame",
+      "shape": "gem",
+      "width": 32,
+      "height": 16,
+      "part": "frame",
+      "colors": [
+        "ink",
+        "ink",
+        "gem_rim"
+      ]
+    },
+    {
+      "path": "block/unlit_torch",
+      "shape": "torch",
+      "colors": [
+        "stick",
+        "charcoal",
+        "ash"
+      ]
+    },
+    {
+      "path": "block/unlit_soul_torch",
+      "shape": "torch",
+      "colors": [
+        "soul_wood",
+        "charcoal",
+        "ash"
+      ]
+    },
+    {
+      "path": "block/unlit_copper_torch",
+      "shape": "torch",
+      "colors": [
+        "copper",
+        "charcoal",
+        "ash"
+      ]
+    },
+    {
+      "path": "block/unlit_lantern",
+      "shape": "lantern",
+      "colors": [
+        "iron_dark",
+        "glass_dark",
+        "ink"
+      ]
+    },
+    {
+      "path": "block/unlit_soul_lantern",
+      "shape": "lantern",
+      "colors": [
+        "iron_dark",
+        "glass_dark",
+        "ink"
+      ]
+    }
   ]
 }

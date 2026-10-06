@@ -1,5 +1,7 @@
 package com.mcspacewizard.emergentstealth.stealth;
 
+import org.jspecify.annotations.Nullable;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.BlockGetter;
@@ -31,8 +33,18 @@ public final class SightRay {
      * @param targetCrawling whether the target is crawling, which makes concealing foliage block sight
      */
     public static float transmittance(Level level, Vec3 from, Vec3 to, boolean targetCrawling) {
+        return transmittance(level, from, to, targetCrawling, null);
+    }
+
+    /**
+     * @param skip a block to ignore (e.g. a light source's own block when tracing light from it), or null
+     */
+    public static float transmittance(Level level, Vec3 from, Vec3 to, boolean targetCrawling, @Nullable BlockPos skip) {
         Accumulator acc = new Accumulator();
         BlockGetter.traverseBlocks(from, to, acc, (a, pos) -> {
+            if (skip != null && pos.equals(skip)) {
+                return null;
+            }
             a.transmittance *= blockTransmittance(level, pos, from, to, targetCrawling, a);
             return a.transmittance <= 0.01F ? Boolean.TRUE : null;
         }, a -> Boolean.FALSE);

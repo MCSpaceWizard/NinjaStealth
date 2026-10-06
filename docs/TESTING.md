@@ -14,6 +14,37 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Stage 3: Light, shadow, light gem & snuffing 🧪
+
+**Automated checks (already passing):** 6 more GameTests (21 total):
+- a wall casts a shadow even though vanilla light leaks around it
+- glass lets light through
+- a sealed room is dark
+- snuff/relight works, and glowstone can't be snuffed
+- holding a torch lights you up
+- darkness makes you much harder to spot
+
+**Verified here in a real client:** lit and unlit torches and lanterns render correctly; the light gem glows near torches and goes dark away from them.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| 3.1 | Light gem | Survival. Walk from a lit area (torches, daytime) into darkness (night, caves) | The gem above the hotbar goes from glowing amber to near-black, smoothly |
+| 3.2 | Real shadows | At night, put a torch on one side of a 1-block-thick wall and stand on the other side | The gem stays dark behind the wall, even though vanilla shows the ground there as lit (light leaks around corners in vanilla; not in our model) |
+| 3.3 | Sun shadows | Daytime, stand right next to a tall wall on its shadow side in the morning/evening, then on the sunny side | Noticeably darker gem in the shade; shadows fall sideways in morning/evening, not just straight down |
+| 3.4 | Moon phases | Night in the open on a full moon vs. a new moon (`/time set` across nights) | Full moon: dim but visible. New moon: very dark |
+| 3.5 | Holding a torch | At night, hold a torch (either hand) | The gem lights up: you're carrying a light, and guards will spot you much faster |
+| 3.6 | Darkness vs guards | At night, approach a guard in full darkness, then do the same in torchlight | In darkness the meter fills much more slowly (roughly 8× in pitch dark); in torchlight it's like daytime |
+| 3.7 | Snuffing torches | Right-click a torch (standing, wall, soul or copper) with an **empty hand** | It goes out (fizz). It becomes an unlit torch with a charred tip, and the area goes dark |
+| 3.8 | Snuffing lanterns | Empty-hand right-click a lantern (standing or hanging) | It becomes a dark unlit lantern |
+| 3.9 | Campfires & candles | Empty-hand right-click a lit campfire; empty-hand right-click a candle | The campfire goes out; the candle goes out (vanilla) |
+| 3.10 | Relighting | Right-click an unlit torch or lantern with flint & steel, a fire charge, or a torch item | It relights. Flint & steel takes durability; a fire charge is used up |
+| 3.11 | Powered lights stay on | Empty-hand right-click glowstone, a redstone lamp, a sea lantern, a froglight | Nothing happens |
+| 3.12 | Unlit drops | Break an unlit torch or lantern | It drops the normal torch or lantern |
+| 3.13 | Guards fetch torches | At night, get a guard to investigate or search (let the meter pass 50%, then hide) | In the dark, the guard pulls a torch into its off-hand while searching, lighting itself and the area. It's put away once the guard calms down |
+| 3.14 | Gem toggle | Config → HUD → Show Light Gem off | The gem disappears |
+
+**Known:** vanilla doesn't *render* held-torch light or our shadows; the light gem is the truth (agreed in Q2). Visual dynamic lights and shadow rendering come later, in Track E.
+
 ## Stage 2: Sight, awareness & detection (+ reactions v0) 🧪
 
 **Automated checks (already passing):** 14 GameTests cover cones, nothing-behind, stone/glass/leaves, crawling in grass, deep water, the grace period, decay, and hit reactions. Run them with `./gradlew runGameTestServer`, or in game with `/test runall emergentstealth`.

@@ -4,11 +4,13 @@ import com.mcspacewizard.emergentstealth.EmergentStealth;
 import com.mcspacewizard.emergentstealth.client.debug.ClientDebugState;
 import com.mcspacewizard.emergentstealth.client.debug.NpcDebugRenderer;
 import com.mcspacewizard.emergentstealth.client.hud.ClientDetection;
+import com.mcspacewizard.emergentstealth.client.hud.LightGemHud;
 import com.mcspacewizard.emergentstealth.client.render.ESModelLayers;
 import com.mcspacewizard.emergentstealth.client.render.NpcRenderer;
 import com.mcspacewizard.emergentstealth.registry.ESDebugSubscriptions;
 import com.mcspacewizard.emergentstealth.registry.ESEntities;
 import com.mcspacewizard.emergentstealth.network.DetectionSyncPayload;
+import com.mcspacewizard.emergentstealth.network.LightGemPayload;
 import com.mcspacewizard.emergentstealth.registry.ESItems;
 
 import net.minecraft.commands.Commands;
@@ -21,6 +23,8 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterDebugRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlersEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
@@ -49,6 +53,12 @@ public final class ESClientEvents {
     @SubscribeEvent
     static void onRegisterClientPayloadHandlers(RegisterClientPayloadHandlersEvent event) {
         event.register(DetectionSyncPayload.TYPE, ClientDetection::handle);
+        event.register(LightGemPayload.TYPE, LightGemHud::handle);
+    }
+
+    @SubscribeEvent
+    static void onRegisterGuiLayers(RegisterGuiLayersEvent event) {
+        event.registerAbove(VanillaGuiLayers.HOTBAR, LightGemHud.LAYER_ID, new LightGemHud());
     }
 
     // --- Game bus ---
@@ -56,6 +66,7 @@ public final class ESClientEvents {
     @SubscribeEvent
     static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientDetection.clear();
+        LightGemHud.reset();
     }
 
     /** Request our debug data from the server only while the debug view is on. */

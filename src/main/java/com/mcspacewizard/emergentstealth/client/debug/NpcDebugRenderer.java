@@ -30,7 +30,7 @@ public class NpcDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
     private static final int COLOR_RAY_BLOCKED = 0xFFFF4040;
     private static final int COLOR_LAST_KNOWN = 0xFFFF40FF;
     private static final int CONE_SEGMENTS = 12;
-    private static final float TEXT_SCALE = 0.4F;
+    private static final float TEXT_SCALE = 0.3F;
 
     @Override
     public void emitGizmos(double camX, double camY, double camZ, DebugValueAccess access, Frustum frustum, float partialTicks) {
@@ -48,7 +48,8 @@ public class NpcDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
                 int color = ray.transmittance() >= 0.99F ? COLOR_RAY_CLEAR : ray.transmittance() > 0.0F ? COLOR_RAY_PARTIAL : COLOR_RAY_BLOCKED;
                 Gizmos.line(entity.getEyePosition(partialTicks), ray.point(), color, 1.5F);
             }
-            info.lastKnown().ifPresent(pos ->
+            // Last known position (skipped when it's right where the camera is: you're being watched now).
+            info.lastKnown().filter(pos -> pos.distanceToSqr(camX, camY, camZ) > 4.0).ifPresent(pos ->
                     Gizmos.cuboid(new AABB(pos.subtract(0.3, 0.0, 0.3), pos.add(0.3, 1.8, 0.3)), GizmoStyle.stroke(COLOR_LAST_KNOWN, 2.0F)));
         });
     }

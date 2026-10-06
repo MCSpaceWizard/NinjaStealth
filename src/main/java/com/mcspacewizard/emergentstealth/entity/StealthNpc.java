@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
+import com.mcspacewizard.emergentstealth.ai.brain.AlertState;
 import com.mcspacewizard.emergentstealth.ai.brain.StealthActionGoal;
 import com.mcspacewizard.emergentstealth.ai.brain.StealthBrain;
 import com.mcspacewizard.emergentstealth.ai.perception.NpcPerception;
@@ -15,6 +16,7 @@ import com.mcspacewizard.emergentstealth.data.Archetype;
 import com.mcspacewizard.emergentstealth.debug.NpcDebugInfo;
 import com.mcspacewizard.emergentstealth.registry.ESDebugSubscriptions;
 import com.mcspacewizard.emergentstealth.registry.ESRegistries;
+import com.mcspacewizard.emergentstealth.stealth.light.ExposureModel;
 
 import net.minecraft.core.Holder;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -39,7 +41,9 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.storage.ValueInput;
@@ -60,8 +64,13 @@ public class StealthNpc extends PathfinderMob {
 
     public static final Identifier DEFAULT_PERCEPTION = EmergentStealth.id("default");
 
+    /** Exposure at the eyes below which an alert guard gets a torch out (L-04). */
+    private static final float DARK_FOR_TORCH = 0.25F;
+
     private final NpcPerception perception = new NpcPerception(this);
     private final StealthBrain brain = new StealthBrain(this);
+    /** Whether the off-hand torch was taken out by us (so we put it away again). */
+    private boolean carryingSearchTorch;
 
     public StealthNpc(EntityType<? extends StealthNpc> type, Level level) {
         super(type, level);
@@ -107,7 +116,28 @@ public class StealthNpc extends PathfinderMob {
     @Override
     protected void customServerAiStep(ServerLevel level) {
         brain.tick(level);
+        if (this.tickCount % 20 == 0) {
+            updateSearchTorch(level);
+        }
         super.customServerAiStep(level);
+    }
+
+    /** Guards investigating, hunting or searching in the dark take out a torch, and put it away when calm. */
+    private void updateSearchTorch(ServerLevel level) {
+        AlertState state = brain.state();
+        boolean looking = state == AlertState.INVESTIGATING || state == AlertState.HUNTING || state == AlertState.SEARCHING;
+        if (looking && isCombatant()) {
+            if (!carryingSearchTorch && this.getOffhandItem().isEmpty()
+                    && ExposureModel.INSTANCE.exposure(level, this.getEyePosition()) < DARK_FOR_TORCH) {
+                this.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.TORCH));
+                carryingSearchTorch = true;
+            }
+        } else if (carryingSearchTorch && !state.isActive()) {
+            if (this.getOffhandItem().is(Items.TORCH)) {
+                this.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+            }
+            carryingSearchTorch = false;
+        }
     }
 
     @Override
@@ -205,12 +235,14 @@ public class StealthNpc extends PathfinderMob {
         output.putString("Archetype", this.entityData.get(DATA_ARCHETYPE));
         output.putInt("BodyVariant", getBodyVariant());
         brain.save(output);
+        output.putBoolean("SearchTorch", carryingSearchTorch);
     }
 
     @Override
     public void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
         brain.load(input);
+        carryingSearchTorch = input.getBooleanOr("SearchTorch", false);
         this.entityData.set(DATA_BODY_VARIANT, input.getIntOr("BodyVariant", 0));
         input.getString("Archetype").ifPresent(value -> {
             Identifier id = Identifier.tryParse(value);

@@ -12,6 +12,8 @@ import com.mcspacewizard.emergentstealth.config.ESConfig;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 import com.mcspacewizard.emergentstealth.network.DetectionSync;
 import com.mcspacewizard.emergentstealth.stealth.LightSampler;
+import com.mcspacewizard.emergentstealth.stealth.light.ExposureModel;
+import com.mcspacewizard.emergentstealth.stealth.light.LightGemSync;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -39,8 +41,8 @@ public final class PerceptionScheduler {
     private static final int TIER3_DECAY_INTERVAL = 20;
     private static final int SYNC_INTERVAL = 4;
 
-    /** The light model perception uses. Stage 3 replaces the placeholder. */
-    private static LightSampler lightSampler = LightSampler.VANILLA;
+    /** The light model perception uses: the Stage 3 exposure model with cast shadows. */
+    private static LightSampler lightSampler = ExposureModel.INSTANCE;
 
     public static void setLightSampler(LightSampler sampler) {
         lightSampler = sampler;
@@ -75,12 +77,14 @@ public final class PerceptionScheduler {
     }
 
     static void tick(ServerLevel level) {
+        long now = level.getGameTime();
+        List<ServerPlayer> players = level.players();
+        LightGemSync.tick(level, players, now);
+
         Set<StealthNpc> npcs = NPCS.get(level);
         if (npcs == null || npcs.isEmpty()) {
             return;
         }
-        long now = level.getGameTime();
-        List<ServerPlayer> players = level.players();
 
         // Sort NPCs by distance to the nearest player.
         List<Ranked> ranked = new ArrayList<>(npcs.size());

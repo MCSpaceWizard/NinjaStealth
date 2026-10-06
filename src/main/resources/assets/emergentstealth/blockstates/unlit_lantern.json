@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "hanging=false": {
+      "model": "emergentstealth:block/unlit_lantern"
+    },
+    "hanging=true": {
+      "model": "emergentstealth:block/unlit_lantern_hanging"
+    }
+  }
+}

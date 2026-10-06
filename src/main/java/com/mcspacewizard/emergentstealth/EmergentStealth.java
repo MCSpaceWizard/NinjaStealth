@@ -6,6 +6,7 @@ import com.mojang.logging.LogUtils;
 import com.mcspacewizard.emergentstealth.command.ESCommands;
 import com.mcspacewizard.emergentstealth.config.ESConfig;
 import com.mcspacewizard.emergentstealth.gametest.ESGameTests;
+import com.mcspacewizard.emergentstealth.registry.ESBlocks;
 import com.mcspacewizard.emergentstealth.registry.ESCreativeTabs;
 import com.mcspacewizard.emergentstealth.registry.ESDebugSubscriptions;
 import com.mcspacewizard.emergentstealth.registry.ESEntities;
@@ -31,6 +32,7 @@ public final class EmergentStealth {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public EmergentStealth(IEventBus modEventBus, ModContainer modContainer) {
+        ESBlocks.BLOCKS.register(modEventBus);
         ESEntities.ENTITY_TYPES.register(modEventBus);
         ESItems.ITEMS.register(modEventBus);
         ESCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);

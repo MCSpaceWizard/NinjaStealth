@@ -116,6 +116,56 @@ def shape_skin(img, *_colors, parts=None, palette=None, face=False, hair=None, s
             img.putpixel((x, 12), c)
 
 
+def gem_mask(w, h):
+    """Lozenge (elongated diamond) mask for the light gem: 0 outside, 1 rim, 2 inside."""
+    cx, cy = (w - 1) / 2, (h - 1) / 2
+    mask = {}
+    for y in range(h):
+        for x in range(w):
+            d = abs(x - cx) / (w / 2) + abs(y - cy) / (h / 2)
+            mask[(x, y)] = 2 if d <= 0.72 else (1 if d <= 1.0 else 0)
+    return mask
+
+
+def shape_gem(img, base, highlight, outline, part="fill"):
+    """Light gem sprites. part = fill (gem body with a highlight) or frame (rim only)."""
+    w, h = img.size
+    mask = gem_mask(w, h)
+    for (x, y), m in mask.items():
+        if part == "frame":
+            if m == 1:
+                img.putpixel((x, y), outline)
+        elif m == 2:
+            upper_left = (x / w + y / h) < 0.55
+            img.putpixel((x, y), highlight if upper_left else base)
+
+
+def shape_torch(img, stick, tip, ash):
+    """Unlit torch in the vanilla torch UV layout: 2x10 stick at x 7-8, y 6-15, burnt tip on top."""
+    for y in range(6, 16):
+        for x in (7, 8):
+            if y <= 7:
+                img.putpixel((x, y), tip if (x + y) % 2 else ash)
+            else:
+                img.putpixel((x, y), shade(stick, 1.1 if x == 7 else 0.85))
+
+
+def shape_lantern(img, iron, glass, outline):
+    """Unlit lantern in the vanilla lantern UV layout (body, cap, top/bottom, handle/chain regions)."""
+    def rect(x0, y0, x1, y1, color):
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                img.putpixel((x, y), color)
+
+    rect(0, 2, 6, 9, iron)          # body sides
+    rect(1, 3, 5, 8, glass)         # dark glass pane inside the frame
+    rect(0, 9, 6, 15, shade(iron, 0.8))   # top/bottom
+    rect(1, 0, 5, 2, shade(iron, 1.15))   # cap sides
+    rect(1, 10, 5, 14, shade(iron, 0.9))  # cap top
+    rect(11, 1, 14, 5, outline)     # handle
+    rect(11, 6, 14, 12, outline)    # chain
+
+
 def shape_lens(img, outline, glass, handle):
     """Round lens with a handle: magnifier-style icon."""
     cx, cy, r = 6.5, 6.5, 5.2
@@ -155,7 +205,8 @@ def shape_badge(img, ink, paper, accent, letter="?"):
                             img.putpixel((5 + gx * 2 + sx, 3 + gy * 2 + sy), accent)
 
 
-SHAPES = {"lens": shape_lens, "noise": shape_noise, "badge": shape_badge, "egg": shape_egg, "skin": shape_skin}
+SHAPES = {"lens": shape_lens, "noise": shape_noise, "badge": shape_badge, "egg": shape_egg, "skin": shape_skin,
+          "gem": shape_gem, "torch": shape_torch, "lantern": shape_lantern}
 
 
 def main():
@@ -179,8 +230,8 @@ def main():
         while len(colors) < 3:
             colors.append(colors[-1])
         size = entry.get("size", 64 if entry["shape"] == "skin" else SIZE)
-        img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-        extra = {k: v for k, v in entry.items() if k in ("letter", "seed", "parts", "face", "hair")}
+        img = Image.new("RGBA", (entry.get("width", size), entry.get("height", size)), (0, 0, 0, 0))
+        extra = {k: v for k, v in entry.items() if k in ("letter", "seed", "parts", "face", "hair", "part")}
         if entry["shape"] == "skin":
             extra["palette"] = palette
         SHAPES[entry["shape"]](img, *colors[:3], **extra)

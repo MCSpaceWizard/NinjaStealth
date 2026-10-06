@@ -28,7 +28,7 @@ Requirements: **JDK 25** (Gradle can auto-provision it via the foojay toolchain 
 
 ```
 ./gradlew build             # compile + jar → build/libs/emergentstealth-<version>.jar
-./gradlew runClient         # dev client
+./gradlew runClient         # dev client (add -PquickPlay=<world> to jump straight into a singleplayer world)
 ./gradlew runServer         # dedicated server (also checks nothing client-only leaks into common code)
 ./gradlew runClient2        # second client "Dev2", for local co-op testing against runServer
 ./gradlew runData           # data generation → src/generated/resources

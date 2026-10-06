@@ -43,6 +43,12 @@ public final class ESGameTests {
         test("perception/deep_water_blocks", PerceptionTests::deepWaterBlocks);
         test("perception/grace_period", PerceptionTests::gracePeriod);
         test("perception/decay_delay", PerceptionTests::decayDelay);
+        test("light/wall_casts_shadow", LightTests::wallCastsShadow);
+        test("light/glass_lets_light_through", LightTests::glassLetsLightThrough);
+        test("light/darkness_is_dark", LightTests::darknessIsDark);
+        test("light/snuff_and_relight", LightTests::snuffAndRelight);
+        test("light/held_torch_lights_holder", LightTests::heldTorchLightsHolder);
+        test("light/darkness_slows_detection", LightTests::darknessSlowsDetection);
         test("brain/melee_hit_starts_combat", PerceptionTests::meleeHitStartsCombat);
         test("brain/civilian_hit_flees", PerceptionTests::civilianHitFlees);
         test("brain/unseen_stays_unaware", PerceptionTests::unseenStaysUnaware);
