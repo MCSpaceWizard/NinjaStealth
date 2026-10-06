@@ -48,3 +48,6 @@ repo/
 
 ### Python (tools/) ###
 __pycache__/
+
+### Claude Code agent worktrees ###
+.claude/worktrees/
