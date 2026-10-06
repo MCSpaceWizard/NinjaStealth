@@ -9,15 +9,21 @@ import com.mcspacewizard.emergentstealth.EmergentStealth;
 import com.mcspacewizard.emergentstealth.ai.brain.AlertState;
 import com.mcspacewizard.emergentstealth.ai.brain.StealthActionGoal;
 import com.mcspacewizard.emergentstealth.ai.brain.StealthBrain;
+import com.mcspacewizard.emergentstealth.ai.nav.PassageGoal;
+import com.mcspacewizard.emergentstealth.ai.nav.StealthNavigation;
+import com.mcspacewizard.emergentstealth.ai.routine.RoutineGoal;
+import com.mcspacewizard.emergentstealth.ai.routine.Schedule;
 import com.mcspacewizard.emergentstealth.ai.perception.NpcPerception;
 import com.mcspacewizard.emergentstealth.ai.perception.PerceptionProfile;
 import com.mcspacewizard.emergentstealth.ai.perception.TargetAwareness;
 import com.mcspacewizard.emergentstealth.data.Archetype;
+import com.mcspacewizard.emergentstealth.data.NpcRole;
 import com.mcspacewizard.emergentstealth.debug.NpcDebugInfo;
 import com.mcspacewizard.emergentstealth.registry.ESDebugSubscriptions;
 import com.mcspacewizard.emergentstealth.registry.ESRegistries;
 import com.mcspacewizard.emergentstealth.stealth.light.ExposureModel;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -39,8 +45,9 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
@@ -71,11 +78,21 @@ public class StealthNpc extends PathfinderMob {
     private final StealthBrain brain = new StealthBrain(this);
     /** Whether the off-hand torch was taken out by us (so we put it away again). */
     private boolean carryingSearchTorch;
+    /** Where the NPC belongs: its spawn spot unless moved. Default post / wander centre. */
+    private BlockPos home = BlockPos.ZERO;
+    private float homeYaw;
+    private Schedule schedule = Schedule.EMPTY;
+    /** Waypoint the routine is heading to (debug only). */
+    private int currentWaypointIndex = -1;
 
     public StealthNpc(EntityType<? extends StealthNpc> type, Level level) {
         super(type, level);
         this.setPersistenceRequired();
-        this.getNavigation().setCanOpenDoors(true);
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        return new StealthNavigation(this, level);
     }
 
     public NpcPerception perception() {
@@ -104,13 +121,14 @@ public class StealthNpc extends PathfinderMob {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        // Doors and gates: no control flags, runs alongside whatever is moving the NPC.
+        this.goalSelector.addGoal(0, new PassageGoal(this));
         // Combat: vanilla melee follows getTarget(), which the brain only sets while the target is seen.
         this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.2, false));
         this.goalSelector.addGoal(2, new StealthActionGoal(this));
-        // Idle placeholders until patrols and routines (S5). No "look at nearby player" goal: that would be
-        // free information (D-08) - NPCs only turn to what they perceive.
-        this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.6));
-        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        // Calm time: patrol routes, posts, wandering (design doc 15). There is deliberately no "look at
+        // nearby player" goal: that would be free information (D-08).
+        this.goalSelector.addGoal(5, new RoutineGoal(this));
     }
 
     @Override
@@ -174,6 +192,55 @@ public class StealthNpc extends PathfinderMob {
         return profile != null ? profile : PerceptionProfile.DEFAULT;
     }
 
+    // ------------------------------------------------------------------------------------------------
+    // Home & routine
+
+    public BlockPos getHome() {
+        return home;
+    }
+
+    public float getHomeYaw() {
+        return homeYaw;
+    }
+
+    public void setHome(BlockPos pos, float yaw) {
+        this.home = pos.immutable();
+        this.homeYaw = yaw;
+    }
+
+    public Schedule getSchedule() {
+        return schedule;
+    }
+
+    public void setSchedule(Schedule schedule) {
+        this.schedule = schedule;
+    }
+
+    public int getCurrentWaypointIndex() {
+        return currentWaypointIndex;
+    }
+
+    public void setCurrentWaypointIndex(int index) {
+        this.currentWaypointIndex = index;
+    }
+
+    /**
+     * The routine activity for the current time of day: the schedule's matching entry, or the role default
+     * (posts for stationary roles, wandering near home for everyone else).
+     */
+    public Schedule.@Nullable Activity activeActivity() {
+        int hour = Schedule.hourOf(this.level().getDefaultClockTime());
+        return schedule.activeAt(hour).orElseGet(this::defaultActivity);
+    }
+
+    private Schedule.Activity defaultActivity() {
+        NpcRole role = getArchetype().map(Archetype::role).orElse(NpcRole.PATROL_GUARD);
+        return switch (role) {
+            case STATIONARY_GUARD, CAPTAIN, TARGET -> new Schedule.Post(home, homeYaw);
+            default -> new Schedule.Wander(8);
+        };
+    }
+
     public int getBodyVariant() {
         return this.entityData.get(DATA_BODY_VARIANT);
     }
@@ -223,6 +290,7 @@ public class StealthNpc extends PathfinderMob {
     public @Nullable SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, EntitySpawnReason reason, @Nullable SpawnGroupData spawnData) {
         SpawnGroupData data = super.finalizeSpawn(level, difficulty, reason, spawnData);
         setArchetype(getArchetypeId(), true);
+        setHome(this.blockPosition(), this.getYRot());
         return data;
     }
 
@@ -236,6 +304,9 @@ public class StealthNpc extends PathfinderMob {
         output.putInt("BodyVariant", getBodyVariant());
         brain.save(output);
         output.putBoolean("SearchTorch", carryingSearchTorch);
+        output.store("Home", BlockPos.CODEC, home);
+        output.putFloat("HomeYaw", homeYaw);
+        output.store("Schedule", Schedule.CODEC, schedule);
     }
 
     @Override
@@ -243,6 +314,9 @@ public class StealthNpc extends PathfinderMob {
         super.readAdditionalSaveData(input);
         brain.load(input);
         carryingSearchTorch = input.getBooleanOr("SearchTorch", false);
+        home = input.read("Home", BlockPos.CODEC).orElse(this.blockPosition());
+        homeYaw = input.getFloatOr("HomeYaw", this.getYRot());
+        schedule = input.read("Schedule", Schedule.CODEC).orElse(Schedule.EMPTY);
         this.entityData.set(DATA_BODY_VARIANT, input.getIntOr("BodyVariant", 0));
         input.getString("Archetype").ifPresent(value -> {
             Identifier id = Identifier.tryParse(value);
@@ -276,6 +350,27 @@ public class StealthNpc extends PathfinderMob {
                 new NpcDebugInfo.Cones(profile.central().halfAngle(), profile.central().range(),
                         profile.peripheral().halfAngle(), profile.peripheral().range(), profile.verticalHalfAngle()),
                 Optional.ofNullable(focus == null ? null : focus.lastKnownPos()),
-                perception.debugRays().stream().map(r -> new NpcDebugInfo.Ray(r.point(), r.transmittance())).toList());
+                perception.debugRays().stream().map(r -> new NpcDebugInfo.Ray(r.point(), r.transmittance())).toList(),
+                describeActivity(),
+                currentPathNodes());
+    }
+
+    private String describeActivity() {
+        Schedule.Activity activity = activeActivity();
+        String text = activity == null ? "-" : activity.describe();
+        return currentWaypointIndex >= 0 && activity instanceof Schedule.Route ? text + " #" + currentWaypointIndex : text;
+    }
+
+    private java.util.List<BlockPos> currentPathNodes() {
+        Path path = this.getNavigation().getPath();
+        if (path == null || path.isDone()) {
+            return java.util.List.of();
+        }
+        java.util.List<BlockPos> nodes = new java.util.ArrayList<>();
+        for (int i = path.getNextNodeIndex(); i < path.getNodeCount() && nodes.size() < 24; i++) {
+            Node node = path.getNode(i);
+            nodes.add(new BlockPos(node.x, node.y, node.z));
+        }
+        return nodes;
     }
 }

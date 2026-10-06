@@ -9,6 +9,7 @@ import java.util.WeakHashMap;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
 import com.mcspacewizard.emergentstealth.config.ESConfig;
+import com.mcspacewizard.emergentstealth.ai.routine.RouteSync;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 import com.mcspacewizard.emergentstealth.network.DetectionSync;
 import com.mcspacewizard.emergentstealth.stealth.LightSampler;
@@ -82,6 +83,7 @@ public final class PerceptionScheduler {
         List<ServerPlayer> players = level.players();
         LightGemSync.tick(level, players, now);
         LightDebugSync.tick(level, players, now);
+        RouteSync.tick(level, players, now);
 
         Set<StealthNpc> npcs = NPCS.get(level);
         if (npcs == null || npcs.isEmpty()) {

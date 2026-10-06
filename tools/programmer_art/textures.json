@@ -310,6 +310,16 @@
         "glass_dark",
         "ink"
       ]
+    },
+    {
+      "path": "item/patrol_baton",
+      "shape": "badge",
+      "letter": "P",
+      "colors": [
+        "ink",
+        "paper",
+        "lacquer"
+      ]
     }
   ]
 }

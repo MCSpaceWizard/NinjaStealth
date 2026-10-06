@@ -3,6 +3,7 @@ package com.mcspacewizard.emergentstealth.registry;
 import com.mcspacewizard.emergentstealth.network.DetectionSyncPayload;
 import com.mcspacewizard.emergentstealth.network.LightDebugPayload;
 import com.mcspacewizard.emergentstealth.network.LightGemPayload;
+import com.mcspacewizard.emergentstealth.network.RouteSyncPayload;
 
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -18,5 +19,6 @@ public final class ESNetwork {
         registrar.playToClient(DetectionSyncPayload.TYPE, DetectionSyncPayload.STREAM_CODEC);
         registrar.playToClient(LightGemPayload.TYPE, LightGemPayload.STREAM_CODEC);
         registrar.playToClient(LightDebugPayload.TYPE, LightDebugPayload.STREAM_CODEC);
+        registrar.playToClient(RouteSyncPayload.TYPE, RouteSyncPayload.STREAM_CODEC);
     }
 }

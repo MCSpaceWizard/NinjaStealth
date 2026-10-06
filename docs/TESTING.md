@@ -14,6 +14,37 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Stage 5: Navigation, patrols & routines 🧪
+
+**Automated checks (already passing):** 6 more GameTests (27 total):
+- a guard walks through a closed wooden door and closes it behind itself
+- same through a fence gate
+- a guard reaches a second floor by ladder
+- a guard on a 3-waypoint loop visits them in order and comes back to the first
+- a schedule picks the right activity for the time of day
+- a `relight` waypoint relights an unlit torch (the lamplighter)
+
+**Tip:** turn on the AI debug view (`/esdebug on`). Each NPC's label shows its current routine, and its remaining path is drawn as a cyan line.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| 5.1 | Default routines | Spawn an `ashigaru` and a `taisho` (captain) | The ashigaru wanders within ~8 blocks of where it spawned. The taisho stands at its spawn spot facing its spawn direction, glancing left and right now and then, and walks back there after any alert |
+| 5.2 | Patrol Baton | Creative, op. Take the **Patrol Baton** from the creative tab. Right-click 3–4 blocks around a courtyard | Chat: `route_1: waypoint #0 at …`, `#1`, … While holding the baton you see the route: lines between waypoints and numbered markers |
+| 5.3 | Remove a waypoint | Sneak + right-click any block with the baton | The last waypoint disappears from the drawing |
+| 5.4 | Assign a route | Right-click an NPC with the baton | `Assigned route route_1 (all day)`. The NPC walks to the nearest waypoint, then follows the route in order at a walking pace, pausing briefly and looking around at each point. It loops back to #0 |
+| 5.5 | Doors & gates | Put a wooden door or fence gate on the route (closed) | The guard opens it, walks through and **closes it behind itself** |
+| 5.6 | Ladders | Make a waypoint on a platform reachable only by a ladder | The guard climbs up and down the ladder. Iron doors are walls for now |
+| 5.7 | Waits & look direction | `/es patrol wait route_1 1 5` then `/es patrol look route_1 1` (faces where you're looking) | At waypoint #1 the guard stands for 5 s facing that direction. The drawing shows the wait and a look arrow |
+| 5.8 | Ping-pong | `/es patrol mode route_1 pingpong` | The guard walks 0→1→2→3→2→1→0… instead of looping |
+| 5.9 | Lamplighter | `/es patrol relight route_1 2 true`, then snuff the torches near waypoint #2 | When the guard reaches #2 it relights unlit torches and lanterns within 4 blocks |
+| 5.10 | Shift changes | `/es patrol assign @e[type=emergentstealth:stealth_npc,limit=1,sort=nearest] route_2 18 6` (a night route; make `route_2` first with a new baton or `/es patrol select`) | Day: the NPC keeps its previous activity (newer windows take priority over older ones). Between 18:00 and 06:00 (`/time set 13000`) it walks route_2 instead. `/es routine show @e[…]` lists its schedule |
+| 5.11 | Posts & wander | `/es routine post <npcs>` (stand here, facing your direction), `/es routine wander <npcs> 5`, `/es routine clear <npcs>` | The NPC holds the post / strolls within 5 blocks / goes back to its default |
+| 5.12 | Back to the route after an alert | Let a patrolling guard notice you (meter past 50%), then hide until it calms down | It searches, then returns to the **nearest** waypoint and carries on |
+| 5.13 | Persistence | Save and quit, reload | Routes (`/es patrol list`) and NPC schedules survive |
+| 5.14 | Other commands | `/es patrol list`, `/es patrol select <route>` (binds the held baton, or gives you one), `/es patrol remove <route>` | As described |
+
+**Known:** procedural patrol routes come with worldgen compounds (S15). Locked doors and keys come with the toolkit (S12).
+
 ## Stage 3: Light, shadow, light gem & snuffing 🧪
 
 **Automated checks (already passing):** 6 more GameTests (21 total):

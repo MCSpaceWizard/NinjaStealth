@@ -29,6 +29,7 @@ public class NpcDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
     private static final int COLOR_RAY_PARTIAL = 0xFFFFE040;
     private static final int COLOR_RAY_BLOCKED = 0xFFFF4040;
     private static final int COLOR_LAST_KNOWN = 0xFFFF40FF;
+    private static final int COLOR_PATH = 0xFF40E0FF;
     private static final int CONE_SEGMENTS = 12;
     private static final float TEXT_SCALE = 0.3F;
 
@@ -43,6 +44,7 @@ public class NpcDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
                 return;
             }
             emitLabel(entity, info, partialTicks);
+            emitPath(entity, info, partialTicks);
             emitCones(entity, info, partialTicks);
             for (NpcDebugInfo.Ray ray : info.rays()) {
                 int color = ray.transmittance() >= 0.99F ? COLOR_RAY_CLEAR : ray.transmittance() > 0.0F ? COLOR_RAY_PARTIAL : COLOR_RAY_BLOCKED;
@@ -59,11 +61,22 @@ public class NpcDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
         String[] lines = {
                 info.archetype() + " [" + info.role() + "]",
                 "state: " + info.state() + "   tier " + info.tier(),
+                "routine: " + info.activity(),
                 String.format(java.util.Locale.ROOT, "awareness: %.2f", info.awareness())
         };
         for (int i = 0; i < lines.length; i++) {
             Gizmos.billboardText(lines[i], top.add(0.0, (lines.length - 1 - i) * 0.25, 0.0),
                     TextGizmo.Style.forColorAndCentered(COLOR_TEXT).withScale(TEXT_SCALE)).setAlwaysOnTop();
+        }
+    }
+
+    /** Remaining navigation path as a cyan line through node centres. */
+    private static void emitPath(Entity entity, NpcDebugInfo info, float partialTicks) {
+        Vec3 previous = entity.getPosition(partialTicks).add(0.0, 0.1, 0.0);
+        for (net.minecraft.core.BlockPos node : info.path()) {
+            Vec3 point = Vec3.atBottomCenterOf(node).add(0.0, 0.1, 0.0);
+            Gizmos.line(previous, point, COLOR_PATH, 2.0F);
+            previous = point;
         }
     }
 

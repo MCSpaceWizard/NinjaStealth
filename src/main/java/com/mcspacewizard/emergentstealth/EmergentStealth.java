@@ -8,6 +8,7 @@ import com.mcspacewizard.emergentstealth.config.ESConfig;
 import com.mcspacewizard.emergentstealth.gametest.ESGameTests;
 import com.mcspacewizard.emergentstealth.registry.ESBlocks;
 import com.mcspacewizard.emergentstealth.registry.ESCreativeTabs;
+import com.mcspacewizard.emergentstealth.registry.ESDataComponents;
 import com.mcspacewizard.emergentstealth.registry.ESDebugSubscriptions;
 import com.mcspacewizard.emergentstealth.registry.ESEntities;
 import com.mcspacewizard.emergentstealth.registry.ESItems;
@@ -35,6 +36,7 @@ public final class EmergentStealth {
         ESBlocks.BLOCKS.register(modEventBus);
         ESEntities.ENTITY_TYPES.register(modEventBus);
         ESItems.ITEMS.register(modEventBus);
+        ESDataComponents.COMPONENTS.register(modEventBus);
         ESCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         ESDebugSubscriptions.DEBUG_SUBSCRIPTIONS.register(modEventBus);
         ESSounds.SOUND_EVENTS.register(modEventBus);

@@ -4,6 +4,7 @@ import com.mcspacewizard.emergentstealth.EmergentStealth;
 import com.mcspacewizard.emergentstealth.client.debug.ClientDebugState;
 import com.mcspacewizard.emergentstealth.client.debug.LightDebugRenderer;
 import com.mcspacewizard.emergentstealth.client.debug.NpcDebugRenderer;
+import com.mcspacewizard.emergentstealth.client.debug.RouteRenderer;
 import com.mcspacewizard.emergentstealth.client.hud.ClientDetection;
 import com.mcspacewizard.emergentstealth.client.hud.LightGemHud;
 import com.mcspacewizard.emergentstealth.client.render.ESModelLayers;
@@ -13,6 +14,7 @@ import com.mcspacewizard.emergentstealth.registry.ESEntities;
 import com.mcspacewizard.emergentstealth.network.DetectionSyncPayload;
 import com.mcspacewizard.emergentstealth.network.LightDebugPayload;
 import com.mcspacewizard.emergentstealth.network.LightGemPayload;
+import com.mcspacewizard.emergentstealth.network.RouteSyncPayload;
 import com.mcspacewizard.emergentstealth.registry.ESItems;
 
 import net.minecraft.commands.Commands;
@@ -51,6 +53,7 @@ public final class ESClientEvents {
     static void onRegisterDebugRenderers(RegisterDebugRenderersEvent event) {
         event.register(new NpcDebugRenderer());
         event.register(new LightDebugRenderer());
+        event.register(new RouteRenderer());
     }
 
     @SubscribeEvent
@@ -58,6 +61,7 @@ public final class ESClientEvents {
         event.register(DetectionSyncPayload.TYPE, ClientDetection::handle);
         event.register(LightGemPayload.TYPE, LightGemHud::handle);
         event.register(LightDebugPayload.TYPE, LightDebugRenderer::handle);
+        event.register(RouteSyncPayload.TYPE, RouteRenderer::handle);
     }
 
     @SubscribeEvent
@@ -72,6 +76,7 @@ public final class ESClientEvents {
         ClientDetection.clear();
         LightGemHud.reset();
         LightDebugRenderer.clear();
+        RouteRenderer.clear();
     }
 
     /** Request our debug data from the server only while the debug view is on. */

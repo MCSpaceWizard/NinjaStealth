@@ -43,7 +43,9 @@ public final class ESCommands {
                                                         .keySet().stream().map(Identifier::toString), builder))
                                         .executes(ESCommands::spawnNpc)))
                         .then(Commands.literal("list")
-                                .executes(ESCommands::listNpcs))));
+                                .executes(ESCommands::listNpcs)))
+                .then(PatrolCommands.patrol())
+                .then(PatrolCommands.routine()));
         dispatcher.register(Commands.literal("es").redirect(root));
     }
 

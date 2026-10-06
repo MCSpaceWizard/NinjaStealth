@@ -24,5 +24,17 @@
   "emergentstealth.configuration.showDetectionIndicators": "Show Detection Indicators",
   "emergentstealth.configuration.playAlertSounds": "Play Alert Sounds",
   "message.emergentstealth.debug.light_on": "Light debug view: ON (requires op / singleplayer host)",
-  "message.emergentstealth.debug.light_off": "Light debug view: OFF"
+  "message.emergentstealth.debug.light_off": "Light debug view: OFF",
+  "item.emergentstealth.patrol_baton": "Patrol Baton",
+  "message.emergentstealth.baton.no_permission": "The Patrol Baton needs creative mode and operator permissions",
+  "message.emergentstealth.baton.added": "%s: waypoint #%s at %s",
+  "message.emergentstealth.baton.removed": "%s: removed last waypoint (%s left)",
+  "message.emergentstealth.baton.assigned": "Assigned route %s (all day)",
+  "commands.emergentstealth.patrol.unknown": "Unknown patrol route: %s",
+  "commands.emergentstealth.patrol.bad_index": "No waypoint #%s on that route",
+  "commands.emergentstealth.patrol.removed": "Removed patrol route %s",
+  "commands.emergentstealth.patrol.list": "%s patrol route(s) in this dimension:",
+  "commands.emergentstealth.patrol.selected": "Patrol Baton now edits %s",
+  "commands.emergentstealth.patrol.updated": "Updated patrol route %s",
+  "commands.emergentstealth.routine.updated": "Updated the routine of %s NPC(s)"
 }

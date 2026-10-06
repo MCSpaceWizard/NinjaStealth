@@ -30,6 +30,7 @@ public final class ESGameTests {
     private static final Identifier ARENA = EmergentStealth.id("arena");
     private static final int MAX_TICKS = 100;
     private static final Map<String, Consumer<GameTestHelper>> TESTS = new LinkedHashMap<>();
+    private static final Map<String, Integer> MAX_TICKS_OVERRIDES = new java.util.HashMap<>();
 
     static {
         test("data/profiles_loaded", PerceptionTests::profilesLoaded);
@@ -49,9 +50,20 @@ public final class ESGameTests {
         test("light/snuff_and_relight", LightTests::snuffAndRelight);
         test("light/held_torch_lights_holder", LightTests::heldTorchLightsHolder);
         test("light/darkness_slows_detection", LightTests::darknessSlowsDetection);
+        test("nav/walks_through_door_and_closes_it", NavigationTests::walksThroughDoorAndClosesIt, 400);
+        test("nav/walks_through_fence_gate", NavigationTests::walksThroughFenceGate, 400);
+        test("nav/climbs_ladder", NavigationTests::climbsLadder, 400);
+        test("routine/patrols_in_order", NavigationTests::patrolsInOrder, 600);
+        test("routine/lamplighter_relights", NavigationTests::lamplighterRelights, 400);
+        test("routine/schedule_selection", NavigationTests::scheduleSelection);
         test("brain/melee_hit_starts_combat", PerceptionTests::meleeHitStartsCombat);
         test("brain/civilian_hit_flees", PerceptionTests::civilianHitFlees);
         test("brain/unseen_stays_unaware", PerceptionTests::unseenStaysUnaware);
+    }
+
+    private static void test(String name, Consumer<GameTestHelper> function, int maxTicks) {
+        MAX_TICKS_OVERRIDES.put(name, maxTicks);
+        test(name, function);
     }
 
     private static void test(String name, Consumer<GameTestHelper> function) {
@@ -65,7 +77,7 @@ public final class ESGameTests {
             Identifier id = EmergentStealth.id(name);
             event.registerTest(id, new FunctionGameTestInstance(
                     ResourceKey.create(Registries.TEST_FUNCTION, id),
-                    new TestData<>(environment, ARENA, MAX_TICKS, 0, true)));
+                    new TestData<>(environment, ARENA, MAX_TICKS_OVERRIDES.getOrDefault(name, MAX_TICKS), 0, true)));
         }
     }
 }

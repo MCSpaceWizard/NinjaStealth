@@ -1,6 +1,7 @@
 package com.mcspacewizard.emergentstealth.registry;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
+import com.mcspacewizard.emergentstealth.item.PatrolBatonItem;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
@@ -14,6 +15,10 @@ public final class ESItems {
 
     /** Developer tool: right-click toggles the AI debug view (client side; the data itself is op-gated). */
     public static final DeferredItem<Item> DEBUG_LENS = ITEMS.registerSimpleItem("debug_lens", p -> p.stacksTo(1));
+
+    /** Map-maker tool for authoring patrol routes (design doc 15). */
+    public static final DeferredItem<PatrolBatonItem> PATROL_BATON = ITEMS.registerItem("patrol_baton",
+            PatrolBatonItem::new, p -> p.stacksTo(1));
 
     /** Spawns a stealth NPC with the default archetype. Use {@code /emergentstealth npc spawn} for others. */
     public static final DeferredItem<SpawnEggItem> STEALTH_NPC_SPAWN_EGG = ITEMS.registerItem("stealth_npc_spawn_egg",

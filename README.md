@@ -41,6 +41,8 @@ On Windows use `gradlew.bat`. In IntelliJ, open the folder as a Gradle project; 
 
 - `/es npc spawn <archetype>` spawns a stealth NPC (op). `/es npc list` counts them. `/es` is short for `/emergentstealth`.
 - `/esdebug [on|off]` or right-clicking the **Debug Lens** toggles the AI debug view. Only ops and the singleplayer host receive debug data.
+- `/esdebug light` or sneak + right-clicking the Debug Lens toggles the light/shadow debug view.
+- **Patrol Baton:** right-click blocks to add waypoints, sneak + right-click to remove the last, right-click an NPC to assign the route. `/es patrol …` and `/es routine …` edit routes and schedules (see [TESTING.md](docs/TESTING.md) Stage 5).
 - Archetypes and outfits are datapack JSON under `data/<namespace>/emergentstealth/{archetype,outfit}/`.
 
 When reporting a build problem, paste the first error block from the Gradle output (or `build/reports/problems/problems-report.html`).

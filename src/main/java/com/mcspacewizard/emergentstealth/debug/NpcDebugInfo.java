@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import io.netty.buffer.ByteBuf;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.phys.Vec3;
@@ -23,9 +24,11 @@ import net.minecraft.world.phys.Vec3;
  * @param cones      vision cone parameters from the perception profile
  * @param lastKnown  focus target's last known position
  * @param rays       last sight rays toward the focus target
+ * @param activity   current routine activity (route/post/wander)
+ * @param path       remaining nodes of the current navigation path (up to 24)
  */
 public record NpcDebugInfo(String archetype, String role, String faction, String state, int tier, float awareness,
-                           Cones cones, Optional<Vec3> lastKnown, List<Ray> rays) {
+                           Cones cones, Optional<Vec3> lastKnown, List<Ray> rays, String activity, List<BlockPos> path) {
 
     public record Cones(float centralHalfAngle, float centralRange, float peripheralHalfAngle, float peripheralRange,
                         float verticalHalfAngle) {
@@ -56,5 +59,7 @@ public record NpcDebugInfo(String archetype, String role, String faction, String
             Cones.STREAM_CODEC, NpcDebugInfo::cones,
             Vec3.STREAM_CODEC.apply(ByteBufCodecs::optional), NpcDebugInfo::lastKnown,
             Ray.STREAM_CODEC.apply(ByteBufCodecs.list(8)), NpcDebugInfo::rays,
+            ByteBufCodecs.STRING_UTF8, NpcDebugInfo::activity,
+            BlockPos.STREAM_CODEC.apply(ByteBufCodecs.list(32)), NpcDebugInfo::path,
             NpcDebugInfo::new);
 }
