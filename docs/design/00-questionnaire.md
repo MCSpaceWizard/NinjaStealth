@@ -4,7 +4,7 @@ The answers here feed the staged roadmap (Phase 1), so every question exists to 
 
 ## How to answer
 
-- **★ = blocking.** These shape the architecture or the first milestone. If you only have time for some, answer the ★ ones first. There are about 45.
+- **★ = blocking.** These shape the architecture or the first milestone. If you only have time for some, answer the ★ ones first. There are 54.
 - Every question has an ID (e.g. `T-01`). Answer inline under `> A:` or reply in chat using the IDs, whichever is easier.
 - Most questions have a **Default** (my recommendation). Writing `default` is a full answer. You can also write `?`, meaning "unsure, talk me through it," or `later`, meaning "not needed for the first stages."
 - For wishlists, rate each item **M**ust / **S**hould / **C**ould / **W**on't (MoSCoW).
