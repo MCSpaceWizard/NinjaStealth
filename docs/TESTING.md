@@ -39,13 +39,16 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 What you **see** now follows the same light model the guards use (design doc [30](design/30-visual-lighting.md)). Screenshots are in `docs/screenshots/visual-lighting/`.
 
-**Automated checks:** 2 more GameTests (29 total). For every air cell of a test room, the light baked for rendering equals the gameplay light:
+**Automated checks:** 4 GameTests (31 total with Stage 5). For every air cell of a test room, the light baked for rendering equals the gameplay light:
 - a torch with a wall and glass
 - a player holding a torch next to a wall
+- sun 30° high in the east and in the west, and overhead (fixed sun positions, the world's time isn't touched)
+- a full moon and a new moon
 
 **Verified here in a real client** (software GL):
 - vanilla renderer, **Sodium 0.9.2**, and **Sodium + Iris 1.11.4** with a shader pack
 - shadows behind walls, a pillar's shadow updating live, held-torch light following the player, an NPC's torch, and dark-is-dark
+- sun shadows at morning/noon/evening (vanilla and Sodium), a full-moon shadow, and the light gem agreeing with the shade; with Complementary the pack's sun shadow replaces ours
 
 **Setup:** night (`/time set 18000`; `/time set 114000` for a new moon), creative. Options are in Mods → Emergent Stealth → Config → **Visual Lighting**. Changes apply immediately (chunks rebuild).
 
@@ -63,9 +66,14 @@ What you **see** now follows the same light model the guards use (design doc [30
 | V.10 | Sodium | `./gradlew runClient -PwithSodium`, then repeat V.1–V.5 | Same results as vanilla rendering |
 | V.11 | Performance | Walk through a torch-lit area holding a torch, with ~20 torches around | No stutter on a normal GPU/CPU. If chunks lag behind, raise *Dynamic Light Update Interval* |
 | V.12 | Dedicated server | `./gradlew runServer` | Starts normally (all visual code is client-only) |
+| V.13 | Sun shadows move | Build a tall wall running north–south. `/gamerule advance_time false`, then `/time set 1500` (morning), `6000` (noon), `10500` (evening); wait a few seconds after each | Morning: a soft shadow on the **west** side. Noon: almost none. Evening: on the **east** side. Turn off *Sun & Moon Shadows* → vanilla (no shadow) |
+| V.14 | Sun shadow ↔ light gem | Survival, morning: stand in the wall's shadow, then step into the sun | Gem dim in the shadow, lit in the sun; the ground, wall face and your hand look darker in the shadow too |
+| V.15 | Moon shadows | Full-moon night (`/time set 14500` on day 0), same wall | Moonlit ground on one side, a darker moon shadow on the other. On a new moon (`/time set 110500`) there's no moon shadow |
+| V.16 | Sun moving live | `/gamerule advance_time true`, stand near the wall for a minute | The shadow creeps in small steps (every ~2° of sun, ~7 s); no stutter. Slower PCs: lower *Sun Shadow Sections Per Tick* |
+| V.17 | Shader packs + sun | With an Iris pack | The pack's own sun shadows; ours pause (no double shadows). Your own held torch uses the pack's glow (no double glow) unless *Own Held Light With Shader Packs* is on |
 
 **Known differences from gameplay** (doc 30 §9):
-- sky and sun shadows aren't baked; that's vanilla sky light
+- sun and moon shadows step every 2° of sun movement and only within 64 blocks of you (configurable)
 - lava lakes and very dense light clusters use vanilla light
 - light pools are round rather than diamond-shaped
 

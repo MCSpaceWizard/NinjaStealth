@@ -1,8 +1,8 @@
 # 30 — Visual lighting: dynamic lights, baked shadows, "dark is dark" (Track E) 📄
 
-> **Status (2026-10-06):** implemented on `claude/visual-lighting` as designed.
-> - Checked in a real client with vanilla rendering, Sodium 0.9.2, and Sodium + Iris 1.11.4 with a shader pack (screenshots below).
-> - 2 new GameTests; all 23 pass.
+> **Status (2026-10-06):** implemented on `claude/visual-lighting`, including sun & moon shadows (§10).
+> - Checked in a real client with vanilla rendering, Sodium 0.9.2, and Sodium + Iris 1.11.4 with shader packs (screenshots below).
+> - 4 GameTests (`visual/*`); all 31 pass after merging Stage 5.
 > - The dedicated server still boots.
 
 Track E R&D (Q2, L-01, L-02, L-07 b, L-10). The server's `ExposureModel` (doc 13) is the gameplay truth: it ray-traces cast shadows from every light source and counts held lights. Vanilla *rendering* disagrees in three ways, and this doc fixes each:
@@ -79,7 +79,7 @@ For a position `P` being meshed (`client/light/ShadowedBlockLight`):
 
 A light placed or snuffed rebuilds its own sphere.
 
-**Sky light is untouched.** Sun and moon shadows change with time of day. Baking them would mean rebuilding every section continuously. With Iris, shader packs already draw sun shadows that roughly match ours (Q2). Vanilla's sky light remains the stand-in.
+**Sky light:** sun and moon shadows are baked separately; see §10.
 
 ## 4. Visual dynamic lights
 
@@ -118,6 +118,12 @@ The overworld's light-0 floor drops from ~0.04 (up to ~0.15 with the slider maxe
 | `darkMaxBrightness` | 0.0 | Cap on the brightness slider |
 | `darkAmbientScale` | 0.35 | Multiplier on the ambient floor |
 | `darkIsDarkWithShaders` | false | Also apply with an Iris shader pack |
+| `skyShadows` | true | Sun and moon shadows baked into sky light (§10) |
+| `skyShadowRadius` | 64 | Blocks around you; vanilla sky light beyond (16-block fade) |
+| `skyShadowAngleStep` | 2.0 | Degrees the sun moves between re-bakes (~6.7 s of game time) |
+| `skySectionsPerTick` | 6 | Sections re-baked per tick when the sun steps |
+| `skyShadowsWithShaders` | false | Keep them with an Iris pack (packs draw their own sun shadows) |
+| `heldLightWithShaders` | false | Keep *your own* held-light glow with an Iris pack (packs add their own) |
 
 Toggling a lighting option rebuilds all chunks (`levelRenderer.allChanged()`).
 
@@ -149,11 +155,62 @@ Toggling a lighting option rebuilds all chunks (`levelRenderer.allChanged()`).
 
 ## 9. Known limitations
 
-- Sky and sun shadows are not baked (§3). The light gem remains the truth for sun shade.
+- Sun and moon shadows step with the sun (`skyShadowAngleStep`, 2° ≈ 6.7 s), only exist within `skyShadowRadius`, and only on near-surface sections (§10).
 - Light is still per block. Shadow edges are block-sharp, and a shadow cast by a thin object (a fence) through partial cover is averaged per block.
 - Dynamic lights update in steps (0.5 blocks / 2 ticks), not per frame.
 - Dense emitter fields fall back to vanilla flood fill (§7).
 - Euclidean falloff (gameplay) instead of vanilla's diamond. Light pools are rounder and reach a little further diagonally.
+
+## 10. Sun & moon shadows (sky light)
+
+The gameplay sky model (doc 13) is:
+
+`sky = skyAccess × direct × weather`
+
+- `skyAccess` is vanilla sky light / 15.
+- `direct` = `day × (0.3 + 0.7·sunClear) + (1 − day) × (0.03 + 0.25·moon·moonClear)`, where each "clear" is a shadow ray toward the body.
+
+**Shared maths.** `LightTransport.SkyState`, `skyDirect`, `cellSkyFactor` and `skyLevelForFactor`. `ExposureModel.skyExposure` now calls `skyDirect` with the same arithmetic. `ExposureBreakdown`'s `celestialDirection`/`skyExposure` signatures are unchanged.
+
+**What the sky channel means.** Vanilla's lightmap already scales sky light by the time of day (`SKY_LIGHT_FACTOR`) and by weather. Baking absolute exposure would dim twice. So the baked value carries only the **shade factor**: `factor = direct / directMax`, i.e. the share of the sky's current direct light that reaches the cell.
+- 1 in the open
+- 0.3 in sun shade
+- ≈ 0.107 in a full moon's shadow
+- 1 everywhere under a new moon, which casts no shadow
+
+The lightmap brightens a level `v` as `v / (4 − 3v)`, which is very non-linear. So the level is chosen by inverting that curve: `brightness(baked) = brightness(vanilla) × factor`. The **ratio** between shade and sun on screen is the gameplay ratio, and the time-of-day/weather curve stays vanilla's. The light gem and the picture agree on "how much darker is this shadow".
+
+**Hook.** The same `BrightnessGetter` hook replaces the sky nibble too, so it works with vanilla and Sodium meshing. A second `EntityRenderer` hook (`getSkyLightLevel`) shades entities and your hand.
+
+**The sun moves.** Re-baking every frame is impossible, so:
+
+| Measure | Detail |
+|---|---|
+| Quantised state | Sun/moon angle in `skyShadowAngleStep` (2°) steps, day factor in tenths, moon phase. Meshing reads one immutable `Bake` snapshot. A new snapshot is made only when this key changes, about every 6.7 s of game time |
+| Radius + anchor | Shadows apply within `skyShadowRadius` (64) of an anchor, fading to vanilla over the last 16 blocks. The anchor follows the camera when you move more than a quarter of the radius |
+| Near-surface sections only | Per chunk, sections from the lowest surface − 16 to the highest surface + 1 (`WORLD_SURFACE` heightmap). Deep underground and open sky above never change with the sun |
+| Throttled, nearest first | The re-bake queue feeds `skySectionsPerTick` (6) sections a tick, nearest the camera first. A 64-block radius on mostly flat ground is ~100–150 sections, ~20–25 ticks |
+| Heightmap-trimmed rays | A ray stops once it is above the highest surface of every chunk it crosses (`ColumnCeilings`). That's exact, because only air lies above. On open ground most rays are 1–2 steps |
+| Block changes | A changed block re-bakes the sections "down-ray" of it (toward the anti-sun and anti-moon directions, up to 64 blocks) |
+
+**Iris.** Packs draw their own sun shadows (Complementary's matched ours in direction and length, see screenshots). With a pack active the sky bake pauses and re-bakes vanilla, unless `skyShadowsWithShaders` is on. Likewise, your own held-light glow is skipped under a pack unless `heldLightWithShaders` is on: packs light the local player's held item themselves, and it would double up. Other entities' lights stay.
+
+**Tests.** `visual/sun_shadow_matches_gameplay` and `visual/moon_shadow_matches_gameplay` use **fixed** sky states:
+- sun 30° high in the east and in the west, sun overhead
+- full moon and new moon in the west
+
+They never change the world's time and never read vanilla sky-light propagation. For every air cell around a wall they assert that:
+- the client's heightmap-trimmed factor equals `ExposureModel.skyDirect / directMax` (to 1e-5)
+- the baked level renders at the gameplay ratio within one level
+- shade lands on the correct side, there is none at noon, and the new moon casts none
+
+**Cost (measured, GameTest timing):** ~3–4 µs per cell with a high sun or the moon, ~13 µs with a low sun (longer rays before clearing the terrain). This is cached per cell per thread until the sun steps.
+
+**Limits.**
+- Shadows step every 2°, not continuously.
+- They're not drawn beyond the radius.
+- Porches under a roof that covers a whole chunk can miss re-bakes; the surface range is a heuristic.
+- Rain and thunder dim through vanilla's lightmap, not our 40%/70% figures. The shade/sun ratio is unaffected.
 
 ## Screenshots
 
@@ -169,3 +226,8 @@ All shots are taken on a new-moon night with the brightness slider at "Bright", 
 | `sodium_held_torch.png` | **Sodium**: held torch after teleporting; the light follows |
 | `npc_carried_torch.png` | A stealth NPC with a torch in its off-hand lights its surroundings |
 | `iris_shaderpack_pillar.png` | **Iris** + a shader pack: our baked block-light shadows show through the pack |
+| `sun_vanilla_morning_noon_evening.png` | Top-down on a 6-high wall: vanilla, then ours at morning (shadow west), noon (none), evening (shadow east) |
+| `moon_vanilla_shadows_full.png` | Full-moon night, moon low in the east: vanilla, moon shadow (dark-is-dark off), full defaults |
+| `sun_shade_vs_sun_light_gem.png` | Survival, morning: standing in the wall's shadow (gem dim, wall and hand shaded) vs in the sun (gem lit) |
+| `sodium_sun_evening.png` | **Sodium**: evening sun shadow |
+| `iris_complementary_sun_morning.png` | **Iris + Complementary**: the pack's own crisp sun shadow (our bake paused) lands where ours does |

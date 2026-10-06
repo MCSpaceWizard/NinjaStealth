@@ -43,6 +43,12 @@ final class ShadowedBlockLight {
         final boolean[] hoodValid = new boolean[HOOD_SLOTS];
         int hoodNext;
         final List<LightTransport.Candidate> scratch = new ArrayList<>();
+
+        // Sun/moon shade factors (0-255 for 0-1), stamped separately: they change with the sun, block light doesn't.
+        @Nullable ClientLevel skyLevel;
+        long skyGeneration = -1;
+        long bakeVersion = -1;
+        final Long2ByteOpenHashMap skyCells = new Long2ByteOpenHashMap();
     }
 
     private static final ThreadLocal<ThreadCache> CACHE = ThreadLocal.withInitial(ThreadCache::new);
@@ -72,6 +78,31 @@ final class ShadowedBlockLight {
         int value = compute(cache, level, pos, statics, dynamics ? snapshot.lights() : List.of());
         cache.cells.put(key, (byte) value);
         return value;
+    }
+
+    /**
+     * Gameplay sun/moon shade factor at a cell (0-1, see {@link LightTransport#cellSkyFactor}) for the current
+     * quantised bake. Rays stop above the surrounding terrain ({@link ColumnCeilings}).
+     */
+    static float skyFactor(ClientLevel level, BlockPos pos, SkyShadows.Bake bake) {
+        ThreadCache cache = CACHE.get();
+        long generation = SkyShadows.generation();
+        if (cache.skyLevel != level || cache.skyGeneration != generation || cache.bakeVersion != bake.version()
+                || cache.skyCells.size() > MAX_CACHED_CELLS) {
+            cache.skyCells.clear();
+            cache.skyLevel = level;
+            cache.skyGeneration = generation;
+            cache.bakeVersion = bake.version();
+        }
+        long key = pos.asLong();
+        if (cache.skyCells.containsKey(key)) {
+            return (cache.skyCells.get(key) & 0xFF) / 255.0F;
+        }
+        int ceiling = ColumnCeilings.ceiling(level, Vec3.atCenterOf(pos), bake.sky());
+        float factor = LightTransport.cellSkyFactor(level, pos, bake.sky(), ceiling);
+        int stored = Math.round(factor * 255.0F);
+        cache.skyCells.put(key, (byte) stored);
+        return stored / 255.0F;
     }
 
     private static int compute(ThreadCache cache, ClientLevel level, BlockPos pos, boolean statics, List<ClientDynamicLights.Light> lights) {

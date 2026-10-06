@@ -90,5 +90,11 @@
   "bark.emergentstealth.civilian_curious.2": "Strange...",
   "commands.emergentstealth.npc.behaviour.set": "Set the behaviour of %s NPC(s) to %s",
   "commands.emergentstealth.npc.behaviour.reset": "%s NPC(s) use their archetype's behaviour again",
-  "commands.emergentstealth.npc.behaviour.unknown": "Unknown behaviour tree: %s"
+  "commands.emergentstealth.npc.behaviour.unknown": "Unknown behaviour tree: %s",
+  "emergentstealth.configuration.skyShadows": "Sun & Moon Shadows",
+  "emergentstealth.configuration.skyShadowRadius": "Sun & Moon Shadow Radius",
+  "emergentstealth.configuration.skyShadowAngleStep": "Sun Shadow Update Step (degrees)",
+  "emergentstealth.configuration.skySectionsPerTick": "Sun Shadow Sections Per Tick",
+  "emergentstealth.configuration.skyShadowsWithShaders": "Sun & Moon Shadows With Shader Packs",
+  "emergentstealth.configuration.heldLightWithShaders": "Own Held Light With Shader Packs"
 }
