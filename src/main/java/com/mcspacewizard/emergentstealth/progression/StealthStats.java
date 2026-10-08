@@ -67,6 +67,13 @@ public final class StealthStats {
                 gear.values().forEach((stat, value) -> apply(values, stat, value));
             }
         }
+        // Active techniques (design doc 26 §3).
+        if (Techniques.stillBreathing(player)) {
+            apply(values, StealthStat.VISIBILITY, Techniques.STILL_BREATH_VISIBILITY);
+        }
+        if (Techniques.active(player, Techniques.LIGHT_STEP)) {
+            apply(values, StealthStat.FOOTSTEP_LOUDNESS, 0.0F);
+        }
         return values;
     }
 

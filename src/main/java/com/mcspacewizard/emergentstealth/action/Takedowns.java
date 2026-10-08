@@ -64,6 +64,8 @@ public final class Takedowns {
         final ServerPlayer attacker;
         final StealthNpc victim;
         final TakedownDefinition definition;
+        /** Nobody was onto the attacker when it started (for Insight). */
+        boolean unseen;
         final long start;
         final Vec3 attackerPos;
         final float yaw;
@@ -171,6 +173,13 @@ public final class Takedowns {
             return false;
         }
         long now = level.getGameTime();
+        // Quiet Hands etc. (design doc 26): faster rear takedowns.
+        float speed = Math.max(0.25F, com.mcspacewizard.emergentstealth.progression.StealthStats.get(player,
+                com.mcspacewizard.emergentstealth.progression.StealthStat.TAKEDOWN_SPEED));
+        if (speed != 1.0F && definition.kind() == TakedownDefinition.Kind.REAR) {
+            definition = new TakedownDefinition(definition.kind(), definition.lethal(), Math.max(1, Math.round(definition.duration() / speed)),
+                    Math.round(definition.impactTick() / speed), definition.noise(), definition.attackerOffset());
+        }
         float yaw = victim.getYHeadRot();
         victim.setYRot(yaw);
         victim.setYBodyRot(yaw);
@@ -189,6 +198,7 @@ public final class Takedowns {
         player.setData(ESAttachments.ACTION, new ActionPlayback(action, ActionPlayback.Role.ATTACKER, now, definition.duration(), anchor, yaw));
         victim.setData(ESAttachments.ACTION, new ActionPlayback(action, ActionPlayback.Role.VICTIM, now, definition.duration(), anchor, yaw));
         Active active = new Active(player, victim, definition, now, attackerPos, yaw);
+        active.unseen = unseen(player, victim);
         ACTIVE.put(player.getUUID(), active);
         if (definition.impactTick() == 0) {
             impact(level, active);
@@ -206,6 +216,28 @@ public final class Takedowns {
         } else {
             victim.knockOut(level, active.attacker);
         }
+        if (active.unseen) {
+            com.mcspacewizard.emergentstealth.progression.Skills.awardInsight(active.attacker,
+                    com.mcspacewizard.emergentstealth.progression.SkillPath.SHINOBI,
+                    active.definition.lethal() ? com.mcspacewizard.emergentstealth.progression.Skills.INSIGHT_KILL_UNSEEN
+                            : com.mcspacewizard.emergentstealth.progression.Skills.INSIGHT_KNOCKOUT_UNSEEN);
+        }
+    }
+
+    /** Unseen: the victim wasn't aware of the attacker, and no NPC nearby is fighting or hunting them. */
+    private static boolean unseen(ServerPlayer player, StealthNpc victim) {
+        var awareness = victim.perception().get(player.getUUID());
+        if (awareness != null && awareness.awareness() >= 1.0F) {
+            return false;
+        }
+        for (StealthNpc npc : player.level().getEntitiesOfClass(StealthNpc.class, player.getBoundingBox().inflate(32.0),
+                n -> !n.isBody() && player.getUUID().equals(n.stealthBrain().alertTarget()))) {
+            AlertState state = npc.stealthBrain().state();
+            if (state == AlertState.COMBAT || state == AlertState.HUNTING) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static void finish(Active active) {

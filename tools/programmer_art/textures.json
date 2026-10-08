@@ -320,6 +320,82 @@
         "paper",
         "lacquer"
       ]
+    },
+    {
+      "path": "entity/equipment/humanoid/shinobi",
+      "shape": "skin",
+      "width": 64,
+      "height": 32,
+      "seed": 21,
+      "parts": {
+        "head": "ink",
+        "body": "ink",
+        "right_arm": "ink",
+        "right_leg": {
+          "color": "charcoal",
+          "from": 0.75,
+          "to": 1.0
+        }
+      }
+    },
+    {
+      "path": "entity/equipment/humanoid_leggings/shinobi",
+      "shape": "skin",
+      "width": 64,
+      "height": 32,
+      "seed": 22,
+      "parts": {
+        "body": {
+          "color": "indigo",
+          "from": 0.75,
+          "to": 1.0
+        },
+        "right_leg": {
+          "color": "indigo",
+          "from": 0.0,
+          "to": 0.8
+        }
+      }
+    },
+    {
+      "path": "item/shinobi_hood",
+      "shape": "badge",
+      "letter": "H",
+      "colors": [
+        "ink",
+        "indigo_light",
+        "paper"
+      ]
+    },
+    {
+      "path": "item/shinobi_garb",
+      "shape": "badge",
+      "letter": "G",
+      "colors": [
+        "ink",
+        "indigo_light",
+        "paper"
+      ]
+    },
+    {
+      "path": "item/hakama",
+      "shape": "badge",
+      "letter": "K",
+      "colors": [
+        "ink",
+        "indigo_light",
+        "paper"
+      ]
+    },
+    {
+      "path": "item/tabi",
+      "shape": "badge",
+      "letter": "T",
+      "colors": [
+        "ink",
+        "indigo_light",
+        "paper"
+      ]
     }
   ]
 }

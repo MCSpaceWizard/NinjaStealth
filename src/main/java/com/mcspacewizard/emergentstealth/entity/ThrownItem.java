@@ -90,7 +90,8 @@ public class ThrownItem extends net.minecraft.world.entity.projectile.throwablei
         Vec3 at = impactPoint(hitResult);
         ItemStack stack = getItem();
         boolean glass = shatters();
-        Noises.emit(level, new NoiseEvent(at, glass ? GLASS_LOUDNESS : IMPACT_LOUDNESS, NoiseKind.IMPACT, null, null));
+        Noises.emit(level, new NoiseEvent(at, glass ? GLASS_LOUDNESS : IMPACT_LOUDNESS, NoiseKind.IMPACT, null,
+                this.getOwner() != null ? this.getOwner().getUUID() : null));
         if (glass) {
             level.playSound(null, at.x, at.y, at.z, SoundEvents.GLASS_BREAK, SoundSource.NEUTRAL, 1.0F,
                     0.9F + this.random.nextFloat() * 0.2F);

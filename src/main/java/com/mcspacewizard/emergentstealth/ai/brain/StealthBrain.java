@@ -302,6 +302,9 @@ public final class StealthBrain {
         behaviour.reset();
 
         if (previous == AlertState.SEARCHING) {
+            if (next == AlertState.COMBAT || next == AlertState.HUNTING) {
+                SearchGroups.get(level).markFound(npc);
+            }
             SearchGroups.get(level).leave(npc);
         }
         if (previous == AlertState.COMBAT) {
@@ -387,6 +390,13 @@ public final class StealthBrain {
             return;
         }
         float strength = heard.intensity() * (noise.kind() == NoiseKind.SHOUT || noise.kind() == NoiseKind.EXPLOSION ? 1.5F : 1.0F);
+        // A player's distraction (thrown item, feint) drawing a calm guard over earns Insight (design doc 26 §2).
+        if (noise.source() != null && npc.isCombatant() && strength >= NOISE_INVESTIGATE_STRENGTH && !state.isActive()
+                && level.getPlayerByUUID(noise.source()) instanceof net.minecraft.server.level.ServerPlayer thrower) {
+            com.mcspacewizard.emergentstealth.progression.Skills.awardInsight(thrower,
+                    com.mcspacewizard.emergentstealth.progression.SkillPath.SHINOBI,
+                    com.mcspacewizard.emergentstealth.progression.Skills.INSIGHT_DISTRACTION);
+        }
         boolean replaces = noisePos == null || now - noiseTick > 40 || strength >= noiseStrength * 0.8F;
         if (replaces) {
             noisePos = noise.pos();
@@ -424,6 +434,9 @@ public final class StealthBrain {
      */
     public void onEvidence(ServerLevel level, Entity evidence, Vec3 at) {
         long now = level.getGameTime();
+        if (evidence instanceof StealthNpc found) {
+            com.mcspacewizard.emergentstealth.action.BodyCarrying.discovered(found);
+        }
         if (evidence instanceof StealthNpc body && body.getBodyState() == com.mcspacewizard.emergentstealth.action.BodyState.DEAD) {
             raiseAlarm(level, at, true);
             Barks.say(level, npc, "body");

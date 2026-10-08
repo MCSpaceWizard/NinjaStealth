@@ -41,6 +41,13 @@ public final class ESAttachments {
                     .sync((holder, to) -> holder == to && hasMod(holder, to), com.mcspacewizard.emergentstealth.progression.PlayerProgression.STREAM_CODEC)
                     .build());
 
+    /** Technique cooldowns and active effects (design doc 26 §3). Saved; synced to its owner. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<com.mcspacewizard.emergentstealth.progression.TechniqueState>> TECHNIQUES =
+            ATTACHMENT_TYPES.register("techniques", () -> AttachmentType.builder(() -> com.mcspacewizard.emergentstealth.progression.TechniqueState.EMPTY)
+                    .serialize(com.mcspacewizard.emergentstealth.progression.TechniqueState.CODEC.fieldOf("techniques"))
+                    .sync((holder, to) -> holder == to && hasMod(holder, to), com.mcspacewizard.emergentstealth.progression.TechniqueState.STREAM_CODEC)
+                    .build());
+
     /** Only players with the mod's channels get attachment syncs (GameTest players have none). */
     private static boolean hasMod(IAttachmentHolder holder, ServerPlayer to) {
         return to.connection != null && to.connection.hasChannel(BarkPayload.TYPE);

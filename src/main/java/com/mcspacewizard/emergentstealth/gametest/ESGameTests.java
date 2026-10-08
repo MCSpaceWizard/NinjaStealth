@@ -72,6 +72,10 @@ public final class ESGameTests {
         test("verbs/drag_follows", VerbTests::dragFollows);
         test("verbs/crawl_stance", VerbTests::crawlStance);
         test("verbs/air_takedown", VerbTests::airTakedown);
+        test("progression/stats_stack", ProgressionTests::statsStack);
+        test("progression/unlock_rules", ProgressionTests::unlockRules);
+        test("progression/insight_to_points", ProgressionTests::insightToPoints);
+        test("progression/still_breath", ProgressionTests::stillBreath);
     }
 
     private static void test(String name, Consumer<GameTestHelper> function, int maxTicks) {

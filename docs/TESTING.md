@@ -16,6 +16,24 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Progression foundations: skills, techniques, stealth gear 🧪
+
+**Automated checks (already passing):** 4 more GameTests (56 total):
+- skills and gear stack on stealth stats (and metal armour is louder)
+- unlock rules (points, prerequisites, capstones)
+- Insight becomes skill points
+- Still Breath: works only crouched and still, with cooldown
+
+The skill tree **screen** (K) is coming with the Sumi UI framework. Until then, use the commands below.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| P.1 | Insight | Survival: knock out or kill guards **unseen**, distract a calm guard with a thrown item, escape a search, hide a body nobody finds for 5 minutes | "New skill point" on the action bar every 100 Insight (knockout 15, kill 10, body hidden 10, distraction 3, escape 20). Creative earns nothing |
+| P.2 | Skill commands | `/es skills points @s shinobi 10`, `/es skills unlock @s emergentstealth:soft_soles`, `/es skills reset @s` | Points given; skill unlocked (the unlock command grants the cost for testing); everything cleared |
+| P.3 | Skills work | Unlock `soft_soles` and sprint past a guard behind you; compare with before | Heard noticeably less often (footsteps 15% quieter). `quiet_hands`: chokes are faster. `strong_back`: faster dragging. `iron_resolve`: +2 hearts |
+| P.4 | Techniques | Unlock `still_breath`, `light_step`, `feint`. Press **X** to use, **sneak + X** to switch | The selected technique and its cooldown show right of the light gem (green while active). Still Breath: crouch and stay still, 40% harder to see. Light Step: 6 s of silent footsteps. Feint: a noise where you look (a guard investigates it) |
+| P.5 | Stealth gear | Craft (or take from creative) Shinobi Hood, Garb, Hakama, Tabi | Black/indigo cloth armour. Tooltips show stealth stats (e.g. Footsteps -20%). Iron/diamond/netherite armour shows nothing but makes footsteps 20% louder per piece |
+
 ## Stage 7: Crawl, takedowns, bodies & evidence 🧪
 
 **Automated checks (already passing):** 7 more GameTests:

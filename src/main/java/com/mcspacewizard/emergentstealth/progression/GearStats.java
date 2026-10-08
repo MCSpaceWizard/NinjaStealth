@@ -22,7 +22,23 @@ public record GearStats(Map<StealthStat, Float> values) {
     /** Heavy metal armour clanks: footsteps ×1.2 per piece (tag {@code emergentstealth:loud_armor}). */
     private static final GearStats LOUD_ARMOR = new GearStats(Map.of(StealthStat.FOOTSTEP_LOUDNESS, 1.2F));
 
+    /** Built-in stats of the shinobi set (design doc 26 §4); the data component overrides them. */
     public static @Nullable GearStats defaultFor(ItemStack stack) {
-        return !stack.isEmpty() && stack.is(com.mcspacewizard.emergentstealth.progression.ProgressionTags.LOUD_ARMOR) ? LOUD_ARMOR : null;
+        if (stack.isEmpty()) {
+            return null;
+        }
+        if (stack.is(com.mcspacewizard.emergentstealth.registry.ESItems.SHINOBI_HOOD.get())) {
+            return new GearStats(Map.of(StealthStat.VISIBILITY, 0.95F));
+        }
+        if (stack.is(com.mcspacewizard.emergentstealth.registry.ESItems.SHINOBI_GARB.get())) {
+            return new GearStats(Map.of(StealthStat.VISIBILITY, 0.9F));
+        }
+        if (stack.is(com.mcspacewizard.emergentstealth.registry.ESItems.HAKAMA.get())) {
+            return new GearStats(Map.of(StealthStat.FOOTSTEP_LOUDNESS, 0.95F));
+        }
+        if (stack.is(com.mcspacewizard.emergentstealth.registry.ESItems.TABI.get())) {
+            return new GearStats(Map.of(StealthStat.FOOTSTEP_LOUDNESS, 0.8F));
+        }
+        return stack.is(ProgressionTags.LOUD_ARMOR) ? LOUD_ARMOR : null;
     }
 }

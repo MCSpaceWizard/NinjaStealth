@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "###",
+    "#S#"
+  ],
+  "key": {
+    "#": "minecraft:black_wool",
+    "S": "minecraft:string"
+  },
+  "result": {
+    "id": "emergentstealth:shinobi_hood",
+    "count": 1
+  }
+}

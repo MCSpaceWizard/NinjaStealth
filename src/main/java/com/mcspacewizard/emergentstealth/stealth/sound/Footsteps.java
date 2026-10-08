@@ -115,7 +115,9 @@ public final class Footsteps {
 
     /** Footstep loudness right now: stance × surface. */
     public static float loudness(Player player) {
-        return stanceLoudness(player) * surfaceMultiplier(player);
+        return stanceLoudness(player) * surfaceMultiplier(player)
+                * com.mcspacewizard.emergentstealth.progression.StealthStats.get(player,
+                        com.mcspacewizard.emergentstealth.progression.StealthStat.FOOTSTEP_LOUDNESS);
     }
 
     /** The footstep noise this player would make right now (at their feet, giving them away). */
@@ -137,7 +139,11 @@ public final class Footsteps {
         if (!NpcPerception.isTargetable(player) || player.isInWater()) {
             return;
         }
-        float loudness = landingLoudness(player.fallDistance, player.isShiftKeyDown());
+        // Light Step halves landings; otherwise gear and skills scale them like footsteps.
+        float loudness = landingLoudness(player.fallDistance, player.isShiftKeyDown())
+                * (com.mcspacewizard.emergentstealth.progression.Techniques.active(player, com.mcspacewizard.emergentstealth.progression.Techniques.LIGHT_STEP)
+                        ? 0.5F : com.mcspacewizard.emergentstealth.progression.StealthStats.get(player,
+                                com.mcspacewizard.emergentstealth.progression.StealthStat.FOOTSTEP_LOUDNESS));
         if (loudness > 0.0F) {
             Noises.emit(level, new NoiseEvent(player.position(), loudness, NoiseKind.LANDING, player.getUUID(), player.getUUID()));
         }

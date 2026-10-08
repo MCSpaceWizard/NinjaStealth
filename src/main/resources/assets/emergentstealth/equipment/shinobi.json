@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "emergentstealth:shinobi"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "emergentstealth:shinobi"
+      }
+    ]
+  }
+}

@@ -57,6 +57,7 @@ public final class Skills {
         progression = progression.withPoints(skill.path(), progression.points(skill.path()) - skill.cost()).withUnlocked(skillId);
         player.setData(ESAttachments.PROGRESSION, progression);
         StealthStats.invalidate(player);
+        SkillAttributes.refresh(player);
         return true;
     }
 
@@ -64,6 +65,22 @@ public final class Skills {
         if (context.player() instanceof ServerPlayer player) {
             unlock(player, payload.skill());
         }
+    }
+
+    /** Insight per deed (design doc 26 §2). */
+    public static final int INSIGHT_KNOCKOUT_UNSEEN = 15;
+    public static final int INSIGHT_KILL_UNSEEN = 10;
+    public static final int INSIGHT_BODY_HIDDEN = 10;
+    public static final int INSIGHT_LOCKPICK = 5;
+    public static final int INSIGHT_DISTRACTION = 3;
+    public static final int INSIGHT_ESCAPE = 20;
+
+    /** Clears all skills, Insight and points (op command; the hideout shrine respec comes with S16). */
+    public static void reset(ServerPlayer player) {
+        player.setData(ESAttachments.PROGRESSION, PlayerProgression.EMPTY);
+        player.setData(ESAttachments.TECHNIQUES, TechniqueState.EMPTY);
+        StealthStats.invalidate(player);
+        SkillAttributes.refresh(player);
     }
 
     /** Awards Insight for a stealth deed (design doc 26 §2). */

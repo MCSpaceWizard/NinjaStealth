@@ -45,6 +45,7 @@ public final class ESCommands {
                         .then(Commands.literal("list")
                                 .executes(ESCommands::listNpcs))
                         .then(PatrolCommands.behaviour()))
+                .then(SkillCommands.skills())
                 .then(PatrolCommands.patrol())
                 .then(PatrolCommands.routine()));
         dispatcher.register(Commands.literal("es").redirect(root));

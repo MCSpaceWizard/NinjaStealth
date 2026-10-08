@@ -41,6 +41,41 @@ public final class BodyCarrying {
     /** A body further than this from its carrier (teleport, lag) is dropped. */
     private static final double MAX_DISTANCE = 6.0;
 
+    /** Bodies a player put down: who, and when (design doc 26 §2: unfound for 5 minutes earns Insight). */
+    private record Hidden(java.util.UUID player, long tick) {}
+
+    private static final java.util.Map<java.util.UUID, Hidden> HIDDEN = new java.util.HashMap<>();
+    public static final long HIDDEN_TICKS = 20L * 60 * 5;
+
+    /** An NPC noticed this body: no hiding Insight for it. */
+    public static void discovered(StealthNpc body) {
+        HIDDEN.remove(body.getUUID());
+    }
+
+    @SubscribeEvent
+    public static void onLevelTick(net.neoforged.neoforge.event.tick.LevelTickEvent.Post event) {
+        if (!(event.getLevel() instanceof ServerLevel level) || HIDDEN.isEmpty() || level.getGameTime() % 20 != 0) {
+            return;
+        }
+        long now = level.getGameTime();
+        var it = HIDDEN.entrySet().iterator();
+        while (it.hasNext()) {
+            var entry = it.next();
+            if (now - entry.getValue().tick() < HIDDEN_TICKS) {
+                continue;
+            }
+            if (level.getEntity(entry.getKey()) instanceof StealthNpc body && body.isBody()
+                    && level.getPlayerByUUID(entry.getValue().player()) instanceof ServerPlayer player) {
+                com.mcspacewizard.emergentstealth.progression.Skills.awardInsight(player,
+                        com.mcspacewizard.emergentstealth.progression.SkillPath.SHINOBI,
+                        com.mcspacewizard.emergentstealth.progression.Skills.INSIGHT_BODY_HIDDEN);
+                it.remove();
+            } else if (level.getEntity(entry.getKey()) == null && now - entry.getValue().tick() > HIDDEN_TICKS * 4) {
+                it.remove(); // unloaded or gone: forget it eventually
+            }
+        }
+    }
+
     public static CarryLink link(Entity entity) {
         return entity.getData(ESAttachments.CARRY);
     }
@@ -58,7 +93,9 @@ public final class BodyCarrying {
         player.setData(ESAttachments.CARRY, new CarryLink(body.getId(), mode));
         body.setData(ESAttachments.CARRY, new CarryLink(player.getId(), mode));
         body.setNoGravity(mode == CarryLink.Mode.CARRY);
-        setSpeed(player, mode == CarryLink.Mode.CARRY ? CARRY_SPEED : DRAG_SPEED);
+        double skill = com.mcspacewizard.emergentstealth.progression.StealthStats.get(player,
+                com.mcspacewizard.emergentstealth.progression.StealthStat.DRAG_SPEED);
+        setSpeed(player, Math.min(1.0, (mode == CarryLink.Mode.CARRY ? CARRY_SPEED : DRAG_SPEED) * skill));
     }
 
     /** Server: the player right-clicked while moving a body. */
@@ -80,6 +117,9 @@ public final class BodyCarrying {
                 Vec3 at = player.position().add(player.getLookAngle().multiply(1, 0, 1).normalize().scale(0.8));
                 body.setPos(at.x, player.getY(), at.z);
                 body.setDeltaMovement(Vec3.ZERO);
+                if (player instanceof ServerPlayer && !player.isCreative()) {
+                    HIDDEN.put(body.getUUID(), new Hidden(player.getUUID(), player.level().getGameTime()));
+                }
             }
         }
     }

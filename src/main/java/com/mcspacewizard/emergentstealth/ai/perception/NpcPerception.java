@@ -276,6 +276,9 @@ public final class NpcPerception {
         if (target.isInvisible()) {
             visibility *= INVISIBLE_FACTOR;
         }
+        // Skills, stealth gear and techniques (design doc 26).
+        visibility *= com.mcspacewizard.emergentstealth.progression.StealthStats.get(target,
+                com.mcspacewizard.emergentstealth.progression.StealthStat.VISIBILITY);
         return new Sight(visibility, anyRay, rays);
     }
 

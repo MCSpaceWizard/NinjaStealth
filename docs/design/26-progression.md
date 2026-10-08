@@ -1,4 +1,14 @@
-# 26 — Progression foundations: skills, abilities, stealth gear (S17, pulled forward) 📄
+# 26 — Progression foundations: skills, abilities, stealth gear (S17, pulled forward) ✅ foundations implemented
+
+> **Status (2026-10-08):** implemented with 4 GameTests:
+> - skills registry and effects
+> - the `StealthStats` pipeline (wired into sight, footsteps, landings, takedown speed and drag speed)
+> - Insight for unseen takedowns, distractions, escaped searches and hidden bodies (lockpicking comes with the toolkit)
+> - techniques on **X**
+> - the shinobi gear set and gear tooltips
+> - `/es skills` commands
+>
+> The skill tree screen comes with the Sumi UI framework (doc 31).
 
 You asked (2026-10-08) for **equipment, tools and abilities** plus the **foundations of the skill trees**. Tools are in [21-toolkit](21-toolkit.md). This doc covers the rest:
 - the **data-driven skill system**
@@ -53,7 +63,7 @@ The look of the skill tree comes from the new UI framework ([31-ui-framework](31
 
 ## 3. Techniques: active abilities (grounded, no magic)
 
-- **Ability key** (default **X**): uses the selected technique. **Hold X** to pick from your unlocked techniques (it uses the same radial wheel component as tools).
+- **Ability key** (default **X**): uses the selected technique. **Sneak + X** selects the next unlocked one (a radial picker can come with the Sumi UI).
 - **Starter set:**
 
   | Technique | Path | Effect | Cooldown |

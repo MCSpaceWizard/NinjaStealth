@@ -68,6 +68,8 @@ public final class SearchGroups {
         final long started;
         final Set<UUID> members = new LinkedHashSet<>();
         final List<Point> points = new ArrayList<>();
+        /** A searcher found the target again (no escape Insight). */
+        boolean found;
 
         Group(Vec3 center, @Nullable UUID target, long started) {
             this.center = center;
@@ -125,10 +127,25 @@ public final class SearchGroups {
         return byMember.get(npc.getUUID());
     }
 
+    /** A searcher found its target again (it went back to hunting or fighting). */
+    public void markFound(StealthNpc npc) {
+        Group group = byMember.get(npc.getUUID());
+        if (group != null) {
+            group.found = true;
+        }
+    }
+
     public void leave(StealthNpc npc) {
         Group group = byMember.remove(npc.getUUID());
         if (group == null) {
             return;
+        }
+        if (group.members.size() == 1 && !group.found && group.target != null
+                && npc.level().getPlayerByUUID(group.target) instanceof net.minecraft.server.level.ServerPlayer escaped) {
+            // The whole search ended without finding them: they escaped (design doc 26 §2).
+            com.mcspacewizard.emergentstealth.progression.Skills.awardInsight(escaped,
+                    com.mcspacewizard.emergentstealth.progression.SkillPath.SHINOBI,
+                    com.mcspacewizard.emergentstealth.progression.Skills.INSIGHT_ESCAPE);
         }
         group.members.remove(npc.getUUID());
         for (Point point : group.points) {
