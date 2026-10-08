@@ -34,6 +34,10 @@ final class TestPlayers {
         Connection connection = new Connection(PacketFlow.SERVERBOUND);
         new EmbeddedChannel(connection);
         level.getServer().getPlayerList().placeNewPlayer(connection, player, cookie);
+        // The server default game mode may be creative: make abilities (invulnerability) match survival too.
+        player.getAbilities().invulnerable = false;
+        player.getAbilities().mayfly = false;
+        player.getAbilities().instabuild = false;
         Vec3 abs = helper.absoluteVec(relativePos);
         player.snapTo(abs.x, abs.y, abs.z, yaw, 0.0F);
         player.xo = abs.x;

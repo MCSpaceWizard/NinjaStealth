@@ -136,9 +136,37 @@ final class BehaviourTests {
         return null;
     }
 
+    /** An attacking guard closes in to melee range (not on Peaceful: vanilla mobs never attack players there). */
+    static void attackerClosesIn(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        normalDifficulty(level);
+        StealthNpc npc = guard(helper, new Vec3(4.5, 1, 4.5), 0.0F, true);
+        ServerPlayer player = TestPlayers.spawn(helper, new Vec3(4.5, 1, 12.5), 180.0F);
+        npc.hurtServer(level, level.damageSources().playerAttack(player), 1.0F);
+        helper.onEachTick(() -> {
+            if (npc.distanceTo(player) < 2.5) {
+                TestPlayers.remove(player);
+                helper.succeed();
+            }
+        });
+        helper.runAfterDelay(150, () -> {
+            String info = String.format("distance %.1f, target %s, nav done %s, difficulty %s, invulnerable %s, canAttack %s",
+                    npc.distanceTo(player), npc.getTarget(), npc.getNavigation().isDone(), level.getDifficulty(),
+                    player.isInvulnerable(), npc.canAttack(player));
+            TestPlayers.remove(player);
+            helper.fail("The attacker should close in: " + info + describe(npc));
+        });
+    }
+
+    /** Vanilla mobs never attack players on Peaceful (the test server's default), so combat tests use Normal. */
+    private static void normalDifficulty(ServerLevel level) {
+        level.getServer().setDifficulty(net.minecraft.world.Difficulty.NORMAL, true);
+    }
+
     /** 3. With three guards on one target, at most two attack; the third holds the ring. */
     static void attackTokensLimit(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
+        normalDifficulty(level);
         List<StealthNpc> guards = List.of(
                 guard(helper, new Vec3(2.5, 1, 6.5), 0.0F, false),
                 guard(helper, new Vec3(4.5, 1, 6.5), 0.0F, false),

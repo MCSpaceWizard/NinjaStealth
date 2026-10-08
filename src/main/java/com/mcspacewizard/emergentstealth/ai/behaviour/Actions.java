@@ -259,7 +259,10 @@ public final class Actions {
         }
     }
 
-    /** Melee the alert target (vanilla melee for now; S13 brings real combat). Needs an attack token. */
+    /**
+     * Melee the alert target (vanilla melee for now; S13 brings real combat). Needs an attack token. Fails when the
+     * NPC may not attack it (vanilla rule: nobody attacks players on Peaceful), so the tree falls back to the ring.
+     */
     public record Attack() implements BtNode {
         @Override
         public BtNodeType<?> type() {
@@ -270,7 +273,8 @@ public final class Actions {
         public BtStatus tick(BtContext ctx) {
             UUID target = ctx.brain().alertTarget();
             LivingEntity entity = ctx.brain().targetEntity(ctx.level());
-            if (target == null || entity == null || !AttackTokens.get(ctx.level()).request(ctx.level(), ctx.npc(), target, ctx.now())) {
+            if (target == null || entity == null || !ctx.npc().canAttack(entity)
+                    || !AttackTokens.get(ctx.level()).request(ctx.level(), ctx.npc(), target, ctx.now())) {
                 return BtStatus.FAILURE;
             }
             ctx.requestMelee();

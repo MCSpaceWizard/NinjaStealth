@@ -87,7 +87,10 @@ public final class Conditions {
         @Override
         public boolean test(BtContext ctx) {
             java.util.UUID target = ctx.brain().alertTarget();
-            return target != null && AttackTokens.get(ctx.level()).request(ctx.level(), ctx.npc(), target, ctx.now());
+            net.minecraft.world.entity.LivingEntity entity = ctx.brain().targetEntity(ctx.level());
+            // Only NPCs that may attack (not on Peaceful) compete for tokens.
+            return target != null && entity != null && ctx.npc().canAttack(entity)
+                    && AttackTokens.get(ctx.level()).request(ctx.level(), ctx.npc(), target, ctx.now());
         }
     }
 

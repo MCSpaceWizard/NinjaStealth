@@ -64,6 +64,7 @@ public final class ESGameTests {
         test("behaviour/shout_brings_guard", BehaviourTests::shoutBringsGuard, 400);
         test("behaviour/search_group_splits", BehaviourTests::searchGroupSplits, 200);
         test("behaviour/attack_tokens_limit", BehaviourTests::attackTokensLimit);
+        test("behaviour/attacker_closes_in", BehaviourTests::attackerClosesIn, 200);
     }
 
     private static void test(String name, Consumer<GameTestHelper> function, int maxTicks) {
