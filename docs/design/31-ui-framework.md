@@ -2,6 +2,30 @@
 
 You asked (2026-10-08) for a **custom GUI framework** so the config, the skill tree, and later menus and dialogue look attractive and consistent. It follows the ink-and-paper accent theme (U-02).
 
+## 0. Direction and design pass (2026-10-08) 📄 for review
+
+**Direction (your request, going with the recommendation from HANDOFF):**
+- No flat colours anywhere in the GUI.
+- **Modern geometric shapes drawn in code** (cut-corner panels, circles, rings, diamonds, hexagons, tapered brush strokes), with **procedural paper grain** and **ink accents**.
+- An **animation system**: eased tweens, inertial (smooth) scrolling, and swiping between tabs.
+- Easy to generate and to theme, and still clearly ink-and-paper.
+
+**How it's built (decisions to review):**
+
+| Topic | Decision |
+|---|---|
+| Shapes | Drawn as real vertex meshes through NeoForge's custom GUI element hook (`submitGuiElementRenderState`), not as pixel textures. Edges stay crisp at every GUI scale, and shapes can rotate and scale smoothly. |
+| Textures | Paper grain and ink speckle are **generated in code** at runtime (tileable noise, seeded from the theme). No PNGs ship, so nothing needs painting. A resource pack *may* drop `textures/gui/sumi/paper.png` or `ink.png` and Sumi uses it instead. |
+| Brush strokes | Geometry too: a polyline whose width tapers at both ends and wobbles with noise, so dividers, frames and the skill tree's prerequisite lines look painted. |
+| Theme | `assets/emergentstealth/ui/theme.json` holds **tokens**: colours, metrics (padding, gap, corner cut, stroke), motion timings and grain settings. Missing keys fall back to built-in defaults, so a pack can override one colour. `ui/theme_high_contrast.json` is layered on top when the high-contrast option is on. |
+| Motion | Tweens with easing curves (cubic, quart, expo, back), driven by real time. Inertial scroll: the wheel glides to a target, drags fling and coast with friction, edges rubber-band. Tabs are pages that swipe with a drag (or a horizontal trackpad scroll) and snap. **Reduced motion** turns all of it into instant changes. |
+| Pure logic | Easing, tweens, inertial scroll, the swipe pager, layout maths, the theme codec, the config-to-widget mapping, the skill tree model and the typewriter live in a side-neutral package `ui/` (no client classes) so GameTests can check them. Everything that draws lives in `client/ui/`. |
+| New client options | `ui.highContrast`, `ui.reducedMotion`, `ui.typewriterSpeed`. |
+| Keys | **K** opens the skill tree (rebindable). In the tree: drag to pan, wheel to zoom, Q/E or PageUp/PageDown switch paths, arrows + Enter work too. |
+| Dev commands | `/es dev dialogue` (op) opens the dialogue preview from the server. The client command `/esui config|skills|dialogue` opens each screen directly, which the screenshot automation uses. |
+
+**Not in this pass:** text fields, dropdowns and lists (no screen needs them yet), a gamepad mapping (focus order is ready for it), a custom brush font.
+
 ## 1. Goals
 
 - **One look everywhere:** washi-paper panels, sumi-ink brush borders, vermilion seal (hanko) accents, subtle motion.
