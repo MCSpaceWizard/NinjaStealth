@@ -1,0 +1,17 @@
+{
+  "path": "shinobi",
+  "column": 3,
+  "row": 2,
+  "cost": 1,
+  "requires": [
+    "emergentstealth:quiet_hands"
+  ],
+  "effects": [
+    {
+      "type": "stealth_stat",
+      "stat": "drag_speed",
+      "value": 1.2
+    }
+  ],
+  "icon": "minecraft:lead"
+}

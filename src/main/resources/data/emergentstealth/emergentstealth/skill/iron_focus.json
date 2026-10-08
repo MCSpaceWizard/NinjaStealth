@@ -1,0 +1,16 @@
+{
+  "path": "shogunate",
+  "column": 1,
+  "row": 1,
+  "cost": 2,
+  "requires": [
+    "emergentstealth:iron_resolve"
+  ],
+  "effects": [
+    {
+      "type": "unlock_technique",
+      "technique": "emergentstealth:iron_focus"
+    }
+  ],
+  "icon": "minecraft:shield"
+}

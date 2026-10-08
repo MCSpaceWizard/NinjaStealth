@@ -1,0 +1,17 @@
+{
+  "path": "shinobi",
+  "column": 3,
+  "row": 1,
+  "cost": 1,
+  "requires": [
+    "emergentstealth:shadow_walker"
+  ],
+  "effects": [
+    {
+      "type": "stealth_stat",
+      "stat": "takedown_speed",
+      "value": 1.25
+    }
+  ],
+  "icon": "minecraft:string"
+}

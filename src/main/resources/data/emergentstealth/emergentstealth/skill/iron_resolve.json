@@ -1,0 +1,15 @@
+{
+  "path": "shogunate",
+  "column": 2,
+  "row": 0,
+  "cost": 1,
+  "effects": [
+    {
+      "type": "attribute",
+      "attribute": "minecraft:max_health",
+      "amount": 4,
+      "operation": "add_value"
+    }
+  ],
+  "icon": "minecraft:iron_ingot"
+}

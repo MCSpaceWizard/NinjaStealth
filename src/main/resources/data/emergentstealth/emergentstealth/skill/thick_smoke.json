@@ -1,0 +1,17 @@
+{
+  "path": "shinobi",
+  "column": 4,
+  "row": 3,
+  "cost": 1,
+  "requires": [
+    "emergentstealth:nimble_fingers"
+  ],
+  "effects": [
+    {
+      "type": "stealth_stat",
+      "stat": "smoke_duration",
+      "value": 1.5
+    }
+  ],
+  "icon": "minecraft:gunpowder"
+}

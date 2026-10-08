@@ -1,0 +1,17 @@
+{
+  "path": "shinobi",
+  "column": 4,
+  "row": 2,
+  "cost": 1,
+  "requires": [
+    "emergentstealth:quiet_hands"
+  ],
+  "effects": [
+    {
+      "type": "stealth_stat",
+      "stat": "lockpick_window",
+      "value": 1.3
+    }
+  ],
+  "icon": "minecraft:tripwire_hook"
+}

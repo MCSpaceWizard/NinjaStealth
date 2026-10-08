@@ -31,6 +31,9 @@ public final class ESNetwork {
         registrar.playToClient(LightGemPayload.TYPE, LightGemPayload.STREAM_CODEC);
         registrar.playToClient(LightDebugPayload.TYPE, LightDebugPayload.STREAM_CODEC);
         registrar.playToClient(RouteSyncPayload.TYPE, RouteSyncPayload.STREAM_CODEC);
+        registrar.playToServer(com.mcspacewizard.emergentstealth.progression.UnlockSkillPayload.TYPE,
+                com.mcspacewizard.emergentstealth.progression.UnlockSkillPayload.STREAM_CODEC,
+                com.mcspacewizard.emergentstealth.progression.Skills::handleUnlock);
         registrar.playToServer(com.mcspacewizard.emergentstealth.action.DropBodyPayload.TYPE,
                 com.mcspacewizard.emergentstealth.action.DropBodyPayload.STREAM_CODEC,
                 com.mcspacewizard.emergentstealth.action.BodyCarrying::handleDrop);

@@ -24,6 +24,8 @@ public final class ESRegistries {
             ResourceKey.createRegistryKey(EmergentStealth.id("behaviour"));
     public static final ResourceKey<Registry<com.mcspacewizard.emergentstealth.action.TakedownDefinition>> TAKEDOWN =
             ResourceKey.createRegistryKey(EmergentStealth.id("takedown"));
+    public static final ResourceKey<Registry<com.mcspacewizard.emergentstealth.progression.SkillDefinition>> SKILL =
+            ResourceKey.createRegistryKey(EmergentStealth.id("skill"));
     public static final ResourceKey<Registry<PerceptionProfile>> PERCEPTION_PROFILE = ResourceKey.createRegistryKey(EmergentStealth.id("perception_profile"));
     /** Vanilla game event → noise mapping (design doc 16 §1). Server-only. */
     public static final ResourceKey<Registry<NoiseSource>> NOISE_SOURCE = ResourceKey.createRegistryKey(EmergentStealth.id("noise_source"));
@@ -32,6 +34,9 @@ public final class ESRegistries {
         event.dataPackRegistry(OUTFIT, Outfit.CODEC, Outfit.CODEC);
         event.dataPackRegistry(ARCHETYPE, Archetype.CODEC, Archetype.CODEC);
         event.dataPackRegistry(PERCEPTION_PROFILE, PerceptionProfile.CODEC);
+        // Synced: the skill tree screen needs it.
+        event.dataPackRegistry(SKILL, com.mcspacewizard.emergentstealth.progression.SkillDefinition.CODEC,
+                com.mcspacewizard.emergentstealth.progression.SkillDefinition.CODEC);
         event.dataPackRegistry(TAKEDOWN, com.mcspacewizard.emergentstealth.action.TakedownDefinition.CODEC);
         event.dataPackRegistry(BEHAVIOUR, com.mcspacewizard.emergentstealth.ai.behaviour.BehaviourTree.CODEC);
         event.dataPackRegistry(NOISE_SOURCE, NoiseSource.CODEC);

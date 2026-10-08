@@ -33,6 +33,14 @@ public final class ESAttachments {
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<CarryLink>> CARRY = ATTACHMENT_TYPES.register("carry",
             () -> AttachmentType.builder(() -> CarryLink.NONE).sync(ESAttachments::hasMod, CarryLink.STREAM_CODEC).build());
 
+    /** Skills, Insight and points (design doc 26). Saved; synced to the owning player only. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<com.mcspacewizard.emergentstealth.progression.PlayerProgression>> PROGRESSION =
+            ATTACHMENT_TYPES.register("progression", () -> AttachmentType.builder(() -> com.mcspacewizard.emergentstealth.progression.PlayerProgression.EMPTY)
+                    .serialize(com.mcspacewizard.emergentstealth.progression.PlayerProgression.CODEC.fieldOf("progression"))
+                    .copyOnDeath()
+                    .sync((holder, to) -> holder == to && hasMod(holder, to), com.mcspacewizard.emergentstealth.progression.PlayerProgression.STREAM_CODEC)
+                    .build());
+
     /** Only players with the mod's channels get attachment syncs (GameTest players have none). */
     private static boolean hasMod(IAttachmentHolder holder, ServerPlayer to) {
         return to.connection != null && to.connection.hasChannel(BarkPayload.TYPE);

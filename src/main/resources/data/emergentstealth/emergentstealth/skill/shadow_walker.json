@@ -1,0 +1,14 @@
+{
+  "path": "shinobi",
+  "column": 2,
+  "row": 0,
+  "cost": 1,
+  "effects": [
+    {
+      "type": "stealth_stat",
+      "stat": "visibility",
+      "value": 0.95
+    }
+  ],
+  "icon": "minecraft:black_dye"
+}

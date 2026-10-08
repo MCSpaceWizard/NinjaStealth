@@ -1,0 +1,17 @@
+{
+  "path": "shogunate",
+  "column": 3,
+  "row": 1,
+  "cost": 1,
+  "requires": [
+    "emergentstealth:iron_resolve"
+  ],
+  "effects": [
+    {
+      "type": "stealth_stat",
+      "stat": "technique_cooldown",
+      "value": 0.85
+    }
+  ],
+  "icon": "minecraft:clock"
+}

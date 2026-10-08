@@ -1,0 +1,16 @@
+{
+  "path": "shinobi",
+  "column": 1,
+  "row": 2,
+  "cost": 2,
+  "requires": [
+    "emergentstealth:soft_soles"
+  ],
+  "effects": [
+    {
+      "type": "unlock_technique",
+      "technique": "emergentstealth:light_step"
+    }
+  ],
+  "icon": "minecraft:leather_boots"
+}

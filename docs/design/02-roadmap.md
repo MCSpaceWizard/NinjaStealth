@@ -75,7 +75,7 @@ The goal of M1 is the **vertical slice** you approved [Z-02]: one guard type tha
 
 | Stage | Contents | Doc |
 |---|---|---|
-| **S17 Progression** | **Path of Shinobi / Path of Shogunate** skill trees, mastery challenges → capstones, coin currency, legendary pool (optional Apotheosis compat) | 📄 26-progression |
+| **S17 Progression** ⏳ (foundations pulled forward: [26](26-progression.md)) | **Path of Shinobi / Path of Shogunate** skill trees, mastery challenges → capstones, coin currency, legendary pool (optional Apotheosis compat) | 📄 26-progression |
 | **S18 Contracts & missions** | Contract board (procedural + authored), **mission UI/HUD framework with stages** (spyglass-gated objective tracker), ratings tracked | 📄 27-missions |
 | **S19 Map-maker suite** | NPC spawner blocks + **GUI editor**, trigger volumes, mission scripting, scenario packaging (zone and patrol tools already exist from S5/S9) | 📄 28-map-tools |
 
@@ -85,6 +85,7 @@ The goal of M1 is the **vertical slice** you approved [Z-02]: one guard type tha
 - **Animation:** PAL player animations (takedowns, climbing, dragging, crawl); NPCs use vanilla keyframes plus an in-house procedural pose layer (no GeckoLib; see [research-animation](research-animation.md)).
 - **Smoke:** volumetric-looking smoke.
 - **Music and sound:** dynamic music by alert state; CC0 sound effects; accessibility visual sound cues.
+- **UI framework "Sumi"** (ink and paper; [31](31-ui-framework.md)): config screen, skill tree, dialogue. Pulled forward 2026-10-08.
 - **Onboarding and integrations:** guidebook, dojo training course, Jade/EMI polish.
 
 ## Later / backlog

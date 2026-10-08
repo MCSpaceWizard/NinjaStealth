@@ -1,0 +1,17 @@
+{
+  "path": "shinobi",
+  "column": 1,
+  "row": 1,
+  "cost": 1,
+  "requires": [
+    "emergentstealth:shadow_walker"
+  ],
+  "effects": [
+    {
+      "type": "stealth_stat",
+      "stat": "footstep_loudness",
+      "value": 0.85
+    }
+  ],
+  "icon": "minecraft:white_wool"
+}

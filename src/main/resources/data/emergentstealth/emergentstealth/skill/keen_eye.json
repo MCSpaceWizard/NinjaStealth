@@ -1,0 +1,17 @@
+{
+  "path": "shinobi",
+  "column": 2,
+  "row": 3,
+  "cost": 2,
+  "requires": [
+    "emergentstealth:feint"
+  ],
+  "effects": [
+    {
+      "type": "stealth_stat",
+      "stat": "tag_count",
+      "value": 1
+    }
+  ],
+  "icon": "minecraft:spyglass"
+}
