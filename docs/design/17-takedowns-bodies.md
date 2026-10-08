@@ -1,4 +1,6 @@
-# 17 — Player verbs I: crawl, takedowns, bodies (Stage 7) 📄
+# 17 — Player verbs I: crawl, takedowns, bodies (Stage 7) ⏳
+
+> **Status (2026-10-08):** server side implemented and covered by 7 GameTests: crawl, takedowns, bodies, dragging and carrying, evidence, waking. Animations are being built in parallel (`claude/s7-animation`). Drop a body by right-clicking again; sneaking doesn't drop it, because sneaking while dragging is common.
 
 The player gets the core stealth verbs: **crawl**, **take guards down** quietly (lethal or not), and **hide the bodies**, which guards now notice. Animation follows [research-animation](research-animation.md) and your answers (2026-10-08):
 - **PAL** is a required client dependency.
@@ -53,7 +55,7 @@ The player gets the core stealth verbs: **crawl**, **take guards down** quietly 
 - **Drag:** right-click a body. It slides along the floor behind you.
   - You move at ×0.75 speed and can't sprint.
   - Dragging is **silent**.
-  - Right-click again, or sneak, to drop it.
+  - Right-click again to drop it.
 - **Carry:** sneak + right-click a body. It goes over your shoulder.
   - You move at ×0.6 speed, but the body is off the floor and can go up ladders and stairs.
 - **What clients see:** the body follows you on the server; clients animate it.

@@ -10,7 +10,8 @@ public enum PoiCause implements StringRepresentable {
     SEEN("seen"),
     HEARD("heard"),
     HURT("hurt"),
-    SHOUT("shout");
+    SHOUT("shout"),
+    EVIDENCE("evidence");
 
     public static final Codec<PoiCause> CODEC = StringRepresentable.fromEnum(PoiCause::values);
 

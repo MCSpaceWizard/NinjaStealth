@@ -99,5 +99,20 @@
   "emergentstealth.configuration.heldLightWithShaders": "Own Held Light With Shader Packs",
   "key.category.emergentstealth.main": "Emergent Stealth",
   "key.emergentstealth.throw": "Throw Held Item",
-  "entity.emergentstealth.thrown_item": "Thrown Item"
+  "entity.emergentstealth.thrown_item": "Thrown Item",
+  "key.emergentstealth.crawl": "Crawl (toggle)",
+  "message.emergentstealth.crawl.no_room": "No room to stand up",
+  "prompt.emergentstealth.takedown": "[RMB] Knock out   [LMB] Kill",
+  "prompt.emergentstealth.takedown_lethal_only": "[LMB] Kill   (empty hand to knock out)",
+  "prompt.emergentstealth.body": "[RMB] Drag   [Sneak + RMB] Carry",
+  "prompt.emergentstealth.drop": "[RMB] Drop body",
+  "bark.emergentstealth.body.0": "A body! Raise the alarm!",
+  "bark.emergentstealth.body.1": "Murder! Search the area!",
+  "bark.emergentstealth.body.2": "Someone's killed him!",
+  "bark.emergentstealth.unconscious.0": "Hey! Wake up!",
+  "bark.emergentstealth.unconscious.1": "What happened to you?",
+  "bark.emergentstealth.woken.0": "Ugh... someone jumped me!",
+  "bark.emergentstealth.woken.1": "My head... they were right behind me!",
+  "bark.emergentstealth.evidence.0": "What's this doing here?",
+  "bark.emergentstealth.evidence.1": "That wasn't here before."
 }

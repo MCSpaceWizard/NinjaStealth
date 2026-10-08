@@ -1,0 +1,1 @@
+{ "kind": "rear", "lethal": true, "duration": 15, "impact_tick": 8, "noise": 6, "attacker_offset": 0.8 }

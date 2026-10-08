@@ -39,6 +39,13 @@ public final class NpcPerception {
     private int tier = 3;
     private int raysLastUpdate;
     private final List<RayResult> debugRays = new ArrayList<>();
+    /** Evidence (design doc 17 §5): how far along noticing each piece is, and what's already been noticed. */
+    private final Map<UUID, Float> evidenceProgress = new HashMap<>();
+    private final java.util.Set<UUID> noticedEvidence = new java.util.HashSet<>();
+    private long lastEvidenceScan = -1;
+    /** Seconds to notice evidence in good light, centre of view (darkness and distance slow it a lot). */
+    private static final float EVIDENCE_GAIN = 1.2F;
+    private static final int EVIDENCE_INTERVAL = 10;
 
     /** One sight ray's outcome, kept for the debug view. */
     public record RayResult(Vec3 point, float transmittance) {}
@@ -167,8 +174,71 @@ public final class NpcPerception {
             }
         }
 
+        if (lastEvidenceScan < 0 || now - lastEvidenceScan >= EVIDENCE_INTERVAL) {
+            float evidenceDt = lastEvidenceScan < 0 ? EVIDENCE_INTERVAL / 20.0F : Math.min(2.0F, (now - lastEvidenceScan) / 20.0F);
+            lastEvidenceScan = now;
+            rays += scanEvidence(level, profile, eye, yaw, pitch, evidenceDt * stateFactor, light);
+        }
+
         raysLastUpdate = rays;
         return rays;
+    }
+
+    /** What counts as evidence (D-06): bodies, arrows stuck in blocks, dropped weapons. */
+    public static net.minecraft.world.entity.@org.jspecify.annotations.Nullable Entity asEvidence(net.minecraft.world.entity.Entity entity) {
+        if (entity instanceof StealthNpc body && body.isBody()) {
+            return entity;
+        }
+        // Arrows at rest are stuck in a block (isInGround() isn't public).
+        if (entity instanceof net.minecraft.world.entity.projectile.arrow.AbstractArrow arrow && arrow.tickCount > 5
+                && arrow.getDeltaMovement().lengthSqr() < 1.0E-4) {
+            return entity;
+        }
+        if (entity instanceof net.minecraft.world.entity.item.ItemEntity item
+                && (item.getItem().is(net.minecraft.tags.ItemTags.SWORDS) || item.getItem().is(net.minecraft.tags.ItemTags.AXES))) {
+            return entity;
+        }
+        return null;
+    }
+
+    /** Looks for evidence with the same cones, rays and light as for players. Returns rays cast. */
+    private int scanEvidence(ServerLevel level, PerceptionProfile profile, Vec3 eye, float yaw, float pitch, float dt, LightSampler light) {
+        double range = profile.maxRange();
+        int rays = 0;
+        net.minecraft.world.phys.AABB box = new net.minecraft.world.phys.AABB(eye, eye).inflate(range);
+        for (net.minecraft.world.entity.Entity entity : level.getEntities((net.minecraft.world.entity.Entity) null, box,
+                e -> e != npc && !noticedEvidence.contains(e.getUUID()) && asEvidence(e) != null)) {
+            Vec3 point = entity instanceof StealthNpc ? entity.position().add(0.0, 0.25, 0.0) : entity.position().add(0.0, 0.1, 0.0);
+            float cone = coneFactor(profile, eye, yaw, pitch, point);
+            if (cone <= 0.0F) {
+                continue;
+            }
+            rays++;
+            // Pull the end point a little toward the eye so arrows sunk into a block don't block their own ray.
+            Vec3 end = point.add(eye.subtract(point).normalize().scale(0.15));
+            float transmittance = SightRay.transmittance(level, eye, end, false);
+            if (transmittance <= 0.0F) {
+                continue;
+            }
+            float visibility = cone * transmittance * light.lightFactor(level, point);
+            float progress = evidenceProgress.getOrDefault(entity.getUUID(), 0.0F) + visibility * EVIDENCE_GAIN * dt;
+            if (progress >= 1.0F) {
+                evidenceProgress.remove(entity.getUUID());
+                if (noticedEvidence.size() > 256) {
+                    noticedEvidence.clear();
+                }
+                noticedEvidence.add(entity.getUUID());
+                npc.stealthBrain().onEvidence(level, entity, point);
+            } else {
+                evidenceProgress.put(entity.getUUID(), progress);
+            }
+        }
+        return rays;
+    }
+
+    /** Forget having noticed this evidence (e.g. a body that was moved: it's new evidence where it is now). */
+    public void forgetEvidence(UUID id) {
+        noticedEvidence.remove(id);
     }
 
     /** Result of looking at one target: summed visibility, whether any ray got through, rays cast. */
