@@ -105,9 +105,16 @@ public class LightDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
         }
         if (data.stats().size() >= 5 && !data.samples().isEmpty()) {
             Vec3 head = data.samples().get(0).pos().add(0.0, 0.7, 0.0);
-            String line = String.format(java.util.Locale.ROOT, "exposure %.2f  (blocks %.2f, sky %.2f, sky access %.2f)",
-                    data.stats().get(4), data.stats().get(0), data.stats().get(1), data.stats().get(2));
+            String line = String.format(java.util.Locale.ROOT, "exposure %.2f  (blocks %.2f, sky %.2f)",
+                    data.stats().get(4), data.stats().get(0), data.stats().get(1));
             Gizmos.billboardText(line, head, TextGizmo.Style.forColorAndCentered(0xFFFFFFFF).withScale(0.25F)).setAlwaysOnTop();
+            if (data.stats().size() >= 6) {
+                // Sky components (doc 13 §1): dome openness, visible share of the sun/moon disk, its altitude strength.
+                String sky = String.format(java.util.Locale.ROOT, "sky openness %.2f  disk visible %.2f  altitude %.2f",
+                        data.stats().get(2), data.stats().get(3), data.stats().get(5));
+                Gizmos.billboardText(sky, head.add(0.0, -0.25, 0.0),
+                        TextGizmo.Style.forColorAndCentered(0xFFB0D8FF).withScale(0.22F)).setAlwaysOnTop();
+            }
         }
     }
 
@@ -115,8 +122,10 @@ public class LightDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
         if (data.stats().size() < 4 || data.celestialDir().y <= 0.05) {
             return;
         }
-        boolean clear = data.stats().get(3) > 0.5F;
+        // Blend shadow → lit colour by the visible share of the disk, so a penumbra reads as in-between.
+        float visible = Math.clamp(data.stats().get(3), 0.0F, 1.0F);
         Vec3 start = camera.add(data.celestialDir().scale(2.0)).add(0.0, -0.5, 0.0);
-        Gizmos.arrow(start, start.add(data.celestialDir().scale(2.0)), clear ? COLOR_CELESTIAL_LIT : COLOR_CELESTIAL_SHADOW, 2.0F);
+        Gizmos.arrow(start, start.add(data.celestialDir().scale(2.0)),
+                ARGB.srgbLerp(visible, COLOR_CELESTIAL_SHADOW, COLOR_CELESTIAL_LIT), 2.0F);
     }
 }

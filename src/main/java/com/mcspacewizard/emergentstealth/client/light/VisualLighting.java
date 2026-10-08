@@ -3,6 +3,7 @@ package com.mcspacewizard.emergentstealth.client.light;
 import com.mcspacewizard.emergentstealth.EmergentStealth;
 import com.mcspacewizard.emergentstealth.stealth.light.LightSourceIndex.Source;
 import com.mcspacewizard.emergentstealth.stealth.light.LightTransport;
+import com.mcspacewizard.emergentstealth.stealth.light.SkyCells;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -117,8 +118,9 @@ public final class VisualLighting {
     }
 
     /**
-     * Vanilla sky light scaled by the gameplay sun/moon shade factor (doc 30 §10). The sky channel then means
-     * "sky access × direct-light share"; the lightmap still applies the time of day, so nothing is dimmed twice.
+     * The sky level that renders at the gameplay sky factor (openness + visible sun/moon disk, relative to an open
+     * sunlit field; doc 30 §10). The lightmap still applies the time of day and weather, so nothing is dimmed
+     * twice. Vanilla's sky light only gates it (0 = sealed off) and takes over at the edge of the radius.
      */
     private static int skyLight(ClientLevel level, BlockPos pos, int vanilla, SkyShadows.Bake bake) {
         if (!bake.active() || vanilla <= 0) {
@@ -129,7 +131,8 @@ public final class VisualLighting {
             return vanilla;
         }
         float factor = ShadowedBlockLight.skyFactor(level, pos, bake);
-        return LightTransport.skyLevelForFactor(vanilla, 1.0F - weight * (1.0F - factor));
+        float vanillaBrightness = LightTransport.brightness(vanilla / 15.0F);
+        return LightTransport.levelFor(vanillaBrightness + weight * (factor - vanillaBrightness));
     }
 
     private static int blockLight(ClientLevel level, BlockPos pos, int vanilla, VisualSettings current) {
@@ -154,10 +157,8 @@ public final class VisualLighting {
         if (oldEmission != newEmission) {
             ClientLightSources.invalidate(pos);
         }
-        if (oldState.isAir() != newState.isAir()) {
-            ColumnCeilings.invalidate(pos);
-        }
         if (oldState.getBlock() != newState.getBlock()) {
+            SkyCells.invalidate(level, pos);
             // A different block can block or pass a sun ray differently (state flips like a lit furnace can't).
             SkyShadows.onBlockChanged(pos);
         }
@@ -222,7 +223,7 @@ public final class VisualLighting {
     static void onChunkLoad(ChunkEvent.Load event) {
         if (event.getLevel() instanceof ClientLevel level) {
             ClientLightSources.invalidateChunk(level, event.getChunk().getPos().x(), event.getChunk().getPos().z());
-            ColumnCeilings.invalidateChunk(event.getChunk().getPos().x(), event.getChunk().getPos().z());
+            SkyCells.invalidateChunk(level, event.getChunk().getPos().x(), event.getChunk().getPos().z());
         }
     }
 
@@ -230,7 +231,7 @@ public final class VisualLighting {
     static void onChunkUnload(ChunkEvent.Unload event) {
         if (event.getLevel() instanceof ClientLevel level) {
             ClientLightSources.invalidateChunk(level, event.getChunk().getPos().x(), event.getChunk().getPos().z());
-            ColumnCeilings.invalidateChunk(event.getChunk().getPos().x(), event.getChunk().getPos().z());
+            SkyCells.invalidateChunk(level, event.getChunk().getPos().x(), event.getChunk().getPos().z());
         }
     }
 
@@ -240,6 +241,8 @@ public final class VisualLighting {
         SectionRebuilds.clear();
         ClientLightSources.reset(null);
         SkyShadows.clear();
-        ColumnCeilings.clear();
+        if (Minecraft.getInstance().level != null) {
+            SkyCells.clear(Minecraft.getInstance().level);
+        }
     }
 }

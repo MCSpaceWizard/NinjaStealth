@@ -92,7 +92,7 @@ public final class VisualLightTests {
     static int gameplayLevel(ServerLevel level, BlockPos cell) {
         // Block term only: sky light is left to vanilla (doc 30 §3), and this keeps the test independent of
         // how fast vanilla's light engine darkens the freshly sealed box.
-        return Math.round(15.0F * ExposureModel.blockExposureUncached(level, Vec3.atCenterOf(cell)));
+        return LightTransport.levelFor(ExposureModel.blockExposureUncached(level, Vec3.atCenterOf(cell)));
     }
 
     /** Every air cell of the sealed box: visual level == gameplay level. */

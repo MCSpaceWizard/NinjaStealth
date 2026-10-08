@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.mcspacewizard.emergentstealth.stealth.light.LightTransport;
+import com.mcspacewizard.emergentstealth.stealth.light.SkyCells;
 import com.mcspacewizard.emergentstealth.stealth.light.LightTransport.SkyState;
 
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -30,6 +31,8 @@ final class SkyShadows {
 
     /** Width of the band at the edge of the radius over which shadows fade back to vanilla sky light. */
     private static final double FADE = 16.0;
+    /** Blocks around a changed block whose sky openness is re-baked immediately. */
+    private static final int OPENNESS_REBAKE_RADIUS = 6;
 
     /**
      * What meshing should bake right now. {@code version} changes with every new bake; together with
@@ -128,12 +131,12 @@ final class SkyShadows {
                 if (ax * ax + az * az > reach * reach) {
                     continue;
                 }
-                ColumnCeilings.Range range = ColumnCeilings.chunk(level, cx, cz);
+                int[] range = SkyCells.surfaceRange(level, cx, cz);
                 if (range == null) {
                     continue; // not loaded: it bakes with the current state when it arrives
                 }
-                int minSy = SectionPos.blockToSectionCoord(Math.max(level.getMinY(), range.min() - 16));
-                int maxSy = SectionPos.blockToSectionCoord(Math.min(level.getMaxY(), range.max() + 1));
+                int minSy = SectionPos.blockToSectionCoord(Math.max(level.getMinY(), range[0] - 16));
+                int maxSy = SectionPos.blockToSectionCoord(Math.min(level.getMaxY(), range[1] + 1));
                 for (int sy = minSy; sy <= maxSy; sy++) {
                     double cxm = cx * 16.0 + 8.0 - camera.x;
                     double cym = sy * 16.0 + 8.0 - camera.y;
@@ -169,6 +172,9 @@ final class SkyShadows {
         }
         GENERATION.incrementAndGet();
         Vec3 origin = Vec3.atCenterOf(pos);
+        // Sky openness changes most right around (and below) the block; further cells catch up at the next
+        // sun step, when the whole area re-bakes anyway.
+        SectionRebuilds.markSphere(origin.add(0.0, -4.0, 0.0), OPENNESS_REBAKE_RADIUS);
         SkyState sky = current.sky();
         if (sky.sunUp()) {
             markAlong(origin, sky.sun());

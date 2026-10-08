@@ -71,8 +71,8 @@ public final class LightDebugSync {
         for (ExposureBreakdown.Source source : breakdown.sources()) {
             sources.add(new LightDebugPayload.Source(source.pos(), source.potential(), source.transmittance(), source.dynamic()));
         }
-        List<Float> stats = List.of(breakdown.blockExposure(), breakdown.skyExposure(), breakdown.skyAccess(),
-                breakdown.celestialClear(), breakdown.total());
+        List<Float> stats = List.of(breakdown.blockExposure(), breakdown.skyExposure(), breakdown.openness(),
+                breakdown.diskVisible(), breakdown.total(), breakdown.altitude(), breakdown.skyAccess());
         return new LightDebugPayload(origin, size, heights, exposure, samples, sources, breakdown.celestialDir(), stats);
     }
 

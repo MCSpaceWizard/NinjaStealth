@@ -23,7 +23,7 @@ import net.minecraft.world.phys.Vec3;
  * @param samples      the player's body points and their exposure
  * @param sources      lights reaching the player's chest point (strongest first)
  * @param celestialDir direction to the sun (day) or moon (night)
- * @param stats        [blockExposure, skyExposure, skyAccess, celestialClear, total]
+ * @param stats        [blockExposure, skyExposure, skyOpenness, diskVisible, total, altitude, vanillaSkyAccess]
  */
 public record LightDebugPayload(BlockPos gridOrigin, int gridSize, List<Integer> gridHeights, byte[] gridExposure,
                                 List<Sample> samples, List<Source> sources, Vec3 celestialDir, List<Float> stats)
