@@ -76,7 +76,7 @@ public class SmokeCloud extends Entity {
                 return;
             }
             if (volumeId == 0) {
-                volumeId = SmokeVolumes.add(level, this.position(), radius(), endTick()).id();
+                register(level);
             }
             if (this.tickCount % BLIND_INTERVAL == 0) {
                 blindInside(level, now);
@@ -126,13 +126,26 @@ public class SmokeCloud extends Entity {
         }
     }
 
+    private void register(ServerLevel level) {
+        volumeId = SmokeVolumes.add(level, this.position(), radius(), endTick()).id();
+    }
+
+    /** Blocks sight from the moment it's in the level (not a tick later), and again after a chunk reload. */
     @Override
-    public void remove(RemovalReason reason) {
+    public void onAddedToLevel() {
+        super.onAddedToLevel();
+        if (this.level() instanceof ServerLevel level && volumeId == 0 && level.getGameTime() < endTick()) {
+            register(level);
+        }
+    }
+
+    @Override
+    public void onRemovedFromLevel() {
         if (volumeId != 0) {
             SmokeVolumes.remove(this.level(), volumeId);
             volumeId = 0;
         }
-        super.remove(reason);
+        super.onRemovedFromLevel();
     }
 
     @Override

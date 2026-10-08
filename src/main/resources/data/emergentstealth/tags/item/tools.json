@@ -1,0 +1,13 @@
+{
+  "values": [
+    "emergentstealth:pebble",
+    "emergentstealth:smoke_bomb",
+    "emergentstealth:firecracker",
+    "emergentstealth:blinding_powder",
+    "emergentstealth:caltrops",
+    {
+      "id": "#emergentstealth:tools_ranged",
+      "required": false
+    }
+  ]
+}

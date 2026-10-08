@@ -31,7 +31,20 @@
     "soul_wood": "#5b4a3a",
     "copper": "#b46a43",
     "iron_dark": "#3a3d44",
-    "glass_dark": "#2a3a40"
+    "glass_dark": "#2a3a40",
+    "stone_light": "#9a9a96",
+    "stone_mid": "#74726e",
+    "stone_dark": "#4c4a47",
+    "bomb_black": "#26242a",
+    "bomb_hi": "#4a4652",
+    "fuse": "#c8ad6a",
+    "spark": "#ffd45a",
+    "cracker_red": "#c0392b",
+    "cracker_dark": "#7a1f17",
+    "powder": "#f4eeb8",
+    "powder_hi": "#fffbe0",
+    "iron": "#b8bec6",
+    "iron_shadow": "#6c727a"
   },
   "textures": [
     {
@@ -319,6 +332,176 @@
         "ink",
         "paper",
         "lacquer"
+      ]
+    },
+    {
+      "path": "item/pebble",
+      "shape": "pixelmap",
+      "key": {
+        "a": "stone_light",
+        "b": "stone_mid",
+        "c": "stone_dark"
+      },
+      "rows": [
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "..........aab...",
+        ".........abbbc..",
+        "....aab..bbbcc..",
+        "...abbbc..ccc...",
+        "...bbbbc........",
+        "....bccc..aab...",
+        ".....cc..abbbc..",
+        "........abbbbc..",
+        ".........bbcc...",
+        "................",
+        "................"
+      ]
+    },
+    {
+      "path": "item/smoke_bomb",
+      "shape": "pixelmap",
+      "key": {
+        "k": "bomb_black",
+        "h": "bomb_hi",
+        "p": "paper",
+        "f": "fuse",
+        "s": "spark",
+        "i": "ink"
+      },
+      "rows": [
+        "...........s....",
+        "..........sfs...",
+        "..........f.....",
+        ".........f......",
+        "........pp......",
+        "......kkpkkk....",
+        ".....khhkkkkk...",
+        "....khhkkkkkki..",
+        "....khkkkkkkki..",
+        "....pppppppppi..",
+        "....kkkkkkkkki..",
+        "....kkkkkkkkki..",
+        ".....kkkkkkki...",
+        "......iiiiii....",
+        "................",
+        "................"
+      ]
+    },
+    {
+      "path": "item/firecracker",
+      "shape": "pixelmap",
+      "key": {
+        "r": "cracker_red",
+        "d": "cracker_dark",
+        "g": "gold",
+        "f": "fuse",
+        "s": "spark",
+        "p": "paper"
+      },
+      "rows": [
+        "..............s.",
+        ".............sf.",
+        "............f...",
+        "..........pf....",
+        ".........rrp....",
+        "........rrrd....",
+        ".......grrd.....",
+        "......rgrd......",
+        ".....rrgd.......",
+        "....rrrd........",
+        "...grrd.........",
+        "..rgrd..........",
+        ".rrgd...........",
+        ".prd............",
+        "..p.............",
+        "................"
+      ]
+    },
+    {
+      "path": "item/blinding_powder",
+      "shape": "pixelmap",
+      "key": {
+        "h": "hemp",
+        "e": "earth",
+        "w": "powder",
+        "x": "powder_hi",
+        "l": "lacquer",
+        "i": "ink"
+      },
+      "rows": [
+        "..........x.....",
+        "........x..w.x..",
+        ".......w.wxw....",
+        "......lll.w..x..",
+        ".......l........",
+        "......hhh.......",
+        ".....hhhhh......",
+        "....hhhhhhe.....",
+        "...hhhhhhhhe....",
+        "...hhhwwhhhe....",
+        "...hhwxwhhhe....",
+        "...hhhwwhhhe....",
+        "...hhhhhhhee....",
+        "....ehhhhee.....",
+        ".....eeeee......",
+        "................"
+      ]
+    },
+    {
+      "path": "item/caltrops",
+      "shape": "pixelmap",
+      "key": {
+        "i": "iron",
+        "s": "iron_shadow",
+        "d": "dark_steel"
+      },
+      "rows": [
+        "................",
+        "...i............",
+        "...i......i.....",
+        ".i.is.....i.....",
+        "..iis...isis....",
+        "..sisi...si.....",
+        "..s..s....s.....",
+        "................",
+        "......i.........",
+        "......i.....i...",
+        "....isisi...i...",
+        ".....sis..isisi.",
+        ".....s.s...sis..",
+        "...........s.s..",
+        "................",
+        "................"
+      ]
+    },
+    {
+      "path": "block/caltrops",
+      "shape": "pixelmap",
+      "key": {
+        "i": "iron",
+        "s": "iron_shadow"
+      },
+      "rows": [
+        "................",
+        "..i.........i...",
+        ".isi.......isi..",
+        "..s.........s...",
+        "......i.........",
+        ".....isi....i...",
+        "......s....isi..",
+        ".i..........s...",
+        "isi.....i.......",
+        ".s.....isi......",
+        ".......s.s...i..",
+        "....i.......isi.",
+        "...isi.......s..",
+        "....s....i......",
+        ".........si.....",
+        "................"
       ]
     }
   ]

@@ -209,6 +209,21 @@ SHAPES = {"lens": shape_lens, "noise": shape_noise, "badge": shape_badge, "egg":
           "gem": shape_gem, "torch": shape_torch, "lantern": shape_lantern}
 
 
+def shape_pixelmap(img, *_colors, rows=None, key=None, palette=None):
+    """Hand-drawn pixel art: "rows" are strings of characters, "key" maps each character to a palette name or
+    hex colour ('.' and ' ' are transparent). Rows may be shorter than the image; they start at the top left."""
+    for y, row in enumerate(rows or []):
+        for x, ch in enumerate(row):
+            if ch in ". " or x >= img.width or y >= img.height:
+                continue
+            color = (key or {}).get(ch)
+            if color is not None:
+                img.putpixel((x, y), rgba(palette.get(color, color)))
+
+
+SHAPES["pixelmap"] = shape_pixelmap
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--force", action="store_true", help="overwrite existing PNGs")
@@ -231,8 +246,8 @@ def main():
             colors.append(colors[-1])
         size = entry.get("size", 64 if entry["shape"] == "skin" else SIZE)
         img = Image.new("RGBA", (entry.get("width", size), entry.get("height", size)), (0, 0, 0, 0))
-        extra = {k: v for k, v in entry.items() if k in ("letter", "seed", "parts", "face", "hair", "part")}
-        if entry["shape"] == "skin":
+        extra = {k: v for k, v in entry.items() if k in ("letter", "seed", "parts", "face", "hair", "part", "rows", "key")}
+        if entry["shape"] in ("skin", "pixelmap"):
             extra["palette"] = palette
         SHAPES[entry["shape"]](img, *colors[:3], **extra)
         target.parent.mkdir(parents=True, exist_ok=True)
