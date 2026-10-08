@@ -37,4 +37,21 @@ public final class ESAttachments {
     private static boolean hasMod(IAttachmentHolder holder, ServerPlayer to) {
         return to.connection != null && to.connection.hasChannel(BarkPayload.TYPE);
     }
+
+    // --- Beta toolkit, part B (design doc 21) ---
+
+    /** Spyglass tags and the current focus. Synced only to the tagging player; not saved (tags last 60 s). */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<com.mcspacewizard.emergentstealth.tool.SpyglassTags>> SPYGLASS_TAGS =
+            ATTACHMENT_TYPES.register("spyglass_tags", () -> AttachmentType.builder(() -> com.mcspacewizard.emergentstealth.tool.SpyglassTags.EMPTY)
+                    .sync((holder, to) -> holder == to && hasMod(holder, to), com.mcspacewizard.emergentstealth.tool.SpyglassTags.STREAM_CODEC).build());
+
+    /** A sleep dart's stagger on an NPC (game-time timestamps). Saved, so a reload mid-stagger still knocks out. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<com.mcspacewizard.emergentstealth.tool.Stagger>> STAGGER =
+            ATTACHMENT_TYPES.register("stagger", () -> AttachmentType.builder(() -> com.mcspacewizard.emergentstealth.tool.Stagger.NONE)
+                    .serialize(com.mcspacewizard.emergentstealth.tool.Stagger.CODEC.fieldOf("stagger")).build());
+
+    /** Extra key ids an NPC carries (besides key items in its equipment), set by {@code /es key npc}. Saved. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<java.util.List<String>>> NPC_KEYS =
+            ATTACHMENT_TYPES.register("npc_keys", () -> AttachmentType.<java.util.List<String>>builder(() -> java.util.List.of())
+                    .serialize(com.mojang.serialization.Codec.STRING.listOf().fieldOf("keys")).build());
 }

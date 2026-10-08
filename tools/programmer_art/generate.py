@@ -208,6 +208,12 @@ def shape_badge(img, ink, paper, accent, letter="?"):
 SHAPES = {"lens": shape_lens, "noise": shape_noise, "badge": shape_badge, "egg": shape_egg, "skin": shape_skin,
           "gem": shape_gem, "torch": shape_torch, "lantern": shape_lantern}
 
+# Beta toolkit, part B shapes live in their own module (arrows, darts, blowgun, keys, picks).
+import sys as _sys  # noqa: E402
+_sys.path.insert(0, str(Path(__file__).resolve().parent))
+from shapes_toolkit_b import SHAPES as _TOOLKIT_B_SHAPES  # noqa: E402
+SHAPES.update(_TOOLKIT_B_SHAPES)
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
