@@ -42,10 +42,12 @@ The goal of M1 is the **vertical slice** you approved [Z-02]: one guard type tha
 | **S4 Behaviour core** 🧪 | Knowledge/memory blackboard, **behaviour-tree runtime (JSON-authorable)**, the full state machine through Heightened alert, investigate, coordinated search (longer with more searchers), hunting from the **last known position only**, attack tokens and blocking exits, **above-head indicators + alert sounds**, text barks, basic NPC melee | 📄 [14-ai-behaviour](14-ai-behaviour.md) |
 | **S5 Navigation & patrols** 🧪 | Custom pathfinding (doors open/close/lock, ladders, stairs, multi-floor; **no climbing for guards**), **patrol tool** (waypoints, waits, look directions), procedural patrol routes, simple routines | 📄 [15-navigation](15-navigation.md) (procedural routes moved to S15) |
 | **S6 Hearing v1 & distractions** 🧪 | Server-side **sound propagation** (flood-fill through openings, muffled by material, cached), quiet/loud surfaces (minor), sprint/landing/door/combat noise, silent chests/drops/bows (QoL), masking (rain, **thunder**, water, music), **throw any item** (glass leaves no trace, sharp items nick) | 📄 [16-sound](16-sound.md) |
-| **S7 Player verbs I** | **Crawl toggle** (Q3) with a proper animation, sprint detectability, **rear + air takedowns** (lethal and non-lethal), **knockouts** (no natural waking; can be woken by others, who remember), **body dragging**, evidence: bodies, stuck arrows, dropped weapons | 📄 17-takedowns-bodies |
+| **S7 Player verbs I** ⏳ | **Crawl toggle** (Q3) with a proper animation, sprint detectability, **rear + air takedowns** (lethal and non-lethal), **knockouts** (no natural waking; can be woken by others, who remember), **body dragging**, evidence: bodies, stuck arrows, dropped weapons | 📄 [17-takedowns-bodies](17-takedowns-bodies.md) |
 | **S8 Slice assembly** | **Smoke bomb** (server-side sight-blocking volume + placeholder visual), **test compound** structure, slice tuning pass | — |
 
 **→ M1 playtest: "one compound, one guard type, all core loops."**
+
+**→ Beta 1 (2026-10-08 plan):** M1 plus the core toolkit pulled forward from S12: wheel, pebbles, smoke, firecrackers, blinding powder, caltrops, water/fire arrows, blowgun and sleep darts, keys, locks, lockpicks, spyglass tagging. Shipped with a test compound and a tester guide. See [21-toolkit](21-toolkit.md) §5.
 
 ## Track B: Infiltration sandbox (milestone M2)
 

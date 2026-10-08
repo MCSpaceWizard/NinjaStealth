@@ -385,6 +385,23 @@ public final class StealthBrain {
         }
     }
 
+    /** The NPC became a body: forget the current alert (the body keeps nothing running). */
+    public void resetForBody() {
+        state = AlertState.UNAWARE;
+        alertTarget = null;
+        noisePos = null;
+        behaviour.reset();
+        cause = PoiCause.NONE;
+    }
+
+    /** Woken up by another NPC (A-12): it remembers being attacked, so it's on heightened alert. */
+    public void onWokenUp(ServerLevel level) {
+        long now = level.getGameTime();
+        heightenedUntil = Math.max(heightenedUntil, now + HEIGHTENED_TICKS);
+        state = AlertState.HEIGHTENED;
+        stateSince = now;
+    }
+
     /** The NPC is gone (died, unloaded): leave groups and give back tokens. */
     public void onRemoved(ServerLevel level) {
         SearchGroups.get(level).leave(npc);

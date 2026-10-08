@@ -92,6 +92,12 @@ public final class NpcPerception {
      * Looks for targets and updates awareness. Returns the number of sight rays cast (for the budget).
      */
     public int update(ServerLevel level, long now, int tier, LightSampler light) {
+        if (npc.isBlinded(now)) {
+            // Blinded (design doc 21): sees nothing; awareness only decays.
+            this.tier = tier;
+            decayOnly(now);
+            return 0;
+        }
         this.tier = tier;
         float dt = lastUpdateTick < 0 ? 0.05F : Math.min(5.0F, (now - lastUpdateTick) / 20.0F);
         lastUpdateTick = now;

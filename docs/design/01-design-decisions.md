@@ -56,7 +56,7 @@ Each entry is **Decided**, **Proposed** (my reading or extension of your answers
 
 - **Decided:** Vanilla stances kept. Sprinting is much more detectable than walking [P-01].
 - **Proposed:** A **crawl toggle usable anywhere**. It uses vanilla's crawl pose with a proper crawling animation instead of the swim pose. It's needed for "tall grass only when prone" [P-08]. See **Q3**.
-- **Decided:** First-person primary. Third-person via Shoulder Surfing compat. No lean for now. Free movement, no cover-snap [P-02, P-03, P-04].
+- **Decided:** ~~First-person primary.~~ **Updated 2026-10-08: third person is preferred** (first person still works; takedown cameras only turn). Third-person via Shoulder Surfing compat. No lean for now. Free movement, no cover-snap [P-02, P-03, P-04].
 - **Decided:** Ledge hang and shimmy. Basic parkour, including climbing up into gaps in buildings, but **no auto 1-block vaults**. Stamina used only for parkour and climbing [P-05, P-07, P-13].
 - **Decided:** Climbing claws climb anything **except** blocks in a blacklist tag (`#emergentstealth:unclimbable`: glass, iron, quartz, obsidian, …) [P-06].
 - **Decided:** Hiding spots. Must: crawlspaces/under floors, rafters/beams. Should: tall grass (crawling only), enterable hay bales. Could: barrels/chests, breathing reed (near surface only), curtains, crowds [P-08].

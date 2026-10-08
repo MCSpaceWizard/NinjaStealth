@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
+import com.mcspacewizard.emergentstealth.action.BodyState;
 import com.mcspacewizard.emergentstealth.ai.behaviour.BehaviourTree;
 import com.mcspacewizard.emergentstealth.ai.brain.AlertState;
 import com.mcspacewizard.emergentstealth.ai.group.AttackTokens;
@@ -70,6 +71,12 @@ public class StealthNpc extends PathfinderMob {
             SynchedEntityData.defineId(StealthNpc.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Integer> DATA_BODY_VARIANT =
             SynchedEntityData.defineId(StealthNpc.class, EntityDataSerializers.INT);
+    /** {@link BodyState} ordinal: up, knocked out or dead (design doc 17 §2). */
+    private static final EntityDataAccessor<Byte> DATA_BODY_STATE =
+            SynchedEntityData.defineId(StealthNpc.class, EntityDataSerializers.BYTE);
+    /** Lying-down hitbox for bodies. */
+    private static final net.minecraft.world.entity.EntityDimensions BODY_DIMENSIONS =
+            net.minecraft.world.entity.EntityDimensions.scalable(0.9F, 0.4F).withEyeHeight(0.2F);
 
     public static final Identifier DEFAULT_PERCEPTION = EmergentStealth.id("default");
 
@@ -120,6 +127,7 @@ public class StealthNpc extends PathfinderMob {
         super.defineSynchedData(builder);
         builder.define(DATA_ARCHETYPE, DEFAULT_ARCHETYPE.toString());
         builder.define(DATA_BODY_VARIANT, 0);
+        builder.define(DATA_BODY_STATE, (byte) 0);
     }
 
     @Override
@@ -143,6 +151,105 @@ public class StealthNpc extends PathfinderMob {
             updateSearchTorch(level);
         }
         super.customServerAiStep(level);
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // Bodies: knocked out and dead NPCs stay in the world as evidence (design doc 17 §2)
+
+    private long blindedUntil = Long.MIN_VALUE;
+
+    public BodyState getBodyState() {
+        return BodyState.byId(this.entityData.get(DATA_BODY_STATE));
+    }
+
+    public boolean isBody() {
+        return getBodyState().isBody();
+    }
+
+    private void setBodyState(ServerLevel level, BodyState state) {
+        if (getBodyState() == state) {
+            return;
+        }
+        this.entityData.set(DATA_BODY_STATE, (byte) state.ordinal());
+        if (state.isBody()) {
+            brain.onRemoved(level);
+            brain.resetForBody();
+            this.getNavigation().stop();
+            this.setTarget(null);
+            this.setSprinting(false);
+            this.setAggressive(false);
+        }
+        this.refreshDimensions();
+    }
+
+    /** Knocks the NPC out (non-lethal). It never wakes by itself (A-12). Returns false if it's already a body. */
+    public boolean knockOut(ServerLevel level, net.minecraft.world.entity.@Nullable Entity by) {
+        if (isBody()) {
+            return false;
+        }
+        setBodyState(level, BodyState.UNCONSCIOUS);
+        return true;
+    }
+
+    /** Turns the NPC into a corpse: it stays as evidence instead of vanishing. Drops its loot. */
+    public void becomeCorpse(ServerLevel level, @Nullable DamageSource source) {
+        if (getBodyState() == BodyState.DEAD) {
+            return;
+        }
+        boolean wasUp = !isBody();
+        setBodyState(level, BodyState.DEAD);
+        this.setHealth(Math.max(1.0F, this.getHealth()));
+        if (wasUp || source != null) {
+            this.dropAllDeathLoot(level, source != null ? source : level.damageSources().generic());
+        }
+    }
+
+    /** Another NPC wakes this one (A-12). It remembers: it comes back on heightened alert. */
+    public boolean wake(ServerLevel level, @Nullable StealthNpc by) {
+        if (getBodyState() != BodyState.UNCONSCIOUS) {
+            return false;
+        }
+        setBodyState(level, BodyState.NONE);
+        brain.onWokenUp(level);
+        return true;
+    }
+
+    /** Blinded (blinding powder etc.): sees nothing until {@code untilTick}. Hearing still works. */
+    public void blind(long untilTick) {
+        this.blindedUntil = Math.max(this.blindedUntil, untilTick);
+    }
+
+    public boolean isBlinded(long gameTime) {
+        return gameTime < blindedUntil;
+    }
+
+    /** Bodies don't run AI (no goals, no brain) but still fall and can be pushed and dragged. */
+    @Override
+    public boolean isImmobile() {
+        return super.isImmobile() || isBody();
+    }
+
+    @Override
+    public net.minecraft.world.entity.EntityDimensions getDefaultDimensions(net.minecraft.world.entity.Pose pose) {
+        return isBody() ? BODY_DIMENSIONS : super.getDefaultDimensions(pose);
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> accessor) {
+        super.onSyncedDataUpdated(accessor);
+        if (DATA_BODY_STATE.equals(accessor)) {
+            this.refreshDimensions();
+        }
+    }
+
+    /** Dying leaves a corpse (evidence, D-06) instead of vanishing. {@code /kill} still removes the NPC. */
+    @Override
+    public void die(DamageSource source) {
+        if (source.is(net.minecraft.world.damagesource.DamageTypes.GENERIC_KILL) || !(this.level() instanceof ServerLevel level)) {
+            super.die(source);
+            return;
+        }
+        becomeCorpse(level, source);
     }
 
     /** Guards investigating, hunting or searching in the dark take out a torch, and put it away when calm. */
@@ -173,6 +280,18 @@ public class StealthNpc extends PathfinderMob {
 
     @Override
     public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
+        if (source.is(net.minecraft.world.damagesource.DamageTypes.GENERIC_KILL) && getBodyState() == BodyState.DEAD) {
+            this.discard();
+            return true;
+        }
+        if (getBodyState() == BodyState.DEAD) {
+            return false;
+        }
+        if (getBodyState() == BodyState.UNCONSCIOUS) {
+            // Hitting a knocked-out NPC kills it.
+            becomeCorpse(level, source);
+            return true;
+        }
         boolean hurt = super.hurtServer(level, source, damage);
         if (hurt && this.isAlive()) {
             brain.onHurt(level, source);
@@ -350,6 +469,7 @@ public class StealthNpc extends PathfinderMob {
         super.addAdditionalSaveData(output);
         output.putString("Archetype", this.entityData.get(DATA_ARCHETYPE));
         output.putInt("BodyVariant", getBodyVariant());
+        output.putByte("BodyState", (byte) getBodyState().ordinal());
         brain.save(output);
         output.putBoolean("SearchTorch", carryingSearchTorch);
         output.store("Home", BlockPos.CODEC, home);
@@ -368,6 +488,7 @@ public class StealthNpc extends PathfinderMob {
         schedule = input.read("Schedule", Schedule.CODEC).orElse(Schedule.EMPTY);
         behaviourOverride = input.read("Behaviour", Identifier.CODEC).orElse(null);
         this.entityData.set(DATA_BODY_VARIANT, input.getIntOr("BodyVariant", 0));
+        this.entityData.set(DATA_BODY_STATE, input.getByteOr("BodyState", (byte) 0));
         input.getString("Archetype").ifPresent(value -> {
             Identifier id = Identifier.tryParse(value);
             if (id != null) {

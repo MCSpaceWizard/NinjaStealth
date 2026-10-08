@@ -93,7 +93,7 @@ public final class PerceptionScheduler {
         // Sort NPCs by distance to the nearest player.
         List<Ranked> ranked = new ArrayList<>(npcs.size());
         for (StealthNpc npc : npcs) {
-            if (!npc.isAlive() || npc.isNoAi()) {
+            if (!npc.isAlive() || npc.isNoAi() || npc.isBody()) {
                 // NoAI NPCs (statues, map props, tests driving perception by hand) don't perceive.
                 continue;
             }

@@ -37,6 +37,7 @@ public final class EmergentStealth {
         ESEntities.ENTITY_TYPES.register(modEventBus);
         ESItems.ITEMS.register(modEventBus);
         ESDataComponents.COMPONENTS.register(modEventBus);
+        com.mcspacewizard.emergentstealth.registry.ESAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ESCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         ESDebugSubscriptions.DEBUG_SUBSCRIPTIONS.register(modEventBus);
         ESSounds.SOUND_EVENTS.register(modEventBus);
