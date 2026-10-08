@@ -1,0 +1,6 @@
+{
+  "game_event": "minecraft:lightning_strike",
+  "loudness": 48,
+  "kind": "explosion",
+  "attributable": false
+}

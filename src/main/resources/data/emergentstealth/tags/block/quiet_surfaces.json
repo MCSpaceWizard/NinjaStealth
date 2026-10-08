@@ -1,0 +1,24 @@
+{
+  "values": [
+    "#minecraft:wool",
+    "#minecraft:wool_carpets",
+    "minecraft:moss_block",
+    "minecraft:moss_carpet",
+    "minecraft:pale_moss_block",
+    "minecraft:pale_moss_carpet",
+    "minecraft:snow",
+    "minecraft:snow_block",
+    "minecraft:powder_snow",
+    "minecraft:grass_block",
+    "minecraft:short_grass",
+    "minecraft:tall_grass",
+    "minecraft:fern",
+    "minecraft:podzol",
+    "minecraft:mycelium",
+    "minecraft:rooted_dirt",
+    "minecraft:mud",
+    "minecraft:hay_block",
+    "minecraft:sponge",
+    "minecraft:wet_sponge"
+  ]
+}

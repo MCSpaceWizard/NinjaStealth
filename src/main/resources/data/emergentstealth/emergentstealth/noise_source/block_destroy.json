@@ -1,0 +1,6 @@
+{
+  "game_event": "minecraft:block_destroy",
+  "loudness": 10,
+  "kind": "block",
+  "attributable": true
+}

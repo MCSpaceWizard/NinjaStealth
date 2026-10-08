@@ -1,0 +1,7 @@
+{
+  "game_event": "minecraft:entity_damage",
+  "loudness": 10,
+  "kind": "combat",
+  "attributable": true,
+  "from_npcs": true
+}

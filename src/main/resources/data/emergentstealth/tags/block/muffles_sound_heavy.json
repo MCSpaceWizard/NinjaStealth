@@ -1,0 +1,17 @@
+{
+  "values": [
+    "#minecraft:wool",
+    "minecraft:hay_block",
+    "minecraft:moss_block",
+    "minecraft:pale_moss_block",
+    "minecraft:sponge",
+    "minecraft:wet_sponge",
+    "minecraft:snow_block",
+    "minecraft:powder_snow",
+    "minecraft:honeycomb_block",
+    "minecraft:dried_kelp_block",
+    "minecraft:target",
+    "minecraft:bookshelf",
+    "minecraft:chiseled_bookshelf"
+  ]
+}

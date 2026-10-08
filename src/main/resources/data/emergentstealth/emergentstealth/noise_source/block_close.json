@@ -1,0 +1,6 @@
+{
+  "game_event": "minecraft:block_close",
+  "loudness": 8,
+  "kind": "door",
+  "attributable": true
+}

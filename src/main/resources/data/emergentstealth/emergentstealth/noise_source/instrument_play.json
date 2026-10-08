@@ -1,0 +1,6 @@
+{
+  "game_event": "minecraft:instrument_play",
+  "loudness": 32,
+  "kind": "other",
+  "attributable": true
+}

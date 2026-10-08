@@ -1,0 +1,16 @@
+{
+  "values": [
+    "#minecraft:doors",
+    "#minecraft:trapdoors",
+    "#minecraft:fence_gates",
+    "#minecraft:fences",
+    "#minecraft:leaves",
+    "#minecraft:impermeable",
+    "minecraft:glass_pane",
+    { "id": "#c:glass_blocks", "required": false },
+    { "id": "#c:glass_panes", "required": false },
+    "minecraft:iron_bars",
+    "minecraft:iron_chain",
+    "minecraft:scaffolding"
+  ]
+}

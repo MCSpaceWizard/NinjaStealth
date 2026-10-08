@@ -33,6 +33,9 @@ public final class ESConfig {
     public static final ModConfigSpec.DoubleValue HEARING_GAIN;
     public static final ModConfigSpec.DoubleValue HEARING_AWARENESS_CAP;
 
+    // --- Server: sound (doc 16) ---
+    public static final ModConfigSpec.IntValue SOUND_NODES_PER_TICK;
+
     // --- Client: HUD ---
     public static final ModConfigSpec.BooleanValue SHOW_LIGHT_GEM;
     public static final ModConfigSpec.BooleanValue SHOW_DETECTION_INDICATORS;
@@ -94,6 +97,11 @@ public final class ESConfig {
                 .defineInRange("hearingGain", 0.5, 0.0, 5.0);
         HEARING_AWARENESS_CAP = server.comment("Hearing alone never raises awareness above this: only sight detects.")
                 .defineInRange("hearingAwarenessCap", 0.65, 0.0, 0.99);
+        server.pop();
+
+        server.push("sound");
+        SOUND_NODES_PER_TICK = server.comment("Max sound flood-fill nodes per tick per dimension (design doc 16 §2). Work over budget waits for the next tick, which reads as a short sound delay.")
+                .defineInRange("soundNodesPerTick", 8000, 500, 1000000);
         server.pop();
         SERVER_SPEC = server.build();
 
