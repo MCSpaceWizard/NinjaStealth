@@ -40,6 +40,33 @@ public final class ESEntities {
                     .updateInterval(10)
                     .build(THROWN_ITEM_KEY));
 
+    // Beta toolkit, part A (design doc 21).
+    private static final ResourceKey<EntityType<?>> SMOKE_CLOUD_KEY =
+            ResourceKey.create(Registries.ENTITY_TYPE, EmergentStealth.id("smoke_cloud"));
+
+    /** A smoke bomb's cloud: blocks sight while it lasts. Invisible itself; the client draws particles. */
+    public static final DeferredHolder<EntityType<?>, EntityType<com.mcspacewizard.emergentstealth.entity.SmokeCloud>> SMOKE_CLOUD =
+            ENTITY_TYPES.register("smoke_cloud", () -> EntityType.Builder.<com.mcspacewizard.emergentstealth.entity.SmokeCloud>of(
+                            com.mcspacewizard.emergentstealth.entity.SmokeCloud::new, MobCategory.MISC)
+                    .noLootTable()
+                    .sized(0.5F, 0.5F)
+                    .clientTrackingRange(8)
+                    .updateInterval(Integer.MAX_VALUE)
+                    .build(SMOKE_CLOUD_KEY));
+
+    private static final ResourceKey<EntityType<?>> LIT_FIRECRACKER_KEY =
+            ResourceKey.create(Registries.ENTITY_TYPE, EmergentStealth.id("lit_firecracker"));
+
+    /** A firecracker going off where it landed. */
+    public static final DeferredHolder<EntityType<?>, EntityType<com.mcspacewizard.emergentstealth.entity.LitFirecracker>> LIT_FIRECRACKER =
+            ENTITY_TYPES.register("lit_firecracker", () -> EntityType.Builder.<com.mcspacewizard.emergentstealth.entity.LitFirecracker>of(
+                            com.mcspacewizard.emergentstealth.entity.LitFirecracker::new, MobCategory.MISC)
+                    .noLootTable()
+                    .sized(0.25F, 0.25F)
+                    .clientTrackingRange(6)
+                    .updateInterval(2)
+                    .build(LIT_FIRECRACKER_KEY));
+
     public static void onAttributeCreation(EntityAttributeCreationEvent event) {
         event.put(STEALTH_NPC.get(), StealthNpc.createAttributes().build());
     }

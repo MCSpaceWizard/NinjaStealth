@@ -64,6 +64,15 @@ public final class ESConfig {
     public static final ModConfigSpec.BooleanValue UI_HIGH_CONTRAST;
     public static final ModConfigSpec.BooleanValue UI_REDUCED_MOTION;
     public static final ModConfigSpec.IntValue UI_TYPEWRITER_SPEED;
+    // --- Client: animation (doc 17 §8) ---
+    public static final ModConfigSpec.BooleanValue PROCEDURAL_CRAWL;
+    public static final ModConfigSpec.BooleanValue PROCEDURAL_BODIES;
+    public static final ModConfigSpec.BooleanValue BREATHING;
+    public static final ModConfigSpec.BooleanValue LEAN;
+    public static final ModConfigSpec.BooleanValue PLAYER_IDLE_ANIMATION;
+    public static final ModConfigSpec.BooleanValue TAKEDOWN_CAMERA;
+    public static final ModConfigSpec.DoubleValue ACTION_MOUSE_SCALE;
+    public static final ModConfigSpec.IntValue ANIMATION_RANGE;
 
     static {
         ModConfigSpec.Builder server = new ModConfigSpec.Builder();
@@ -164,6 +173,23 @@ public final class ESConfig {
                 .define("reducedMotion", false);
         UI_TYPEWRITER_SPEED = client.comment("Dialogue text speed in characters per second. 0 shows each line at once.")
                 .defineInRange("typewriterSpeed", 45, 0, 400);
+        client.push("animation");
+        PROCEDURAL_CRAWL = client.comment("Crawling players use the procedural elbow crawl instead of vanilla's swimming arms.")
+                .define("proceduralCrawl", true);
+        PROCEDURAL_BODIES = client.comment("Knocked-out and dead NPCs lie down in slack poses; dragged and carried bodies hang and trail.")
+                .define("proceduralBodies", true);
+        BREATHING = client.comment("Subtle breathing on NPCs and players; slow, deep breathing on knocked-out NPCs.")
+                .define("breathing", true);
+        LEAN = client.comment("NPCs and players lean into turns and speed changes.")
+                .define("lean", true);
+        PLAYER_IDLE_ANIMATION = client.comment("Breathing and lean also animate players (keeps the player animation layer always on).")
+                .define("playerIdleAnimation", true);
+        TAKEDOWN_CAMERA = client.comment("In first person, the camera turns with takedown animations (angles only; it never moves).")
+                .define("takedownCamera", true);
+        ACTION_MOUSE_SCALE = client.comment("Mouse look speed during takedowns and other actions (1 = normal, 0 = locked).")
+                .defineInRange("actionMouseScale", 0.25, 0.0, 1.0);
+        ANIMATION_RANGE = client.comment("Procedural animation (crawl, breathing, dragged bodies) runs for entities within this many blocks.")
+                .defineInRange("animationRange", 64, 16, 256);
         client.pop();
         CLIENT_SPEC = client.build();
     }

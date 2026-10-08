@@ -37,6 +37,20 @@ final class VerbTests {
         return npc;
     }
 
+    /**
+     * NPCs only perceive near a targetable player (the {@code PerceptionScheduler} tiers), so a test about what a
+     * guard notices needs one. This one stands behind a stone wall across z = 2, out of sight of the arena beyond.
+     * Remove it when the test ends.
+     */
+    private static ServerPlayer hiddenObserver(GameTestHelper helper) {
+        for (int x = 0; x < 9; x++) {
+            for (int y = 1; y < 5; y++) {
+                helper.setBlock(new BlockPos(x, y, 2), Blocks.STONE);
+            }
+        }
+        return TestPlayers.spawn(helper, new Vec3(4.5, 1, 0.5), 180.0F);
+    }
+
     private static String describe(StealthNpc npc) {
         return " [body " + npc.getBodyState() + ", state " + npc.stealthBrain().state() + ", cause " + npc.stealthBrain().cause() + "]";
     }
@@ -79,11 +93,13 @@ final class VerbTests {
         ServerLevel level = helper.getLevel();
         StealthNpc sleeper = npc(helper, new Vec3(4.5, 1, 14.5), 0.0F, true, "ashigaru");
         StealthNpc guard = npc(helper, new Vec3(4.5, 1, 6.5), 0.0F, true, "ashigaru");
+        ServerPlayer observer = hiddenObserver(helper);
         sleeper.knockOut(level, null);
         helper.succeedWhen(() -> {
             helper.assertTrue(sleeper.getBodyState() == BodyState.NONE, "The guard should wake the sleeper" + describe(sleeper)
                     + " guard" + describe(guard));
             helper.assertTrue(sleeper.stealthBrain().state() != AlertState.UNAWARE, "The woken guard should be on alert" + describe(sleeper));
+            TestPlayers.remove(observer);
         });
     }
 
@@ -92,11 +108,13 @@ final class VerbTests {
         ServerLevel level = helper.getLevel();
         StealthNpc corpse = npc(helper, new Vec3(4.5, 1, 13.5), 0.0F, false, "ashigaru");
         StealthNpc guard = npc(helper, new Vec3(4.5, 1, 6.5), 0.0F, true, "ashigaru");
+        ServerPlayer observer = hiddenObserver(helper);
         corpse.becomeCorpse(level, null);
         helper.succeedWhen(() -> {
             AlertState state = guard.stealthBrain().state();
             helper.assertTrue(state == AlertState.HUNTING || state == AlertState.SEARCHING, "The guard should be alarmed" + describe(guard));
             helper.assertTrue(guard.stealthBrain().cause() == PoiCause.EVIDENCE, "Cause should be evidence" + describe(guard));
+            TestPlayers.remove(observer);
         });
     }
 
@@ -113,8 +131,10 @@ final class VerbTests {
         guard.setSchedule(new com.mcspacewizard.emergentstealth.ai.routine.Schedule(java.util.List.of(
                 new com.mcspacewizard.emergentstealth.ai.routine.Schedule.Entry(0, 0,
                         new com.mcspacewizard.emergentstealth.ai.routine.Schedule.Post(guard.blockPosition(), 0.0F)))));
+        ServerPlayer observer = hiddenObserver(helper);
         corpse.becomeCorpse(level, null);
         helper.runAfterDelay(100, () -> {
+            TestPlayers.remove(observer);
             helper.assertTrue(guard.stealthBrain().state() == AlertState.UNAWARE, "A hidden corpse shouldn't be noticed" + describe(guard));
             helper.succeed();
         });

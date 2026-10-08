@@ -241,4 +241,22 @@
   "commands.emergentstealth.dev.dialogue.unsupported": "That client doesn't have Emergent Stealth, so it can't show the preview.",
   "ui.emergentstealth.skills.tab.shinobi": "Shinobi",
   "ui.emergentstealth.skills.tab.shogunate": "Shogunate"
+  "item.emergentstealth.pebble": "Pebble",
+  "item.emergentstealth.smoke_bomb": "Smoke Bomb",
+  "item.emergentstealth.firecracker": "Firecracker",
+  "item.emergentstealth.blinding_powder": "Blinding Powder",
+  "item.emergentstealth.caltrops": "Caltrops",
+  "block.emergentstealth.caltrops": "Caltrops",
+  "entity.emergentstealth.smoke_cloud": "Smoke Cloud",
+  "entity.emergentstealth.lit_firecracker": "Lit Firecracker",
+  "key.emergentstealth.tool_wheel": "Tool Wheel (hold)",
+  "key.emergentstealth.quick_use": "Use Active Tool",
+  "gui.emergentstealth.tool_wheel": "Tool Wheel",
+  "gui.emergentstealth.tool_wheel.empty": "No stealth tools in your inventory",
+  "gui.emergentstealth.tool_wheel.hint": "Point at a tool",
+  "gui.emergentstealth.tool_wheel.release": "Release %s to choose",
+  "message.emergentstealth.tool.none": "No active tool: hold the Tool Wheel key to choose one",
+  "message.emergentstealth.tool.out": "No %s left",
+  "death.attack.emergentstealth.caltrops": "%1$s stepped on caltrops one time too many",
+  "death.attack.emergentstealth.caltrops.player": "%1$s stepped on caltrops while trying to escape %2$s"
 }

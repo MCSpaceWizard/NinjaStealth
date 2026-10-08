@@ -16,6 +16,32 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Beta toolkit, part A: pebble, smoke bomb, firecracker, blinding powder, caltrops 🧪
+
+**Automated checks (already passing):** 8 more GameTests (64 total):
+- smoke between a guard and a player blocks sight completely, and a guard inside the cloud is blinded
+- smoke stops blocking once it expires
+- Thick Smoke (skill) makes clouds last 15 s instead of 10
+- a firecracker draws a guard to it by sound alone
+- blinding powder blinds an NPC in its cone but not one outside it
+- caltrops slow and hurt
+- quick use (V) keeps the held item
+- a pebble makes a noise at the landing spot and leaves no trace
+
+All five are in the creative tab and the `#emergentstealth:tools` tag. The cheapest way to try them is in creative: put a stack of each in your inventory.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| A.1 | Tool wheel | Hold **R** with some tools in your inventory, point at one, release | A radial wheel of the tools you carry, with counts. The chosen one shows as the active tool icon near the hotbar. With no tools: "No stealth tools in your inventory" |
+| A.2 | Quick use | With a sword in hand and an active tool, **tap V** (lob) or **hold V** and release (charged throw) | The tool is thrown/used; you still hold the sword. When you run out: "No *tool* left" |
+| A.3 | Pebble | Throw one past a calm guard | A clack where it lands; the guard investigates **the landing spot**, not you. Nothing is left behind |
+| A.4 | Smoke bomb | Throw one between you and a guard who can see you | A pop, then a grey cloud (3-block radius) for 10 s. The guard loses sight of you completely. A guard standing in the cloud is blinded. `/esdebug` shows the smoke volume |
+| A.5 | Firecracker | Throw one far from you, behind a guard | 2 s of fizzing, then 3 s of bangs. Guards come to the firecracker, not to you |
+| A.6 | Blinding powder | Use it facing a guard within 4 blocks | Guards in the 60° cone are blinded for 6 s: they stagger, slow down and turn at random, but still hear you. A guard beside the cone isn't affected |
+| A.7 | Caltrops | Throw them on a path a guard walks | A 2×2 patch for 60 s. Stepping in: 1 damage and Slowness. Guards path around them when they can |
+| A.8 | Recipes | Check the recipe book | Pebble ×4: gravel. Smoke bomb: gunpowder + paper + charcoal. Firecracker: paper + gunpowder. Blinding powder: glowstone dust + bone meal + paper. Caltrops: 3 iron nuggets |
+| A.9 | Thick Smoke | `/es skills unlock @s emergentstealth:thick_smoke`, then throw a smoke bomb | The cloud lasts 15 s |
+
 ## Progression foundations: skills, techniques, stealth gear 🧪
 
 **Automated checks (already passing):** 4 more GameTests (56 total):

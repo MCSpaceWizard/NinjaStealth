@@ -34,6 +34,14 @@ public final class ESBlocks {
     public static final DeferredBlock<LanternBlock> UNLIT_SOUL_LANTERN = BLOCKS.registerBlock("unlit_soul_lantern",
             LanternBlock::new, () -> unlit(Blocks.SOUL_LANTERN));
 
+    /** Scattered caltrops (design doc 21): thrown, never placed by hand, gone after 60 s. No item, no drops. */
+    public static final DeferredBlock<com.mcspacewizard.emergentstealth.block.CaltropsBlock> CALTROPS = BLOCKS.registerBlock("caltrops",
+            com.mcspacewizard.emergentstealth.block.CaltropsBlock::new, () -> BlockBehaviour.Properties.of()
+                    .mapColor(net.minecraft.world.level.material.MapColor.METAL)
+                    .noCollision().noOcclusion().instabreak().noLootTable()
+                    .sound(net.minecraft.world.level.block.SoundType.CHAIN)
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY));
+
     private static BlockBehaviour.Properties unlit(Block lit) {
         return BlockBehaviour.Properties.ofFullCopy(lit).lightLevel(state -> 0);
     }

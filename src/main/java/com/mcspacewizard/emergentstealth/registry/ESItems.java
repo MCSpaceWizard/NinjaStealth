@@ -41,4 +41,16 @@ public final class ESItems {
             p -> p.humanoidArmor(SHINOBI_MATERIAL, net.minecraft.world.item.equipment.ArmorType.LEGGINGS));
     public static final DeferredItem<Item> TABI = ITEMS.registerItem("tabi", Item::new,
             p -> p.humanoidArmor(SHINOBI_MATERIAL, net.minecraft.world.item.equipment.ArmorType.BOOTS));
+
+    // Beta toolkit, part A (design doc 21 §2). All are in #emergentstealth:tools.
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.tool.PebbleItem> PEBBLE = ITEMS.registerItem("pebble",
+            com.mcspacewizard.emergentstealth.tool.PebbleItem::new, p -> p.stacksTo(16));
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.tool.SmokeBombItem> SMOKE_BOMB = ITEMS.registerItem("smoke_bomb",
+            com.mcspacewizard.emergentstealth.tool.SmokeBombItem::new, p -> p.stacksTo(8));
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.tool.FirecrackerItem> FIRECRACKER = ITEMS.registerItem("firecracker",
+            com.mcspacewizard.emergentstealth.tool.FirecrackerItem::new, p -> p.stacksTo(8));
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.tool.BlindingPowderItem> BLINDING_POWDER = ITEMS.registerItem("blinding_powder",
+            com.mcspacewizard.emergentstealth.tool.BlindingPowderItem::new, p -> p.stacksTo(8));
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.tool.CaltropsItem> CALTROPS = ITEMS.registerItem("caltrops",
+            com.mcspacewizard.emergentstealth.tool.CaltropsItem::new, p -> p.stacksTo(8));
 }

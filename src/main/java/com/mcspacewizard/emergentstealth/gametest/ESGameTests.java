@@ -31,6 +31,11 @@ public final class ESGameTests {
     private static final int MAX_TICKS = 100;
     private static final Map<String, Consumer<GameTestHelper>> TESTS = new LinkedHashMap<>();
     private static final Map<String, Integer> MAX_TICKS_OVERRIDES = new java.util.HashMap<>();
+    /**
+     * Tests that run alone. A batch's tests run side by side, and alarmed guards shout loud enough to reach the
+     * neighbouring arenas, so a test that needs a guard to stay calm or react to one cause gets a batch to itself.
+     */
+    private static final java.util.Set<String> ISOLATED = new java.util.HashSet<>();
 
     static {
         test("data/profiles_loaded", PerceptionTests::profilesLoaded);
@@ -66,9 +71,9 @@ public final class ESGameTests {
         test("behaviour/attack_tokens_limit", BehaviourTests::attackTokensLimit);
         test("behaviour/attacker_closes_in", BehaviourTests::attackerClosesIn, 200);
         test("verbs/rear_takedown_rules", VerbTests::rearTakedownRules, 100);
-        test("verbs/knocked_out_gets_woken", VerbTests::knockedOutGetsWoken, 600);
-        test("verbs/corpse_raises_alarm", VerbTests::corpseRaisesAlarm, 400);
-        test("verbs/hidden_corpse_unnoticed", VerbTests::hiddenCorpseUnnoticed, 150);
+        isolated("verbs/knocked_out_gets_woken", VerbTests::knockedOutGetsWoken, 600);
+        isolated("verbs/corpse_raises_alarm", VerbTests::corpseRaisesAlarm, 400);
+        isolated("verbs/hidden_corpse_unnoticed", VerbTests::hiddenCorpseUnnoticed, 150);
         test("verbs/drag_follows", VerbTests::dragFollows);
         test("verbs/crawl_stance", VerbTests::crawlStance);
         test("verbs/air_takedown", VerbTests::airTakedown);
@@ -88,6 +93,11 @@ public final class ESGameTests {
         test("ui/dev_dialogue_command", UiTests::devDialogueCommand);
     }
 
+    private static void isolated(String name, Consumer<GameTestHelper> function, int maxTicks) {
+        ISOLATED.add(name);
+        test(name, function, maxTicks);
+    }
+
     private static void test(String name, Consumer<GameTestHelper> function, int maxTicks) {
         MAX_TICKS_OVERRIDES.put(name, maxTicks);
         test(name, function);
@@ -102,9 +112,13 @@ public final class ESGameTests {
         Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(EmergentStealth.id("default"));
         for (String name : TESTS.keySet()) {
             Identifier id = EmergentStealth.id(name);
+            // One environment per isolated test: batches are grouped by environment and run one after another.
+            Holder<TestEnvironmentDefinition<?>> testEnvironment = ISOLATED.contains(name)
+                    ? event.registerEnvironment(EmergentStealth.id("isolated/" + name))
+                    : environment;
             event.registerTest(id, new FunctionGameTestInstance(
                     ResourceKey.create(Registries.TEST_FUNCTION, id),
-                    new TestData<>(environment, ARENA, MAX_TICKS_OVERRIDES.getOrDefault(name, MAX_TICKS), 0, true)));
+                    new TestData<>(testEnvironment, ARENA, MAX_TICKS_OVERRIDES.getOrDefault(name, MAX_TICKS), 0, true)));
         }
     }
 }

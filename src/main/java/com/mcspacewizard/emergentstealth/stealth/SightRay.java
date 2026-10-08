@@ -49,6 +49,10 @@ public final class SightRay {
      */
     public static float transmittance(BlockGetter level, Vec3 from, Vec3 to, boolean targetCrawling,
             @Nullable BlockPos skip, @Nullable BlockPos skipEnd) {
+        // Smoke (design doc 21): blocks sight completely. One volatile read when there's no smoke anywhere.
+        if (SmokeVolumes.blocksSight(level, from, to)) {
+            return 0.0F;
+        }
         Accumulator acc = new Accumulator();
         BlockGetter.traverseBlocks(from, to, acc, (a, pos) -> {
             if ((skip != null && pos.equals(skip)) || (skipEnd != null && pos.equals(skipEnd))) {
