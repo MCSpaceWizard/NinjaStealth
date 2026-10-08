@@ -28,6 +28,16 @@ repositories {
         forRepository { maven { name = 'Modrinth'; url = 'https://api.modrinth.com/maven' } }
         filter { includeGroup 'maven.modrinth' }
     }
+
+    // Player Animation Library (required, doc 17) and Bendable Cuboids (elbows and knees). Only the
+    // ZigyTheBird/redlance groups resolve from this maven; everything else keeps coming from Central.
+    exclusiveContent {
+        forRepository { maven { name = 'Redlance'; url = 'https://repo.redlance.org/public' } }
+        filter {
+            includeGroupAndSubgroups 'com.zigythebird'
+            includeGroup 'org.redlance.common-utils'
+        }
+    }
 }
 
 base {
@@ -99,6 +109,16 @@ configurations {
 }
 
 dependencies {
+    // Player Animation Library: required on clients (players need it installed), not needed on servers.
+    // We compile against its API (IAnimation, controllers, PAL-format clips). See doc 17 §8.
+    // Non-transitive: its poms ask for newer joml/netty/gson than Minecraft's strict versions; the game provides
+    // those, and the Neo jar bundles its own molang engine (jar-in-jar). Core holds the API and is a game library.
+    implementation("com.zigythebird.playeranim:PlayerAnimationLibNeo:${pal_version}") { transitive = false }
+    implementation("com.zigythebird.playeranim:PlayerAnimationLibCore:${pal_version}") { transitive = false }
+    compileOnly("com.zigythebird:mochafloats:5.0.0") { transitive = false }
+    // Bendable Cuboids: elbows and knees on NPCs and players (client-only, optional at runtime).
+    implementation "com.zigythebird.bendable_cuboids:BendableCuboidsMerged:${bendable_cuboids_version}"
+
     // Renderer compat testing (doc 30). Never required at runtime; nothing compiles against them.
     //   ./gradlew runClient -PwithSodium          (Sodium)
     //   ./gradlew runClient -PwithIris            (Sodium + Iris)
@@ -121,6 +141,7 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
             mod_version            : mod_version,
             mod_authors            : mod_authors,
             mod_description        : mod_description,
+            pal_version_range      : pal_version_range,
     ]
     inputs.properties replaceProperties
     expand replaceProperties

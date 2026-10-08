@@ -26,3 +26,20 @@ ${mod_description}
     versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"
+
+# Player Animation Library animates players (crawl, drag/carry arms, takedown clips; doc 17 §8).
+# Required on clients only: dedicated servers never load it, so a server without PAL accepts clients with it.
+[[dependencies.${mod_id}]]
+    modId="player_animation_library"
+    type="required"
+    versionRange="${pal_version_range}"
+    ordering="AFTER"
+    side="CLIENT"
+
+# Bendable Cuboids gives NPCs and players elbows and knees. Optional: without it limbs stay six-part.
+[[dependencies.${mod_id}]]
+    modId="bendable_cuboids"
+    type="optional"
+    versionRange="[2.0.2,)"
+    ordering="AFTER"
+    side="CLIENT"
