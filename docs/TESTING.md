@@ -10,6 +10,8 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 **Reporting:** for each item, a quick ✅/❌ plus what you saw is enough. Screenshots help a lot for anything visual. For crashes, send `run/logs/latest.log`.
 
+**Overview:** see [PROGRESS.md](PROGRESS.md) for where things stand.
+
 **Before you start:** build per [GETTING_STARTED.md](GETTING_STARTED.md), run `./gradlew runClient`, and create a **Creative world with cheats on**.
 
 ---
