@@ -6,7 +6,6 @@ import java.util.Map;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
@@ -17,12 +16,12 @@ import net.minecraft.server.packs.resources.ResourceManager;
  * Draws an NPC's outfit layers over its body. Layers whose texture doesn't exist are skipped, so a
  * resource pack can ship partial art without purple-checkerboard NPCs.
  */
-public class NpcOutfitLayer extends RenderLayer<NpcRenderState, HumanoidModel<NpcRenderState>> {
+public class NpcOutfitLayer extends RenderLayer<NpcRenderState, NpcModel> {
     private final ResourceManager resourceManager;
     // Renderers are rebuilt on resource reload, so caching per instance stays correct.
     private final Map<Identifier, Boolean> textureExists = new HashMap<>();
 
-    public NpcOutfitLayer(RenderLayerParent<NpcRenderState, HumanoidModel<NpcRenderState>> parent, ResourceManager resourceManager) {
+    public NpcOutfitLayer(RenderLayerParent<NpcRenderState, NpcModel> parent, ResourceManager resourceManager) {
         super(parent);
         this.resourceManager = resourceManager;
     }

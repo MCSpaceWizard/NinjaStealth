@@ -25,12 +25,22 @@ public final class ESModelLayers {
             new ModelLayerLocation(EmergentStealth.id("stealth_npc_armor/feet"), "main"));
 
     public static void onRegisterLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
-        event.registerLayerDefinition(NPC, () -> LayerDefinition.create(PlayerModel.createMesh(CubeDeformation.NONE, false), 64, 64));
+        event.registerLayerDefinition(NPC, ESModelLayers::npc);
+        ArmorModelSet<LayerDefinition> armor = npcArmor();
+        event.registerLayerDefinition(NPC_ARMOR.head(), armor::head);
+        event.registerLayerDefinition(NPC_ARMOR.chest(), armor::chest);
+        event.registerLayerDefinition(NPC_ARMOR.legs(), armor::legs);
+        event.registerLayerDefinition(NPC_ARMOR.feet(), armor::feet);
+    }
 
+    /** The NPC body. The renderer bakes it itself, with elbows and knees ({@code Bends}). */
+    public static LayerDefinition npc() {
+        return LayerDefinition.create(PlayerModel.createMesh(CubeDeformation.NONE, false), 64, 64);
+    }
+
+    /** NPC armour, baked with bends too so it follows the limbs. */
+    public static ArmorModelSet<LayerDefinition> npcArmor() {
         ArmorModelSet<MeshDefinition> armor = HumanoidModel.createArmorMeshSet(new CubeDeformation(0.5F), new CubeDeformation(1.0F));
-        event.registerLayerDefinition(NPC_ARMOR.head(), () -> LayerDefinition.create(armor.head(), 64, 32));
-        event.registerLayerDefinition(NPC_ARMOR.chest(), () -> LayerDefinition.create(armor.chest(), 64, 32));
-        event.registerLayerDefinition(NPC_ARMOR.legs(), () -> LayerDefinition.create(armor.legs(), 64, 32));
-        event.registerLayerDefinition(NPC_ARMOR.feet(), () -> LayerDefinition.create(armor.feet(), 64, 32));
+        return armor.map(mesh -> LayerDefinition.create(mesh, 64, 32));
     }
 }
