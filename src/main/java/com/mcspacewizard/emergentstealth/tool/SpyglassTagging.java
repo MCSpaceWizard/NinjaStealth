@@ -91,7 +91,7 @@ public final class SpyglassTagging {
     }
 
     /** Adds a tag, dropping the oldest beyond {@link #MAX_TAGS}. */
-    static SpyglassTags tag(SpyglassTags tags, int entityId, long now) {
+    public static SpyglassTags tag(SpyglassTags tags, int entityId, long now) {
         List<SpyglassTags.Tag> list = new ArrayList<>(tags.active(now));
         list.removeIf(tag -> tag.entityId() == entityId);
         list.add(new SpyglassTags.Tag(entityId, now + TAG_TICKS));
