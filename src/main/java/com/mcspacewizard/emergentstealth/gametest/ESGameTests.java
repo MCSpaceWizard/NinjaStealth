@@ -85,6 +85,7 @@ public final class ESGameTests {
         test("ui/skill_tree_model", UiTests::skillTreeModel);
         test("ui/typewriter", UiTests::typewriter);
         test("ui/paper_noise", UiTests::paperNoise);
+        test("ui/dev_dialogue_command", UiTests::devDialogueCommand);
     }
 
     private static void test(String name, Consumer<GameTestHelper> function, int maxTicks) {

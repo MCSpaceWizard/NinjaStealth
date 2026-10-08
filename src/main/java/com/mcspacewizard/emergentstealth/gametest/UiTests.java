@@ -263,4 +263,20 @@ final class UiTests {
         }
         helper.succeed();
     }
+
+    /** {@code /es dev dialogue} exists (op) and only messages clients that have the mod. */
+    static void devDialogueCommand(GameTestHelper helper) {
+        var dispatcher = helper.getLevel().getServer().getCommands().getDispatcher();
+        var root = dispatcher.getRoot().getChild("emergentstealth");
+        helper.assertTrue(root != null && root.getChild("dev") != null && root.getChild("dev").getChild("dialogue") != null,
+                "/es dev dialogue is registered");
+        ServerPlayer player = TestPlayers.spawn(helper, new Vec3(4.5, 1, 8.5), 0.0F);
+        try {
+            helper.assertTrue(com.mcspacewizard.emergentstealth.command.DevCommands.openDialoguePreview(List.of(player)) == 0,
+                    "A client without our channel gets nothing (and nothing throws)");
+        } finally {
+            TestPlayers.remove(player);
+        }
+        helper.succeed();
+    }
 }

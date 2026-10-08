@@ -45,5 +45,7 @@ public final class ESNetwork {
                 com.mcspacewizard.emergentstealth.action.Crawling::handleToggle);
         registrar.playToClient(com.mcspacewizard.emergentstealth.network.BarkPayload.TYPE,
                 com.mcspacewizard.emergentstealth.network.BarkPayload.STREAM_CODEC);
+        registrar.playToClient(com.mcspacewizard.emergentstealth.network.OpenDialoguePreviewPayload.TYPE,
+                com.mcspacewizard.emergentstealth.network.OpenDialoguePreviewPayload.STREAM_CODEC);
     }
 }
