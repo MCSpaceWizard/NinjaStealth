@@ -13,6 +13,9 @@ import com.mcspacewizard.emergentstealth.entity.LitFirecracker;
 import com.mcspacewizard.emergentstealth.entity.SmokeCloud;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 import com.mcspacewizard.emergentstealth.entity.ThrownItem;
+import com.mcspacewizard.emergentstealth.progression.SkillPath;
+import com.mcspacewizard.emergentstealth.progression.Skills;
+import com.mcspacewizard.emergentstealth.registry.ESAttachments;
 import com.mcspacewizard.emergentstealth.registry.ESBlocks;
 import com.mcspacewizard.emergentstealth.registry.ESEntities;
 import com.mcspacewizard.emergentstealth.registry.ESItems;
@@ -29,6 +32,7 @@ import com.mcspacewizard.emergentstealth.tool.SmokeBombItem;
 import com.mcspacewizard.emergentstealth.tool.Toolkit;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.FunctionGameTestInstance;
@@ -47,6 +51,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -71,6 +76,7 @@ public final class ToolkitATests {
     static {
         TESTS.put("toolkit/smoke_blocks_sight", new Spec(ToolkitATests::smokeBlocksSight, 100));
         TESTS.put("toolkit/smoke_expires", new Spec(ToolkitATests::smokeExpires, 100));
+        TESTS.put("toolkit/thick_smoke_lasts_longer", new Spec(ToolkitATests::thickSmokeLastsLonger, 100));
         TESTS.put("toolkit/firecracker_draws_guard", new Spec(ToolkitATests::firecrackerDrawsGuard, 400));
         TESTS.put("toolkit/blinding_cone_only", new Spec(ToolkitATests::blindingConeOnly, 100));
         TESTS.put("toolkit/caltrops_slow_and_hurt", new Spec(ToolkitATests::caltropsSlowAndHurt, 100));
@@ -141,7 +147,8 @@ public final class ToolkitATests {
                     "Smoke between them should block sight completely, got " + after);
             helper.assertTrue(SightRay.transmittance(level, watcher.getEyePosition(), player.getEyePosition(), false) == 0.0F,
                     "A sight ray through smoke should have zero transmittance");
-            Vec3 aside = helper.absoluteVec(new Vec3(0.5, 2.5, 14.5));
+            // Sideways along the guard's own row: 5.5 blocks from the cloud's centre, well outside its 3-block radius.
+            Vec3 aside = helper.absoluteVec(new Vec3(0.5, 2.5, 3.5));
             helper.assertTrue(SightRay.transmittance(level, watcher.getEyePosition(), aside, false) > 0.9F,
                     "A ray that misses the cloud should still be clear");
         } finally {
@@ -169,6 +176,31 @@ public final class ToolkitATests {
             helper.assertTrue(SmokeVolumes.find(level, volume.id()) == null, "Expired volumes are pruned");
             helper.succeed();
         });
+    }
+
+    /** The thrower's Thick Smoke skill (smoke duration ×1.5) makes their clouds last 15 s instead of 10. */
+    static void thickSmokeLastsLonger(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        ServerPlayer player = TestPlayers.spawn(helper, new Vec3(4.5, 1, 3.5), 0.0F);
+        try {
+            player.setData(ESAttachments.PROGRESSION, Skills.progression(player).withPoints(SkillPath.SHINOBI, 10));
+            for (String skill : List.of("shadow_walker", "quiet_hands", "nimble_fingers", "thick_smoke")) {
+                helper.assertTrue(Skills.unlock(player, EmergentStealth.id(skill)), "Unlock " + skill);
+            }
+            ThrownItem bomb = new ThrownItem(level, player, new ItemStack(ESItems.SMOKE_BOMB.get()));
+            Vec3 at = helper.absoluteVec(new Vec3(4.5, 1.05, 9.0));
+            long now = level.getGameTime();
+            ESItems.SMOKE_BOMB.get().onImpact(level, bomb, at, BlockHitResult.miss(at, Direction.UP, BlockPos.containing(at)));
+            List<SmokeCloud> clouds = level.getEntitiesOfClass(SmokeCloud.class, new AABB(at, at).inflate(2.0));
+            helper.assertTrue(clouds.size() == 1, "One cloud should pop, got " + clouds.size());
+            long duration = clouds.getFirst().endTick() - now;
+            helper.assertTrue(duration == Math.round(SmokeCloud.DURATION_TICKS * 1.5F),
+                    "Thick Smoke clouds should last 300 ticks, got " + duration);
+            clouds.getFirst().discard();
+        } finally {
+            TestPlayers.remove(player);
+        }
+        helper.succeed();
     }
 
     // ------------------------------------------------------------------------------------------------

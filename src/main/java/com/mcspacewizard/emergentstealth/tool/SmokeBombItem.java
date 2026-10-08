@@ -2,6 +2,8 @@ package com.mcspacewizard.emergentstealth.tool;
 
 import com.mcspacewizard.emergentstealth.entity.SmokeCloud;
 import com.mcspacewizard.emergentstealth.entity.ThrownItem;
+import com.mcspacewizard.emergentstealth.progression.StealthStat;
+import com.mcspacewizard.emergentstealth.progression.StealthStats;
 import com.mcspacewizard.emergentstealth.registry.ESParticles;
 import com.mcspacewizard.emergentstealth.stealth.sound.NoiseEvent;
 import com.mcspacewizard.emergentstealth.stealth.sound.NoiseKind;
@@ -11,6 +13,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -29,17 +32,26 @@ public class SmokeBombItem extends ThrowableToolItem {
 
     @Override
     public void onImpact(ServerLevel level, ThrownItem thrown, Vec3 at, HitResult hit) {
-        pop(level, at);
+        int duration = SmokeCloud.DURATION_TICKS;
+        if (thrown.getOwner() instanceof Player thrower) {
+            duration = Math.round(duration * StealthStats.get(thrower, StealthStat.SMOKE_DURATION));
+        }
+        pop(level, at, duration);
     }
 
-    /** Spawns the cloud at a landing point (also used by tests and commands). */
+    /** Spawns a standard cloud at a landing point (also used by tests and commands). */
     public static SmokeCloud pop(ServerLevel level, Vec3 at) {
+        return pop(level, at, SmokeCloud.DURATION_TICKS);
+    }
+
+    /** Spawns a cloud lasting {@code duration} ticks (the thrower's Thick Smoke skill lengthens it). */
+    public static SmokeCloud pop(ServerLevel level, Vec3 at, int duration) {
         Noises.emit(level, new NoiseEvent(at, POP_LOUDNESS, NoiseKind.EXPLOSION, null, null));
         level.playSound(null, at.x, at.y, at.z, SoundEvents.GENERIC_EXPLODE, SoundSource.NEUTRAL, 0.6F, 1.7F);
         level.playSound(null, at.x, at.y, at.z, SoundEvents.FIRE_EXTINGUISH, SoundSource.NEUTRAL, 1.0F, 0.6F);
         level.sendParticles(ParticleTypes.POOF, at.x, at.y + 0.3, at.z, 20, 0.3, 0.3, 0.3, 0.08);
         level.sendParticles(ESParticles.SMOKE_CLOUD, at.x, at.y + 0.5, at.z, 12, 0.6, 0.4, 0.6, 0.05);
-        SmokeCloud cloud = SmokeCloud.create(level, at.add(0.0, CENTER_RAISE, 0.0), SmokeCloud.RADIUS, SmokeCloud.DURATION_TICKS);
+        SmokeCloud cloud = SmokeCloud.create(level, at.add(0.0, CENTER_RAISE, 0.0), SmokeCloud.RADIUS, duration);
         level.addFreshEntity(cloud);
         return cloud;
     }
