@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "minecraft:arrow",
+    "minecraft:arrow",
+    "minecraft:arrow",
+    "minecraft:arrow",
+    "minecraft:flint",
+    "#minecraft:coals"
+  ],
+  "result": {
+    "count": 4,
+    "id": "emergentstealth:fire_arrow"
+  }
+}

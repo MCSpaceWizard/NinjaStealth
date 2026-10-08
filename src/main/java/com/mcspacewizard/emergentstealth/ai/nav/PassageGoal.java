@@ -48,7 +48,8 @@ public class PassageGoal extends Goal {
             Node node = path.getNode(i);
             for (int dy = 0; dy <= 1; dy++) {
                 BlockPos pos = new BlockPos(node.x, node.y + dy, node.z);
-                if (isClosedPassage(mob.level().getBlockState(pos))
+                BlockState state = mob.level().getBlockState(pos);
+                if (isClosedPassage(state) && !com.mcspacewizard.emergentstealth.world.lock.Locks.blocksMob(mob, pos, state)
                         && mob.distanceToSqr(pos.getX() + 0.5, mob.getY(), pos.getZ() + 0.5) <= OPEN_DISTANCE_SQ) {
                     passage = pos;
                     return true;

@@ -681,6 +681,99 @@
         "................",
         "................"
       ]
+    },
+    {
+      "path": "item/water_arrow",
+      "shape": "arrow_item",
+      "colors": [
+        "wood",
+        "#5fb4e8",
+        "#3d6fb0"
+      ]
+    },
+    {
+      "path": "item/fire_arrow",
+      "shape": "arrow_item",
+      "colors": [
+        "wood",
+        "#f08a24",
+        "lacquer"
+      ]
+    },
+    {
+      "path": "item/sleep_dart",
+      "shape": "dart_item",
+      "colors": [
+        "straw",
+        "jade",
+        "paper"
+      ]
+    },
+    {
+      "path": "item/blowgun",
+      "shape": "blowgun",
+      "colors": [
+        "#8fae4a",
+        "#5d7430",
+        "ink"
+      ]
+    },
+    {
+      "path": "item/key",
+      "shape": "key",
+      "colors": [
+        "gold",
+        "#7a5f14",
+        "lacquer"
+      ]
+    },
+    {
+      "path": "item/lockpick",
+      "shape": "lockpick",
+      "colors": [
+        "steel",
+        "dark_steel",
+        "lacquer_dark"
+      ]
+    },
+    {
+      "path": "item/locksmiths_kit",
+      "shape": "kit",
+      "colors": [
+        "lacquer",
+        "ink",
+        "gold"
+      ]
+    },
+    {
+      "path": "entity/projectiles/water_arrow",
+      "shape": "arrow_entity",
+      "size": 32,
+      "colors": [
+        "wood",
+        "#5fb4e8",
+        "#3d6fb0"
+      ]
+    },
+    {
+      "path": "entity/projectiles/fire_arrow",
+      "shape": "arrow_entity",
+      "size": 32,
+      "colors": [
+        "wood",
+        "#f08a24",
+        "lacquer"
+      ]
+    },
+    {
+      "path": "entity/projectiles/sleep_dart",
+      "shape": "arrow_entity",
+      "size": 32,
+      "colors": [
+        "straw",
+        "jade",
+        "paper"
+      ]
     }
   ]
 }
