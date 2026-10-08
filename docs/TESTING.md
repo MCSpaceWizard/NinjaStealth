@@ -40,7 +40,7 @@ This is a living list of what's implemented and how to test it. It's updated wit
 | 7.7 | Air takedown | Drop onto a guard from 2+ blocks (sneaking or empty-handed: knock out; holding a sword or axe, not sneaking: kill) | It goes down, and you take **no fall damage** |
 | 7.8 | Elites | Try a rear takedown on a `samurai` | Not offered (only air takedowns work on elites) |
 | 7.9 | Bodies stay | Kill or knock out a guard | The body stays on the ground (corpses forever for now). Hitting a knocked-out NPC kills it |
-| 7.10 | Drag & carry | Right-click a body: drag. Sneak + right-click: shoulder carry. Right-click again: drop | Dragging: the body slides behind you, ×0.75 speed, no sprint, silent. Carrying: ×0.6 speed, the body rides your shoulder, works on ladders |
+| 7.10 | Drag & carry | Right-click a body: drag. Sneak + right-click: shoulder carry. **Any right-click** while moving a body: put it down | Dragging: the body slides behind you, ×0.75 speed, no sprint, silent. Carrying: ×0.6 speed, the body rides your shoulder, works on ladders |
 | 7.11 | Bodies are evidence | Leave a corpse where a patrol will see it (lit area) | The guard barks "A body! Raise the alarm!", shouts (others come), hunts to the body and searches around it. Hide bodies in the dark or out of sight and they aren't found |
 | 7.12 | Waking | Leave a knocked-out guard where another will see it | The other walks over ("Hey! Wake up!"), wakes it after a moment, and both search on alert ("Ugh... someone jumped me!") |
 | 7.13 | Other evidence | Shoot an arrow into a wall near a patrol, or drop a sword | A guard who sees it becomes curious ("What's this doing here?") and investigates |

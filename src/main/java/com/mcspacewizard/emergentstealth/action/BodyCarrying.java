@@ -61,6 +61,13 @@ public final class BodyCarrying {
         setSpeed(player, mode == CarryLink.Mode.CARRY ? CARRY_SPEED : DRAG_SPEED);
     }
 
+    /** Server: the player right-clicked while moving a body. */
+    public static void handleDrop(DropBodyPayload payload, net.neoforged.neoforge.network.handling.IPayloadContext context) {
+        if (context.player() instanceof ServerPlayer player) {
+            drop(player);
+        }
+    }
+
     public static void drop(Player player) {
         StealthNpc body = carriedBody(player);
         player.setData(ESAttachments.CARRY, CarryLink.NONE);

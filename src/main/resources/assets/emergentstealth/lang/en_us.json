@@ -105,7 +105,7 @@
   "prompt.emergentstealth.takedown": "[RMB] Knock out   [LMB] Kill",
   "prompt.emergentstealth.takedown_lethal_only": "[LMB] Kill   (empty hand to knock out)",
   "prompt.emergentstealth.body": "[RMB] Drag   [Sneak + RMB] Carry",
-  "prompt.emergentstealth.drop": "[RMB] Drop body",
+  "prompt.emergentstealth.drop": "[RMB] Put the body down",
   "bark.emergentstealth.body.0": "A body! Raise the alarm!",
   "bark.emergentstealth.body.1": "Murder! Search the area!",
   "bark.emergentstealth.body.2": "Someone's killed him!",

@@ -230,6 +230,12 @@ public class StealthNpc extends PathfinderMob {
                 || this.getData(com.mcspacewizard.emergentstealth.registry.ESAttachments.ACTION).activeAt(this.level().getGameTime());
     }
 
+    /** A body being dragged or carried can't be targeted (so the carrier can still interact with the world). */
+    @Override
+    public boolean isPickable() {
+        return super.isPickable() && this.getData(com.mcspacewizard.emergentstealth.registry.ESAttachments.CARRY).isNone();
+    }
+
     /** Bodies don't get shoved around by walking into them. */
     @Override
     public boolean isPushable() {

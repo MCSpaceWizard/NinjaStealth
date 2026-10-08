@@ -60,6 +60,19 @@ public final class ActionClientEvents {
         }
     }
 
+    /** While moving a body, any right-click puts it down (you can't aim at a body on your shoulder). */
+    @SubscribeEvent
+    static void onInteractionKey(net.neoforged.neoforge.client.event.InputEvent.InteractionKeyMappingTriggered event) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (event.isUseItem() && minecraft.player != null && !BodyCarrying.link(minecraft.player).isNone()) {
+            event.setCanceled(true);
+            event.setSwingHand(false);
+            if (event.getHand() == net.minecraft.world.InteractionHand.MAIN_HAND) {
+                ClientPacketDistributor.sendToServer(com.mcspacewizard.emergentstealth.action.DropBodyPayload.INSTANCE);
+            }
+        }
+    }
+
     /** What the player could do right now with what's under the crosshair, or null. */
     static Component prompt(LocalPlayer player) {
         if (!BodyCarrying.link(player).isNone()) {
