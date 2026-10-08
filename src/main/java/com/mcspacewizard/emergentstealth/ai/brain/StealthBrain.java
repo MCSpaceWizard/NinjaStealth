@@ -70,6 +70,12 @@ public final class StealthBrain {
     private long noiseTick = Long.MIN_VALUE;
     private PoiCause noiseCause = PoiCause.HEARD;
 
+    // Alarm without a known target (a corpse was found): search the area (design doc 17 §5).
+    private boolean alarmed;
+    private long alarmTick = Long.MIN_VALUE;
+    /** A knocked-out colleague this NPC is walking over to wake up (entity id), or -1. */
+    private int wakeTarget = -1;
+
     // Debug and bark bookkeeping.
     private @Nullable HeardNoise lastHeard;
     private long lastHeardTick = Long.MIN_VALUE;
@@ -189,7 +195,7 @@ public final class StealthBrain {
         }
 
         AlertState next;
-        if (alertTarget != null) {
+        if (alertTarget != null || alarmed) {
             next = alertedState(level, now, combatant, perception.get(alertTarget));
         } else if (awareness >= ESConfig.SUSPICIOUS_THRESHOLD.get()) {
             boolean readyToInvestigate = state == AlertState.INVESTIGATING
@@ -214,6 +220,10 @@ public final class StealthBrain {
     /** An investigation ends after looking around at the spot for a while, or when it takes too long. */
     private boolean investigationDone(long now) {
         if (now - stateSince > INVESTIGATE_MAX_TICKS) {
+            wakeTarget = -1;
+            return true;
+        }
+        if (wakeTarget >= 0 && tryWake(now)) {
             return true;
         }
         Vec3 poi = pointOfInterest();
@@ -231,13 +241,16 @@ public final class StealthBrain {
 
     private AlertState alertedState(ServerLevel level, long now, boolean combatant, @Nullable TargetAwareness target) {
         long since = target == null ? Long.MAX_VALUE : target.ticksSincePerceived(now);
+        if (alarmed) {
+            since = Math.min(since, now - alarmTick);
+        }
         if (!combatant) {
             if (since > FLEE_TICKS) {
                 return endAlert(level, now);
             }
             return AlertState.FLEEING;
         }
-        if (target != null && since <= COMBAT_MEMORY_TICKS && targetEntity(level) != null) {
+        if (target != null && target.ticksSincePerceived(now) <= COMBAT_MEMORY_TICKS && targetEntity(level) != null) {
             return AlertState.COMBAT;
         }
         Vec3 poi = pointOfInterest();
@@ -268,6 +281,7 @@ public final class StealthBrain {
     private AlertState endAlert(ServerLevel level, long now) {
         alertTarget = null;
         noisePos = null;
+        alarmed = false;
         heightenedUntil = now + HEIGHTENED_TICKS;
         return baseline(now);
     }
@@ -390,6 +404,8 @@ public final class StealthBrain {
         state = AlertState.UNAWARE;
         alertTarget = null;
         noisePos = null;
+        alarmed = false;
+        wakeTarget = -1;
         behaviour.reset();
         cause = PoiCause.NONE;
     }
@@ -400,6 +416,71 @@ public final class StealthBrain {
         heightenedUntil = Math.max(heightenedUntil, now + HEIGHTENED_TICKS);
         state = AlertState.HEIGHTENED;
         stateSince = now;
+    }
+
+    /**
+     * Evidence was noticed (design doc 17 §5). A corpse raises the alarm; a knocked-out colleague gets woken up;
+     * arrows and dropped weapons get investigated.
+     */
+    public void onEvidence(ServerLevel level, Entity evidence, Vec3 at) {
+        long now = level.getGameTime();
+        if (evidence instanceof StealthNpc body && body.getBodyState() == com.mcspacewizard.emergentstealth.action.BodyState.DEAD) {
+            raiseAlarm(level, at, true);
+            Barks.say(level, npc, "body");
+        } else if (evidence instanceof StealthNpc body && npc.isCombatant()) {
+            wakeTarget = body.getId();
+            setNoise(at, 1.0F, now, PoiCause.EVIDENCE);
+            Barks.say(level, npc, "unconscious");
+        } else if (evidence instanceof StealthNpc) {
+            raiseAlarm(level, at, true); // civilians flee and scream
+        } else {
+            setNoise(at, 0.6F, now, PoiCause.EVIDENCE);
+            if (npc.isCombatant()) {
+                Barks.say(level, npc, "evidence");
+            }
+        }
+    }
+
+    /** Alarm with no known target: hunt to the spot, search, and (optionally) shout for help. */
+    public void raiseAlarm(ServerLevel level, Vec3 at, boolean shout) {
+        long now = level.getGameTime();
+        alarmed = true;
+        alarmTick = now;
+        setNoise(at, 1.0F, now, PoiCause.EVIDENCE);
+        if (shout) {
+            com.mcspacewizard.emergentstealth.stealth.sound.Noises.emit(level, new NoiseEvent(npc.getEyePosition(), 24.0F,
+                    NoiseKind.SHOUT, null, npc.getUUID()));
+            lastShoutTick = now;
+        }
+    }
+
+    private void setNoise(Vec3 at, float strength, long now, PoiCause why) {
+        noisePos = at;
+        noiseStrength = strength;
+        noiseTick = now;
+        noiseCause = why;
+        if (!canSeeTarget()) {
+            cause = why;
+        }
+    }
+
+    /** Next to the knocked-out colleague for a moment: wake it; then both search. */
+    private boolean tryWake(long now) {
+        if (!(npc.level() instanceof ServerLevel level) || !(level.getEntity(wakeTarget) instanceof StealthNpc body)
+                || body.getBodyState() != com.mcspacewizard.emergentstealth.action.BodyState.UNCONSCIOUS) {
+            wakeTarget = -1;
+            return false;
+        }
+        if (npc.distanceToSqr(body) > 2.5 * 2.5 || arrivedTick < 0 || now - arrivedTick < 40) {
+            return false;
+        }
+        wakeTarget = -1;
+        body.wake(level, npc);
+        Barks.say(level, body, "woken");
+        Vec3 spot = body.position();
+        body.stealthBrain().raiseAlarm(level, spot, false);
+        raiseAlarm(level, spot, false);
+        return true;
     }
 
     /** The NPC is gone (died, unloaded): leave groups and give back tokens. */

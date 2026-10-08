@@ -17,7 +17,10 @@
       "type": "sequence",
       "children": [
         { "type": "state", "states": ["hunting"] },
-        { "type": "once_per_state", "child": { "type": "bark", "situation": "lost" } },
+        { "type": "once_per_state", "child": { "type": "selector", "children": [
+          { "type": "sequence", "children": [ { "type": "cause", "causes": ["evidence"] } ] },
+          { "type": "bark", "situation": "lost" }
+        ] } },
         { "type": "move_to", "target": "poi", "speed": 1.0, "arrive": 2.0 },
         { "type": "look_around", "seconds": 3 }
       ]
@@ -37,6 +40,7 @@
         { "type": "once_per_state", "child": { "type": "selector", "children": [
           { "type": "sequence", "children": [ { "type": "cause", "causes": ["heard"] }, { "type": "bark", "situation": "heard" } ] },
           { "type": "sequence", "children": [ { "type": "cause", "causes": ["shout"] }, { "type": "bark", "situation": "shout" } ] },
+          { "type": "sequence", "children": [ { "type": "cause", "causes": ["evidence"] } ] },
           { "type": "bark", "situation": "investigate" }
         ] } },
         { "type": "selector", "children": [

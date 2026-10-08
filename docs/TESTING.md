@@ -16,6 +16,35 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Stage 7: Crawl, takedowns, bodies & evidence 🧪
+
+**Automated checks (already passing):** 7 more GameTests:
+- rear takedown rules (behind yes, front no, not on a guard fighting you) and the choke knocking out
+- a knocked-out guard is woken by a colleague and comes back on alert
+- a corpse raises the alarm
+- a corpse behind a wall goes unnoticed
+- a dragged body follows and slows you
+- crawl stance (and no standing up under a low ceiling)
+- air takedown
+
+*(Animations are arriving on a separate branch: until then the body poses, crawl and takedowns use vanilla poses.)*
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| 7.1 | Crawl | Press **Z** | You drop to vanilla's crawl: low camera, slow, very quiet (footstep loudness 1). Press Z again to stand; under a 1-block ceiling you can't ("No room to stand up"). Swimming, ladders or flying stand you up |
+| 7.2 | Crawl in grass | Crawl through tall grass near a guard | Much harder to spot than walking through it |
+| 7.3 | Takedown prompt | Sneak up behind an unaware guard (within 2 blocks) | Above the hotbar: `[RMB] Knock out   [LMB] Kill` (with an item in hand only Kill is offered). No prompt from the front or when it's onto you |
+| 7.4 | Choke (non-lethal) | Right-click with an empty hand from behind | You're snapped behind it and both of you are held for 2 s, then it drops, knocked out. A faint struggle noise (loudness 4) |
+| 7.5 | Rear kill | Left-click from behind | A quick kill (0.75 s); it becomes a corpse and drops its gear |
+| 7.6 | Interrupted choke | Have a second guard hit you during a choke | The choke breaks and the victim fights back |
+| 7.7 | Air takedown | Drop onto a guard from 2+ blocks (sneaking or empty-handed: knock out; holding a sword or axe, not sneaking: kill) | It goes down, and you take **no fall damage** |
+| 7.8 | Elites | Try a rear takedown on a `samurai` | Not offered (only air takedowns work on elites) |
+| 7.9 | Bodies stay | Kill or knock out a guard | The body stays on the ground (corpses forever for now). Hitting a knocked-out NPC kills it |
+| 7.10 | Drag & carry | Right-click a body: drag. Sneak + right-click: shoulder carry. Right-click again: drop | Dragging: the body slides behind you, ×0.75 speed, no sprint, silent. Carrying: ×0.6 speed, the body rides your shoulder, works on ladders |
+| 7.11 | Bodies are evidence | Leave a corpse where a patrol will see it (lit area) | The guard barks "A body! Raise the alarm!", shouts (others come), hunts to the body and searches around it. Hide bodies in the dark or out of sight and they aren't found |
+| 7.12 | Waking | Leave a knocked-out guard where another will see it | The other walks over ("Hey! Wake up!"), wakes it after a moment, and both search on alert ("Ugh... someone jumped me!") |
+| 7.13 | Other evidence | Shoot an arrow into a wall near a patrol, or drop a sword | A guard who sees it becomes curious ("What's this doing here?") and investigates |
+
 ## Stage 6: Hearing & distractions 🧪
 
 Guards now **hear** (design doc [16](design/16-sound.md)). Sound goes round corners and through open doors, and walls muffle it. Your footsteps depend on how you move. Rain, thunder, running water and music mask noise, and you can **throw any item** to distract. Screenshots are in `docs/screenshots/sound/`.

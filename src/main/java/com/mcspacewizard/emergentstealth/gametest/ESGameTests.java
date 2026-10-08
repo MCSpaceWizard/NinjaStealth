@@ -65,6 +65,13 @@ public final class ESGameTests {
         test("behaviour/search_group_splits", BehaviourTests::searchGroupSplits, 200);
         test("behaviour/attack_tokens_limit", BehaviourTests::attackTokensLimit);
         test("behaviour/attacker_closes_in", BehaviourTests::attackerClosesIn, 200);
+        test("verbs/rear_takedown_rules", VerbTests::rearTakedownRules, 100);
+        test("verbs/knocked_out_gets_woken", VerbTests::knockedOutGetsWoken, 600);
+        test("verbs/corpse_raises_alarm", VerbTests::corpseRaisesAlarm, 400);
+        test("verbs/hidden_corpse_unnoticed", VerbTests::hiddenCorpseUnnoticed, 150);
+        test("verbs/drag_follows", VerbTests::dragFollows);
+        test("verbs/crawl_stance", VerbTests::crawlStance);
+        test("verbs/air_takedown", VerbTests::airTakedown);
     }
 
     private static void test(String name, Consumer<GameTestHelper> function, int maxTicks) {

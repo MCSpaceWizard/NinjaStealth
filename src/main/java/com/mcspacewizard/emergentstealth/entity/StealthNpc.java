@@ -226,7 +226,14 @@ public class StealthNpc extends PathfinderMob {
     /** Bodies don't run AI (no goals, no brain) but still fall and can be pushed and dragged. */
     @Override
     public boolean isImmobile() {
-        return super.isImmobile() || isBody();
+        return super.isImmobile() || isBody()
+                || this.getData(com.mcspacewizard.emergentstealth.registry.ESAttachments.ACTION).activeAt(this.level().getGameTime());
+    }
+
+    /** Bodies don't get shoved around by walking into them. */
+    @Override
+    public boolean isPushable() {
+        return !isBody() && super.isPushable();
     }
 
     @Override
