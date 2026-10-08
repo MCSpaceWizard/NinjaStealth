@@ -1,0 +1,21 @@
+{
+  "_comment": "Layered over theme.json when the client option ui.highContrast is on (design doc 31).",
+  "colors": {
+    "paper": "#fbf6ea",
+    "paper_shade": "#ece2c9",
+    "paper_edge": "#1b1a20",
+    "ink": "#000000",
+    "ink_soft": "#000000",
+    "ink_faint": "#3a3540",
+    "lacquer": "#c01d16",
+    "text": "#000000",
+    "text_muted": "#2b2420"
+  },
+  "metrics": {
+    "backdrop_alpha": 0.88
+  },
+  "texture": {
+    "grain_strength": 0.04,
+    "ink_speckle": 0.05
+  }
+}

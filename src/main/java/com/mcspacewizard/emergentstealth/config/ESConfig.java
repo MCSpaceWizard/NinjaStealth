@@ -60,6 +60,11 @@ public final class ESConfig {
     public static final ModConfigSpec.BooleanValue SKY_SHADOWS_WITH_SHADERS;
     public static final ModConfigSpec.BooleanValue HELD_LIGHT_WITH_SHADERS;
 
+    // --- Client: Sumi UI (doc 31) ---
+    public static final ModConfigSpec.BooleanValue UI_HIGH_CONTRAST;
+    public static final ModConfigSpec.BooleanValue UI_REDUCED_MOTION;
+    public static final ModConfigSpec.IntValue UI_TYPEWRITER_SPEED;
+
     static {
         ModConfigSpec.Builder server = new ModConfigSpec.Builder();
         server.push("perception");
@@ -150,6 +155,15 @@ public final class ESConfig {
                 .define("skyShadowsWithShaders", false);
         HELD_LIGHT_WITH_SHADERS = client.comment("Keep your own held-light glow while an Iris shader pack is active (most packs add their own held light).")
                 .define("heldLightWithShaders", false);
+        client.pop();
+
+        client.push("ui");
+        UI_HIGH_CONTRAST = client.comment("Mod screens use a high-contrast theme: brighter paper, black text, stronger lines.")
+                .define("highContrast", false);
+        UI_REDUCED_MOTION = client.comment("Mod screens skip animations: no slides, fades, glides or flings.")
+                .define("reducedMotion", false);
+        UI_TYPEWRITER_SPEED = client.comment("Dialogue text speed in characters per second. 0 shows each line at once.")
+                .defineInRange("typewriterSpeed", 45, 0, 400);
         client.pop();
         CLIENT_SPEC = client.build();
     }

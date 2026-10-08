@@ -76,6 +76,15 @@ public final class ESGameTests {
         test("progression/unlock_rules", ProgressionTests::unlockRules);
         test("progression/insight_to_points", ProgressionTests::insightToPoints);
         test("progression/still_breath", ProgressionTests::stillBreath);
+        test("ui/easing_and_tween", UiTests::easingAndTween);
+        test("ui/inertial_scroll", UiTests::inertialScroll);
+        test("ui/swipe_pager", UiTests::swipePager);
+        test("ui/layout_math", UiTests::layoutMath);
+        test("ui/theme_parsing", UiTests::themeParsing);
+        test("ui/config_mapping", UiTests::configMapping);
+        test("ui/skill_tree_model", UiTests::skillTreeModel);
+        test("ui/typewriter", UiTests::typewriter);
+        test("ui/paper_noise", UiTests::paperNoise);
     }
 
     private static void test(String name, Consumer<GameTestHelper> function, int maxTicks) {
