@@ -47,3 +47,9 @@ On Windows use `gradlew.bat`. In IntelliJ, open the folder as a Gradle project; 
 - Archetypes and outfits are datapack JSON under `data/<namespace>/emergentstealth/{archetype,outfit}/`.
 
 When reporting a build problem, paste the first error block from the Gradle output (or `build/reports/problems/problems-report.html`).
+
+## Releases and handoff
+
+- Release notes: [CHANGELOG.md](CHANGELOG.md).
+- Starting a new development session: [docs/HANDOFF.md](docs/HANDOFF.md).
+- Artists: [style guide](docs/art/STYLE_GUIDE.md) and [texture list](docs/art/TEXTURE_LIST.md).

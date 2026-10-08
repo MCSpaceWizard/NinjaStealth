@@ -1,5 +1,7 @@
 # Emergent Stealth — notes for Claude
 
+**New session? Read `docs/HANDOFF.md` first:** current state, unfinished branches, next tasks and hard-won gotchas.
+
 - NeoForge **26.1.2**, Java 25, ModDevGradle. Unobfuscated Mojang names (`Identifier`, not `ResourceLocation`). Mod ID `emergentstealth`, package `com.mcspacewizard.emergentstealth`.
 - Design source of truth: `docs/design/01-design-decisions.md` (decisions + open questions) and `docs/design/02-roadmap.md` (stages). Architecture rules: `docs/design/10-architecture.md`. Read them before starting a stage.
 - Every stage starts with a short design doc in `docs/design/` that the user reviews (Z-03). Subsystems inside an approved doc can proceed autonomously.
