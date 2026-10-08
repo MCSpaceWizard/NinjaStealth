@@ -6,14 +6,19 @@ Usage: xin.py ACTION [ACTION ...]
   cmd <command>       open chat, type the command, press Enter
   sleep <seconds>
   look <dx> <dy>      move the mouse relatively (turn the camera)
+  move <x> <y>        move the mouse to root-window coordinates
+  drag <x0> <y0> <x1> <y1> [steps]   left-drag between two points
+  wheel <n>           scroll the wheel n notches (negative = down)
+Set XIN_DISPLAY to use another display than :99.
 """
+import os
 import sys
 import time
 
 from Xlib import X, XK, display
 from Xlib.ext import xtest
 
-d = display.Display(':99')
+d = display.Display(os.environ.get('XIN_DISPLAY', ':99'))
 root = d.screen().root
 
 
@@ -82,5 +87,25 @@ while i < len(args):
         xtest.fake_input(d, X.ButtonRelease, 3); d.sync(); time.sleep(0.3); i += 1
     elif a == 'look':
         xtest.fake_input(d, X.MotionNotify, True, x=int(args[i + 1]), y=int(args[i + 2])); d.sync(); time.sleep(0.2); i += 3
+    elif a == 'move':
+        xtest.fake_input(d, X.MotionNotify, False, x=int(args[i + 1]), y=int(args[i + 2])); d.sync(); time.sleep(0.2); i += 3
+    elif a == 'drag':
+        x0, y0, x1, y1 = (int(v) for v in args[i + 1:i + 5])
+        steps = 12
+        i += 5
+        if i < len(args) and args[i].isdigit():
+            steps = int(args[i]); i += 1
+        xtest.fake_input(d, X.MotionNotify, False, x=x0, y=y0); d.sync(); time.sleep(0.15)
+        xtest.fake_input(d, X.ButtonPress, 1); d.sync(); time.sleep(0.05)
+        for s_ in range(1, steps + 1):
+            xtest.fake_input(d, X.MotionNotify, False, x=x0 + (x1 - x0) * s_ // steps, y=y0 + (y1 - y0) * s_ // steps); d.sync(); time.sleep(0.02)
+        xtest.fake_input(d, X.ButtonRelease, 1); d.sync(); time.sleep(0.3)
+    elif a == 'wheel':
+        n = int(args[i + 1])
+        button = 4 if n > 0 else 5
+        for _ in range(abs(n)):
+            xtest.fake_input(d, X.ButtonPress, button); d.sync(); time.sleep(0.03)
+            xtest.fake_input(d, X.ButtonRelease, button); d.sync(); time.sleep(0.05)
+        i += 2
     else:
         raise SystemExit('unknown action ' + a)

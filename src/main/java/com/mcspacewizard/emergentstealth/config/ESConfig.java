@@ -60,6 +60,10 @@ public final class ESConfig {
     public static final ModConfigSpec.BooleanValue SKY_SHADOWS_WITH_SHADERS;
     public static final ModConfigSpec.BooleanValue HELD_LIGHT_WITH_SHADERS;
 
+    // --- Client: Sumi UI (doc 31) ---
+    public static final ModConfigSpec.BooleanValue UI_HIGH_CONTRAST;
+    public static final ModConfigSpec.BooleanValue UI_REDUCED_MOTION;
+    public static final ModConfigSpec.IntValue UI_TYPEWRITER_SPEED;
     // --- Client: animation (doc 17 §8) ---
     public static final ModConfigSpec.BooleanValue PROCEDURAL_CRAWL;
     public static final ModConfigSpec.BooleanValue PROCEDURAL_BODIES;
@@ -162,6 +166,13 @@ public final class ESConfig {
                 .define("heldLightWithShaders", false);
         client.pop();
 
+        client.push("ui");
+        UI_HIGH_CONTRAST = client.comment("Mod screens use a high-contrast theme: brighter paper, black text, stronger lines.")
+                .define("highContrast", false);
+        UI_REDUCED_MOTION = client.comment("Mod screens skip animations: no slides, fades, glides or flings.")
+                .define("reducedMotion", false);
+        UI_TYPEWRITER_SPEED = client.comment("Dialogue text speed in characters per second. 0 shows each line at once.")
+                .defineInRange("typewriterSpeed", 45, 0, 400);
         client.push("animation");
         PROCEDURAL_CRAWL = client.comment("Crawling players use the procedural elbow crawl instead of vanilla's swimming arms.")
                 .define("proceduralCrawl", true);

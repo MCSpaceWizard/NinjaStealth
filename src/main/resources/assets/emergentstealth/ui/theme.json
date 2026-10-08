@@ -1,0 +1,50 @@
+{
+  "_comment": "Sumi UI theme tokens (design doc 31 section 0). Every key is optional: missing ones use the built-in defaults, so a resource pack can override a single colour. Colours are #rrggbb or #aarrggbb, metrics are GUI pixels, motion is milliseconds. grain_scale is paper texels per GUI pixel.",
+  "colors": {
+    "paper": "#e8dcc0",
+    "paper_shade": "#d5c5a1",
+    "paper_edge": "#b5a27a",
+    "ink": "#1b1a20",
+    "ink_soft": "#3a3540",
+    "ink_faint": "#8a7f6c",
+    "lacquer": "#a8322d",
+    "lacquer_dark": "#5c1c1a",
+    "gold": "#c9a227",
+    "jade": "#4f8a6b",
+    "indigo": "#2d3a5c",
+    "text": "#1b1a20",
+    "text_muted": "#6b5f50",
+    "text_on_ink": "#e8dcc0",
+    "backdrop": "#0d0c10",
+    "shinobi": "#24232b",
+    "shogunate": "#a8322d"
+  },
+  "metrics": {
+    "padding": 8,
+    "gap": 6,
+    "corner_cut": 5,
+    "stroke": 2,
+    "row_height": 22,
+    "sidebar_width": 104,
+    "control_width": 96,
+    "node_radius": 13,
+    "node_spacing_x": 58,
+    "node_spacing_y": 46,
+    "card_width": 168,
+    "backdrop_alpha": 0.72
+  },
+  "motion": {
+    "fast": 120,
+    "normal": 240,
+    "slow": 420,
+    "stagger": 35,
+    "tooltip_delay": 350
+  },
+  "texture": {
+    "grain_seed": 1337,
+    "grain_strength": 0.11,
+    "grain_scale": 2,
+    "fiber_density": 1,
+    "ink_speckle": 0.22
+  }
+}
