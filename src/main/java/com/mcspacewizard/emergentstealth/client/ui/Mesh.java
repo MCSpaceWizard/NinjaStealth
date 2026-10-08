@@ -137,10 +137,25 @@ public final class Mesh implements GuiElementRenderState {
         }
 
         public Builder quad(float x0, float y0, int c0, float x1, float y1, int c1, float x2, float y2, int c2, float x3, float y3, int c3) {
-            vertex(x0, y0, 0, 0, c0);
-            vertex(x1, y1, 0, 0, c1);
-            vertex(x2, y2, 0, 0, c2);
-            return vertex(x3, y3, 0, 0, c3);
+            return texQuad(x0, y0, 0, 0, c0, x1, y1, 0, 0, c1, x2, y2, 0, 0, c2, x3, y3, 0, 0, c3);
+        }
+
+        /**
+         * Emits a quad with the winding the GUI pipelines expect (the same as vanilla's fills and blits),
+         * reversing it if needed: back faces are culled, so shapes built either way round still show.
+         */
+        private Builder texQuad(float x0, float y0, float u0, float v0, int c0, float x1, float y1, float u1, float v1, int c1,
+                                float x2, float y2, float u2, float v2, int c2, float x3, float y3, float u3, float v3, int c3) {
+            float area = (x0 * y1 - x1 * y0) + (x1 * y2 - x2 * y1) + (x2 * y3 - x3 * y2) + (x3 * y0 - x0 * y3);
+            vertex(x0, y0, u0, v0, c0);
+            if (area > 0.0F) {
+                vertex(x3, y3, u3, v3, c3);
+                vertex(x2, y2, u2, v2, c2);
+                return vertex(x1, y1, u1, v1, c1);
+            }
+            vertex(x1, y1, u1, v1, c1);
+            vertex(x2, y2, u2, v2, c2);
+            return vertex(x3, y3, u3, v3, c3);
         }
 
         public Builder quad(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int color) {
@@ -154,10 +169,7 @@ public final class Mesh implements GuiElementRenderState {
         /** A textured quad; u/v come from the caller. */
         public Builder texQuad(float x0, float y0, float u0, float v0, float x1, float y1, float u1, float v1,
                                float x2, float y2, float u2, float v2, float x3, float y3, float u3, float v3, int color) {
-            vertex(x0, y0, u0, v0, color);
-            vertex(x1, y1, u1, v1, color);
-            vertex(x2, y2, u2, v2, color);
-            return vertex(x3, y3, u3, v3, color);
+            return texQuad(x0, y0, u0, v0, color, x1, y1, u1, v1, color, x2, y2, u2, v2, color, x3, y3, u3, v3, color);
         }
 
         public Builder texTri(float x0, float y0, float u0, float v0, float x1, float y1, float u1, float v1,

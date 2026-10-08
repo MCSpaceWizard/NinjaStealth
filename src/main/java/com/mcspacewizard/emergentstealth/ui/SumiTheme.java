@@ -83,7 +83,7 @@ public record SumiTheme(Map<String, Integer> colors, Map<String, Float> metrics,
                     BACKDROP, 0xFF0D0C10, SHINOBI, 0xFF24232B, SHOGUNATE, 0xFFA8322D),
             orderedF(
                     PADDING, 8, GAP, 6, CUT, 5, STROKE, 2, ROW_HEIGHT, 22, SIDEBAR_WIDTH, 104, CONTROL_WIDTH, 96,
-                    NODE_RADIUS, 13, NODE_SPACING_X, 56, NODE_SPACING_Y, 52, CARD_WIDTH, 168, BACKDROP_ALPHA, 0.72F),
+                    NODE_RADIUS, 13, NODE_SPACING_X, 58, NODE_SPACING_Y, 46, CARD_WIDTH, 168, BACKDROP_ALPHA, 0.72F),
             orderedF(FAST, 120, NORMAL, 240, SLOW, 420, STAGGER, 35, TOOLTIP_DELAY, 350),
             orderedF(GRAIN_SEED, 1337, GRAIN_STRENGTH, 0.11F, GRAIN_SCALE, 2, FIBER_DENSITY, 1, INK_SPECKLE, 0.22F));
 

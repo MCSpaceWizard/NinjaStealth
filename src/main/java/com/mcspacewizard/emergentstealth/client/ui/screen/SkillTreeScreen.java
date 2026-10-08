@@ -79,8 +79,8 @@ public final class SkillTreeScreen extends UiScreen {
         header.size(-1, 28);
         header.add(new UiLabel(Component.translatable("ui.emergentstealth.skills.title")).scale(1.5F)).size(-1, 14);
         UiTabBar tabs = new UiTabBar(UiTabBar.Orientation.HORIZONTAL, pages::position, pages::select);
-        tabs.tab(Component.translatable("skill_path.emergentstealth.shinobi"), 0, theme.color(SumiTheme.SHINOBI));
-        tabs.tab(Component.translatable("skill_path.emergentstealth.shogunate"), 1, theme.color(SumiTheme.SHOGUNATE));
+        tabs.tab(Component.translatable("ui.emergentstealth.skills.tab.shinobi"), 0, theme.color(SumiTheme.SHINOBI));
+        tabs.tab(Component.translatable("ui.emergentstealth.skills.tab.shogunate"), 1, theme.color(SumiTheme.SHOGUNATE));
         header.add(tabs).flex(1);
         header.add(new PointsSeal()).size(22, 22);
         UiFlex insight = header.add(UiFlex.column().gap(2));

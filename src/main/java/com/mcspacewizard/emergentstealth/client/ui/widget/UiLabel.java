@@ -78,6 +78,11 @@ public class UiLabel extends UiNode {
             ctx.graphics().pose().popMatrix();
             return;
         }
+        if (width > 0 && font.width(value) * scale > width) {
+            // Too long for one line: cut it with an ellipsis (the full text belongs in a tooltip).
+            String cut = font.plainSubstrByWidth(value.getString(), Math.max(0, Math.round(width / scale) - font.width("...")));
+            value = Component.literal(cut + "...").withStyle(value.getStyle());
+        }
         float w = font.width(value) * scale;
         float tx = switch (align) {
             case LEFT -> x;

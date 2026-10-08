@@ -120,7 +120,11 @@ public final class SumiConfigScreen extends UiScreen {
             tabs.tab(sectionName(p.section), i);
         }
         int sidebar = panelW < 340 ? 84 : theme.metric(SumiTheme.SIDEBAR_WIDTH);
-        body.add(tabs).size(sidebar, -1);
+        if (panelH < 260) {
+            tabs.rowHeight(16);
+        }
+        // The sidebar scrolls too, for small windows and big GUI scales.
+        body.add(new UiScroll(tabs)).size(sidebar, -1);
         body.add(new VerticalRule()).size(4, -1);
         body.add(pages).flex(1);
         for (int i = 0; i < this.pages.size(); i++) {

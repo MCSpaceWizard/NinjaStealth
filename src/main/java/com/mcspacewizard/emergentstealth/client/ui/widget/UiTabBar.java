@@ -30,6 +30,7 @@ public class UiTabBar extends UiNode {
     private final List<Item> items = new ArrayList<>();
     private final DoubleSupplier position;
     private final IntConsumer select;
+    private int rowHeight = 20;
     private int[] starts = new int[0];
     private int[] sizes = new int[0];
 
@@ -90,8 +91,14 @@ public class UiTabBar extends UiNode {
         return h;
     }
 
-    private static int rowHeight() {
-        return 20;
+    private int rowHeight() {
+        return rowHeight;
+    }
+
+    /** Height of each tab in a vertical bar (default 20). */
+    public UiTabBar rowHeight(int rowHeight) {
+        this.rowHeight = rowHeight;
+        return this;
     }
 
     private static net.minecraft.client.gui.Font font() {

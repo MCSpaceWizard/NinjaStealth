@@ -52,7 +52,7 @@ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
  * the server's answer arrives (the server stays authoritative).
  */
 final class SkillCanvas extends UiNode {
-    private static final float MIN_ZOOM = 0.55F;
+    private static final float MIN_ZOOM = 0.45F;
     private static final float MAX_ZOOM = 2.0F;
     private static final long PENDING_TIMEOUT_MS = 2500L;
 
@@ -122,8 +122,9 @@ final class SkillCanvas extends UiNode {
         return Sumi.theme().metricF(SumiTheme.NODE_RADIUS);
     }
 
+    /** Room around the content for seal radii and names; scales with zoom so small views still fit. */
     private float margin() {
-        return radius() * 2.0F + 10.0F;
+        return radius() * 1.6F * Math.max(zoom, MIN_ZOOM) + 8.0F;
     }
 
     private float contentW() {
@@ -168,8 +169,10 @@ final class SkillCanvas extends UiNode {
     }
 
     private float fitZoom() {
-        float fx = contentW() <= 0 ? MAX_ZOOM : (width - 2 * margin()) / contentW();
-        float fy = contentH() <= 0 ? MAX_ZOOM : (height - 2 * margin()) / contentH();
+        // Margin depends on zoom, so solve from both sides: size * z + 2 * (1.6 r z + 8) = view.
+        float edge = radius() * 3.2F;
+        float fx = contentW() <= 0 ? MAX_ZOOM : (width - 16) / (contentW() + edge);
+        float fy = contentH() <= 0 ? MAX_ZOOM : (height - 16) / (contentH() + edge);
         return Math.clamp(Math.min(1.3F, Math.min(fx, fy)), MIN_ZOOM, MAX_ZOOM);
     }
 

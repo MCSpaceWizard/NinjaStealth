@@ -28,8 +28,8 @@
     "sidebar_width": 104,
     "control_width": 96,
     "node_radius": 13,
-    "node_spacing_x": 56,
-    "node_spacing_y": 52,
+    "node_spacing_x": 58,
+    "node_spacing_y": 46,
     "card_width": 168,
     "backdrop_alpha": 0.72
   },
