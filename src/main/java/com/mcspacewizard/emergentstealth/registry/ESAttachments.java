@@ -33,6 +33,14 @@ public final class ESAttachments {
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<CarryLink>> CARRY = ATTACHMENT_TYPES.register("carry",
             () -> AttachmentType.builder(() -> CarryLink.NONE).sync(ESAttachments::hasMod, CarryLink.STREAM_CODEC).build());
 
+    /** The active stealth tool for quick use (design doc 21 §1). Saved, kept on death, synced to its owner only. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<com.mcspacewizard.emergentstealth.tool.ActiveTool>> ACTIVE_TOOL =
+            ATTACHMENT_TYPES.register("active_tool", () -> AttachmentType.builder(() -> com.mcspacewizard.emergentstealth.tool.ActiveTool.NONE)
+                    .serialize(com.mcspacewizard.emergentstealth.tool.ActiveTool.CODEC.fieldOf("item"))
+                    .copyOnDeath()
+                    .sync((holder, to) -> holder == to && hasMod(holder, to), com.mcspacewizard.emergentstealth.tool.ActiveTool.STREAM_CODEC)
+                    .build());
+
     /** Only players with the mod's channels get attachment syncs (GameTest players have none). */
     private static boolean hasMod(IAttachmentHolder holder, ServerPlayer to) {
         return to.connection != null && to.connection.hasChannel(BarkPayload.TYPE);

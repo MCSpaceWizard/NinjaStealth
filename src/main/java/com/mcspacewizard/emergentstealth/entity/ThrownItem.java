@@ -89,6 +89,11 @@ public class ThrownItem extends net.minecraft.world.entity.projectile.throwablei
     private void land(ServerLevel level, HitResult hitResult) {
         Vec3 at = impactPoint(hitResult);
         ItemStack stack = getItem();
+        // Stealth tools (design doc 21) bring their own impact: smoke, firecrackers, caltrops, pebbles.
+        if (stack.getItem() instanceof com.mcspacewizard.emergentstealth.tool.ThrowableTool tool) {
+            tool.onImpact(level, this, at, hitResult);
+            return;
+        }
         boolean glass = shatters();
         Noises.emit(level, new NoiseEvent(at, glass ? GLASS_LOUDNESS : IMPACT_LOUDNESS, NoiseKind.IMPACT, null, null));
         if (glass) {

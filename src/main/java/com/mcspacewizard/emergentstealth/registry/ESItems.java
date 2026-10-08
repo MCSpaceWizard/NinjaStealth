@@ -23,4 +23,16 @@ public final class ESItems {
     /** Spawns a stealth NPC with the default archetype. Use {@code /emergentstealth npc spawn} for others. */
     public static final DeferredItem<SpawnEggItem> STEALTH_NPC_SPAWN_EGG = ITEMS.registerItem("stealth_npc_spawn_egg",
             p -> new SpawnEggItem(p.spawnEgg(ESEntities.STEALTH_NPC.get())));
+
+    // Beta toolkit, part A (design doc 21 §2). All are in #emergentstealth:tools.
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.tool.PebbleItem> PEBBLE = ITEMS.registerItem("pebble",
+            com.mcspacewizard.emergentstealth.tool.PebbleItem::new, p -> p.stacksTo(16));
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.tool.SmokeBombItem> SMOKE_BOMB = ITEMS.registerItem("smoke_bomb",
+            com.mcspacewizard.emergentstealth.tool.SmokeBombItem::new, p -> p.stacksTo(8));
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.tool.FirecrackerItem> FIRECRACKER = ITEMS.registerItem("firecracker",
+            com.mcspacewizard.emergentstealth.tool.FirecrackerItem::new, p -> p.stacksTo(8));
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.tool.BlindingPowderItem> BLINDING_POWDER = ITEMS.registerItem("blinding_powder",
+            com.mcspacewizard.emergentstealth.tool.BlindingPowderItem::new, p -> p.stacksTo(8));
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.tool.CaltropsItem> CALTROPS = ITEMS.registerItem("caltrops",
+            com.mcspacewizard.emergentstealth.tool.CaltropsItem::new, p -> p.stacksTo(8));
 }

@@ -61,10 +61,20 @@ public final class Throwing {
      * @return the thrown entity, or null if nothing was thrown (empty hand, cooldown, dead, spectator)
      */
     public static ThrownItem tryThrow(ServerPlayer player, float charge) {
+        return throwFrom(player, player.getMainHandItem(), charge);
+    }
+
+    /**
+     * Throws one item from {@code source} (any of the player's stacks; the tool wheel's quick use passes a stack
+     * that isn't in the hand). Same checks and cooldown as {@link #tryThrow}.
+     *
+     * @return the thrown entity, or null if nothing was thrown
+     */
+    public static ThrownItem throwFrom(ServerPlayer player, ItemStack source, float charge) {
         if (!player.isAlive() || player.isSpectator() || !(player.level() instanceof ServerLevel level)) {
             return null;
         }
-        ItemStack held = player.getMainHandItem();
+        ItemStack held = source;
         if (held.isEmpty()) {
             return null;
         }
