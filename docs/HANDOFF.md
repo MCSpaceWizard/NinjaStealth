@@ -18,7 +18,7 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 
 | Branch | What's done | What's left |
 |---|---|---|
-| `claude/toolkit-a` | Server side: pebble, smoke bomb (sight-blocking clouds), firecracker, blinding powder, caltrops, active tool + quick use (V) | WIP: client tool wheel (R), particles, recipes, tests. Then merge with main (conflicts in `ESAttachments`, `ESItems`, `en_us.json`, `textures.json` are append-only: keep both sides) |
+| `claude/toolkit-a` | **Merged into `claude/fervent-babbage-jyh6r0`** (tests green, 64). Wheel (R), quick use (V), particles, recipes, tests and the Thick Smoke skill hook are in | Play-test (TESTING.md "Beta toolkit, part A"), then a PR to `main` |
 | `claude/toolkit-b` | Water/fire arrows, blowgun + sleep darts, locks/keys/Locksmith's Kit, lockpicking minigame, spyglass tagging | WIP: GameTests, final tagging fix. Then merge. Also call `Skills.awardInsight(..., INSIGHT_LOCKPICK)` on a successful pick, and read `StealthStats` (`LOCKPICK_WINDOW`, `TAG_COUNT`) |
 | `claude/s7-animation` | Started: PAL dependency, pose framework, `NpcModel` | Most of doc 17 §8 / research-animation: body poses, crawl cycle, drag/carry poses, takedown clips, camera turning. Clip time must scale to `ActionPlayback.length` (takedown speed skills shorten it) |
 | `claude/visual-lighting` | Light nuance in progress: sky openness (`SkyCells`), penumbra, smoother falloff | WIP: finish, tests, light gem tiers, docs |
@@ -58,6 +58,8 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
   - Software rendering is slow: 2–10 minutes to join a world.
 
 **GameTest gotchas:**
+- NPCs only perceive near a **targetable player** (`PerceptionScheduler` tiers). A test about what a guard notices on its own needs a player nearby but hidden (see `VerbTests.hiddenObserver`); otherwise it only passes when another test's player happens to be close.
+- A batch's tests run side by side, and alarmed guards shout across arenas. Tests that need a calm guard use `isolated(...)` in `ESGameTests` (their own batch).
 - The test server is on **Peaceful**, where mobs can't target players. Combat tests set Normal difficulty.
 - Test players come from `TestPlayers.spawn`. They aren't ticked by the server, so tick logic must be callable directly (e.g. `BodyCarrying.tick`, `Takedowns.checkAirTakedown`).
 - `GameTestHelper.relativePos` is buggy in 26.1.2: subtract `absolutePos(BlockPos.ZERO)` instead.

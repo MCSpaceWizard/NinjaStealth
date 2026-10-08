@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:glowstone_dust",
+    "minecraft:bone_meal",
+    "minecraft:paper"
+  ],
+  "result": {
+    "count": 1,
+    "id": "emergentstealth:blinding_powder"
+  }
+}
