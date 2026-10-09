@@ -1,11 +1,11 @@
 # 17 — Player verbs I: crawl, takedowns, bodies (Stage 7) ⏳
 
-> **Status (2026-10-08):** server side implemented and covered by 7 GameTests: crawl, takedowns, bodies, dragging and carrying, evidence, waking. Animations are being built in parallel (`claude/s7-animation`). Drop a body by right-clicking again; sneaking doesn't drop it, because sneaking while dragging is common.
+> **Status (2026-10-09):** server side and animation implemented. 13 GameTests (7 for the verbs, 6 for the animation maths), and the animations checked in the real client (the half-second air takedown only by its outcome). Drop a body by right-clicking again; sneaking doesn't drop it, because sneaking while dragging is common.
 
 The player gets the core stealth verbs: **crawl**, **take guards down** quietly (lethal or not), and **hide the bodies**, which guards now notice. Animation follows [research-animation](research-animation.md) and your answers (2026-10-08):
 - **PAL** is a required client dependency.
 - Animation is **procedural wherever possible**.
-- **Elbows and knees** (Bendable Cuboids) first, with plain six-part bodies as the fallback.
+- **Elbows and knees** (Bendable Cuboids), a required client dependency like PAL (2026-10-09: no six-part fallback).
 - **Camera turning only**; third person is preferred.
 
 ## 1. Crawl (P-08, Q3)
@@ -94,3 +94,25 @@ NPCs now perceive evidence with the same sight model as you: cones, rays and lig
 - Disguises from knocked-out NPCs (S11).
 - Corpse cleanup: bodies persist for now; a despawn timer comes with zones (S9).
 - Blood decals as evidence (S13).
+
+## 8. Animation (implemented)
+
+One procedural **pose graph** drives NPCs and players alike. Common maths lives in `anim/` (testable on the server); the rest is client code in `client/anim/`.
+
+| Piece | What it does |
+|---|---|
+| `HumanoidPose` | Every channel is an affine function of whatever the base pose is (vanilla walk for NPCs, PAL's bone for players), so layers blend without knowing the base |
+| Layers (`client/anim/layer`) | `CrawlLayer` (elbow crawl), `CarrierLayer` (dragging and carrying arms, lean), `BodyLayer` (lying, dragged, carried limbs), `BreathingLayer`, `LeanLayer` |
+| Sims (`client/anim/sim`) | Stepped at 20 Hz, never in `setupAnim`: distance and lean springs, breathing phase, the body's fall and ground fit, the drag chain (verlet, pinned to the dragger's hand, pulled towards the server's body position) |
+| NPCs | `NpcRenderer` evaluates the graph at extraction; `NpcModel` (body and armour, with bends) applies it. `BodyPlacement` lays bodies down about their middle, along the drag chain or across the carrier's shoulders |
+| Players | `PalPoseAnimation`, one PAL layer evaluating the same graph; `TakedownClipController`, a PAL controller whose clip time is pinned to the server's action clock every frame |
+| Takedown clips | Attacker: PAL Bedrock JSON. Victim: NeoForge entity animation JSON. Both are stretched over `ActionPlayback.length`, so takedown-speed skills shorten them. Programmer art from `tools/programmer_art/takedown_clips.py`; artists replace the files |
+| Camera | First person: angle-only turn per takedown kind (`TakedownCamera`), damped mouse look, no zoom while held still |
+
+**Decisions made while building it:**
+- Clips never keep their own time. Every frame evaluates `gameTime − start + partialTick`, so late viewers seek in and both sides stay aligned.
+- The drag chain is visual only; the server's body position wins (evidence, hiding), and the chain is pulled towards it.
+- A carried body is hidden in your own first-person view.
+- Bodies beyond the animation range aren't simulated; they simply lie flat.
+
+**Not yet:** NPC-side keyframe clips other than takedown victims (combat, climbing), first-person arm visibility tuning during takedowns, and real (artist) clips.

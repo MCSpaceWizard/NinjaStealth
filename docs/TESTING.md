@@ -92,6 +92,29 @@ The skill tree **screen** is on **K** (see the Sumi section above). The commands
 | P.4 | Techniques | Unlock `still_breath`, `light_step`, `feint`. Press **X** to use, **sneak + X** to switch | The selected technique and its cooldown show right of the light gem (green while active). Still Breath: crouch and stay still, 40% harder to see. Light Step: 6 s of silent footsteps. Feint: a noise where you look (a guard investigates it) |
 | P.5 | Stealth gear | Craft (or take from creative) Shinobi Hood, Garb, Hakama, Tabi | Black/indigo cloth armour. Tooltips show stealth stats (e.g. Footsteps -20%). Iron/diamond/netherite armour shows nothing but makes footsteps 20% louder per piece |
 
+## Stage 7 animation: crawl, bodies, dragging, carrying, takedowns 🧪
+
+Needs **Player Animation Library** and **Bendable Cuboids** on the client (`./gradlew runClient` includes both). Everything is procedural except the takedowns, which play programmer-art clips (`assets/emergentstealth/player_animations/takedowns.json` for you, `neoforge/animations/entity/takedown/*.victim.json` for the victim; `tools/programmer_art/takedown_clips.py` writes them). Screenshots: [docs/screenshots/animation](screenshots/animation).
+
+**Automated checks (already passing):** 6 more GameTests for the shared maths: two-bone IK reaches its targets, crawling hands stay planted, the drag chain keeps its shape on the floor, the action clock seeks for late viewers, pose blending, stable per-body poses.
+
+**Test helpers:** `/es npc knockout <targets>` makes a knocked-out body. `/esphoto <yaw> [pitch]` swings the third-person camera round you (try 90) so you can watch your own animations from the side; `/esphoto off` stops it.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| A7.1 | Elbow crawl | Press **Z** and crawl around (third person, `/esphoto 90`) | Elbows and knees bend. Hands stay planted while you pull past them, the opposite knee pushes out to the side. Standing still, the limbs rest |
+| A7.2 | Bodies lie down | Kill a guard, and `/es npc knockout` another | Each falls over in about half a second and lies flat on the ground, centred on where it stood, fitted to slopes and steps. Every body lies a little differently. Chokes fall on their backs, kills face down |
+| A7.3 | Knocked out vs dead | Watch both bodies closely | The knocked-out one breathes slowly (chest rises, arms ease out); the corpse doesn't move. Bodies show no detection indicator |
+| A7.4 | Dragging | Right-click a body, walk around, turn, go up a step | Your right hand reaches back and holds the wrists; you lean into the pull. The body is face up, arms overhead, hips and legs trailing along the floor behind you |
+| A7.5 | Carrying | Sneak + right-click a body | The body lies across your shoulders, arms and legs hanging, swaying as you walk; both your hands steady it. In first person it's hidden (it would fill the view) |
+| A7.6 | Choke | Rear takedown with an empty hand (third person and first person) | You wrap an arm round the neck and pull back; the victim claws at your arm and kicks, then goes limp and falls on its back. In first person the camera looks down over its shoulder with a struggle shake, the view doesn't zoom, mouse look is damped |
+| A7.7 | Rear kill | Left-click from behind | Grab with the left hand, strike with the right (0.75 s); the victim jerks and drops |
+| A7.8 | Air takedown | Drop onto a guard from 2+ blocks | A deep landing crouch, the camera dips; the victim is crushed down |
+| A7.9 | Skill speed | Unlock `quiet_hands`, then choke | The whole clip plays faster to match the shorter choke, staying in sync |
+| A7.10 | Breathing and lean | Stand still, sprint, turn sharply (NPCs too) | Subtle breathing, heavier after sprinting; a slight lean into turns |
+| A7.11 | Other players | On a server with a second player | They see your crawl, drag, carry and takedowns the same way (late joiners seek into a running takedown) |
+| A7.12 | Settings | The client config, `animation` section (in game or `run/config/emergentstealth-client.toml`) | Each part can be turned off: procedural crawl, bodies, breathing, lean, player idle animation, takedown camera, mouse damping, animation range |
+
 ## Stage 7: Crawl, takedowns, bodies & evidence 🧪
 
 **Automated checks (already passing):** 7 more GameTests:
@@ -103,7 +126,7 @@ The skill tree **screen** is on **K** (see the Sumi section above). The commands
 - crawl stance (and no standing up under a low ceiling)
 - air takedown
 
-*(Animations are arriving on a separate branch: until then the body poses, crawl and takedowns use vanilla poses.)*
+Animations for this stage are in the next table (S7 animation).
 
 | # | Feature | How to test | Expected |
 |---|---|---|---|
