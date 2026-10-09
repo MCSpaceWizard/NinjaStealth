@@ -105,7 +105,7 @@ public final class GhostPreview implements DebugRenderer.SimpleDebugRenderer {
     public static void place() {
         BlockPos origin = origin();
         if (active != null && origin != null) {
-            ClientPacketDistributor.sendToServer(new StructurePayloads.Place(active.id(), origin, rotation, mirror));
+            ClientPacketDistributor.sendToServer(new StructurePayloads.Place(active.id(), active.key().compound(), origin, rotation, mirror));
         }
         stop();
     }
@@ -145,7 +145,10 @@ public final class GhostPreview implements DebugRenderer.SimpleDebugRenderer {
             case NORTH -> -f.max().getZ();
             default -> -(f.min().getZ() + f.max().getZ()) / 2;
         };
-        return target.offset(dx, -f.min().getY() + raise, dz);
+        // A structure stands on the block you look at; a compound's origin goes there, as with /es compound place
+        // (its modules' offsets already sink their ground lines to that level).
+        int dy = active != null && active.key().compound() ? 0 : -f.min().getY();
+        return target.offset(dx, dy + raise, dz);
     }
 
     private static @Nullable Faces faces() {

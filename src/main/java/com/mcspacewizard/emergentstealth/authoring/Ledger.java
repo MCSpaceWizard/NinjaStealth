@@ -1,7 +1,6 @@
 package com.mcspacewizard.emergentstealth.authoring;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -18,7 +17,9 @@ import com.mcspacewizard.emergentstealth.ai.routine.PatrolRoutes;
 import com.mcspacewizard.emergentstealth.registry.ESNetwork;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -76,7 +77,7 @@ public final class Ledger {
             BlockPos origin = draft != null ? draft.origin() : at;
             String id = draft != null ? draft.id().toString() : "";
             return new LedgerPayloads.State(id, origin, draft != null ? draft.compound().structures().size() : 0,
-                    placed != null ? placed.template().toString() : "", List.of(), List.of(), List.of(), open);
+                    placed != null ? placed.template().toString() : "", List.of(), List.of(), List.of(), true, List.of(), open);
         }
 
         Map<String, LedgerPayloads.Entry> zones = new LinkedHashMap<>();
@@ -106,8 +107,14 @@ public final class Ledger {
             spawns.add(spawn.archetype().getPath() + (spawn.count() > 1 ? " x" + spawn.count() : "") + "  " + spawn.pos().toShortString()
                     + (spawn.schedule().entries().isEmpty() ? "" : "  (" + spawn.schedule().entries().size() + ")"));
         }
+        Compound.Lights rule = draft.compound().lights();
+        List<LedgerPayloads.Entry> lights = new ArrayList<>();
+        for (BlockPos pos : CompoundDrafts.lightsIn(level, draft)) {
+            lights.add(new LedgerPayloads.Entry(pos.getX() + " " + pos.getY() + " " + pos.getZ(),
+                    BuiltInRegistries.BLOCK.getKey(level.getBlockState(pos).getBlock()).getPath(), rule.relights(draft.local(pos)), true));
+        }
         return new LedgerPayloads.State(draft.id().toString(), draft.origin(), draft.compound().structures().size(), "",
-                cap(zones.values()), cap(routes.values()), cap(spawns), open);
+                cap(zones.values()), cap(routes.values()), cap(spawns), rule.relight() == Compound.Relight.ALL, cap(lights), open);
     }
 
     private static <T> List<T> cap(java.util.Collection<T> items) {
@@ -142,6 +149,33 @@ public final class Ledger {
         ESNetwork.sendIfSupported(player, state(player, action.pos(), false));
     }
 
+    /** "x y z" as a position, or null. */
+    private static @Nullable BlockPos parsePos(String text) {
+        String[] parts = text.trim().split(" ");
+        if (parts.length != 3) {
+            return null;
+        }
+        try {
+            return new BlockPos(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /** What to tell the author after a save: the file, and the structures saved again because they were edited. */
+    public static List<Component> savedMessages(CompoundSaver.Saved saved) {
+        List<Component> messages = new ArrayList<>();
+        messages.add(Component.translatable("commands.emergentstealth.compound.saved", saved.id().toString(), saved.file().toString()));
+        if (!saved.resaved().isEmpty()) {
+            messages.add(Component.translatable("commands.emergentstealth.compound.resaved", saved.resaved().size(),
+                    String.join(", ", saved.resaved().stream().map(Identifier::toString).toList())));
+        }
+        if (saved.skipped() > 0) {
+            messages.add(Component.translatable("commands.emergentstealth.compound.resave_skipped", saved.skipped()));
+        }
+        return messages;
+    }
+
     /** {@code minecraft:x} or a bare {@code x} means {@code emergentstealth:x}. Null if it isn't a usable id. */
     public static @Nullable Identifier compoundId(String text) {
         Identifier id = Identifier.tryParse(text.trim());
@@ -165,7 +199,7 @@ public final class Ledger {
             StructurePlacement.Placed placed = placedAt(level, author, action.pos());
             if (placed != null) {
                 CompoundDrafts.start(author, id, level.dimension(), placed.origin(), Compound.EMPTY);
-                CompoundDrafts.onPlaced(author, placed);
+                CompoundDrafts.onPlaced(level.getServer(), author, placed);
             } else {
                 CompoundDrafts.start(author, id, level.dimension(), action.pos(), Compound.EMPTY);
             }
@@ -211,11 +245,29 @@ public final class Ledger {
                 CompoundDrafts.removeSpawn(author, draft, action.index());
                 yield Component.translatable("message.emergentstealth.ledger.spawn_removed");
             }
+            case TOGGLE_LIGHT -> {
+                BlockPos pos = parsePos(name);
+                if (pos == null) {
+                    yield Component.translatable("message.emergentstealth.ledger.no_light");
+                }
+                Compound.Lights lights = draft.compound().lights().toggled(draft.local(pos));
+                CompoundDrafts.setLights(author, draft, lights);
+                yield Component.translatable(lights.relights(draft.local(pos)) ? "commands.emergentstealth.compound.light_relit"
+                        : "commands.emergentstealth.compound.light_dark", pos.getX(), pos.getY(), pos.getZ());
+            }
+            case LIGHT_RULE -> {
+                Compound.Lights lights = draft.compound().lights().flipped();
+                CompoundDrafts.setLights(author, draft, lights);
+                yield Component.translatable("commands.emergentstealth.compound.lights_rule", lights.relight().getSerializedName());
+            }
             case SAVE -> {
-                CompoundDrafts.Draft fresh = CompoundDrafts.refreshLinks(author, draft, level);
                 try {
-                    Path file = Compounds.saveToWorld(level.getServer(), fresh.id(), fresh.compound());
-                    yield Component.translatable("commands.emergentstealth.compound.saved", fresh.id().toString(), file.toString());
+                    MutableComponent text = Component.empty();
+                    List<Component> lines = savedMessages(CompoundSaver.save(level.getServer(), author, draft));
+                    for (int i = 0; i < lines.size(); i++) {
+                        text.append(i == 0 ? Component.empty() : Component.literal("\n")).append(lines.get(i));
+                    }
+                    yield text;
                 } catch (IOException e) {
                     yield Component.translatable("commands.emergentstealth.compound.save_failed", String.valueOf(e.getMessage()));
                 }

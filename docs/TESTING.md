@@ -130,6 +130,21 @@ Design doc [32](design/32-authoring-tools.md) §3. A compound is structures plus
 | C.7 | Undo | `/es structure undo` | The copy's blocks and guard are gone; `/es compound copies` shows none |
 | C.8 | Export | `/es compound export shrine_post` | Written to `run/compounds/emergentstealth/shrine_post.json`, ready to go in `data/emergentstealth/emergentstealth/compound/` |
 
+### Compound upkeep: reset, re-save edits, ground lines, lights, browser 🧪
+
+Screenshots: [browser_compounds.png](screenshots/authoring/browser_compounds.png), [ledger_lights.png](screenshots/authoring/ledger_lights.png).
+
+**Automated checks:** `compounds/reset` (a removed guard and a deleted route come back, a knocked-out guard is cleared and replaced, a standing one is kept), `compounds/resave_edited` (an untouched module and a snuffed light aren't saved again; a changed block makes the module its own template, which a new copy brings along), `compounds/ground_lines` (gatehouse and teahouse 7, fort 0), `compounds/lights` (the rule round-trips in JSON; placed turned and mirrored, only the exception may be relit, only inside the copy, and not after `remove`), `compounds/browser_preview` (the estate's preview holds both modules' blocks and its counts).
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| U.1 | Reset | Place an example (`/es compound place emergentstealth:examples/samurai_fort`), `/kill` or knock out two of its guards, `/es compound reset 1` | "Reset compound #1: 6 NPCs kept, 2 respawned, … bodies cleared"; the new guards stand on their spawns. Reset again: nothing respawned |
+| U.2 | Re-save edits | `/es compound start lit_shrine ~ ~ ~5`, `/es structure place emergentstealth:edo/medium_shrine ~ ~ ~5` ("ground line at layer 0"), change a block in it, `/es compound save` | "Saved 1 edited structures as their own templates: emergentstealth:compound/lit_shrine/0"; placing `lit_shrine` elsewhere shows your change. Saving without changes (or after only snuffing a lantern) says nothing about templates |
+| U.3 | Lights | With the draft open, use the Compound Ledger | "Lights: N in its structures" with **Relight: all**, and one row per light. **Relit** switches to **Left dark**; after saving the JSON has `"lights": { "except": [[x, y, z]] }`. A lamplighter in a placed copy leaves that light out |
+| U.4 | Ground line | `/es compound info` | Each structure line ends with ", ground N"; `/es compound ground 1 3` changes it |
+| U.5 | Browser | `/es structure browse` | "N structures, M compounds"; compounds first, under red "Compounds · …" headers. Selecting one shows "A compound: 2 structures, 6 guards, 2 routes, 2 zones". **Preview** shows the whole compound; right-click places it with its origin on the block you look at ("Placed … as copy #n …"); **Undo last** takes it back |
+| U.6 | Export | `/es compound export lit_shrine` | "… (with 1 of its own templates)"; `run/compounds/emergentstealth/structure/compound/lit_shrine/0.nbt` exists |
+
 ## Structure viewer: browse, preview, place, undo 🧪
 
 Design doc [32](design/32-authoring-tools.md) §1. Browse every structure (ours first, then vanilla), see a translucent ghost of it in the world, and place it. Needs **creative mode with cheats** (the structure block rule). Screenshots: [docs/screenshots/structures](screenshots/structures) (`viewer_*.png`).

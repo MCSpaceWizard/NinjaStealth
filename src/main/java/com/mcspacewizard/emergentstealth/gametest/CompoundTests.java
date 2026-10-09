@@ -54,7 +54,7 @@ public final class CompoundTests {
     private CompoundTests() {}
 
     private static final Identifier ARENA = EmergentStealth.id("arena");
-    private static final Identifier SHRINE = EmergentStealth.id("edo/small_shrine_v1");
+    static final Identifier SHRINE = EmergentStealth.id("edo/small_shrine_v1");
     private static final Identifier GUARD = EmergentStealth.id("ashigaru");
 
     private static final Map<Identifier, Consumer<GameTestHelper>> TESTS = Map.of(
@@ -155,7 +155,7 @@ public final class CompoundTests {
      * The shrine with a route whose first waypoint stands on its chest, a guard there with a post on the same spot,
      * and a zone round the chest.
      */
-    private static Compound sample(BlockPos chest) {
+    static Compound sample(BlockPos chest) {
         BlockPos stand = chest.above();
         PatrolRoute route = new PatrolRoute("shrine_walk",
                 List.of(new PatrolRoute.Waypoint(stand, 20, Optional.of(90.0F), false), PatrolRoute.Waypoint.at(stand.offset(2, 0, 0))),

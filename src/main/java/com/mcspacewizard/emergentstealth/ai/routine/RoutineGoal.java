@@ -5,6 +5,7 @@ import java.util.EnumSet;
 import org.jspecify.annotations.Nullable;
 
 import com.mcspacewizard.emergentstealth.ai.brain.AlertState;
+import com.mcspacewizard.emergentstealth.authoring.PlacedCompounds;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 import com.mcspacewizard.emergentstealth.stealth.light.Snuffing;
 
@@ -175,9 +176,11 @@ public class RoutineGoal extends Goal {
         return best;
     }
 
+    /** Relights unlit lights near a waypoint, except those a placed compound leaves dark (doc 32 §3 "lights"). */
     private void relightAround(ServerLevel level, BlockPos center) {
+        PlacedCompounds compounds = PlacedCompounds.get(level);
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-RELIGHT_RADIUS, -1, -RELIGHT_RADIUS), center.offset(RELIGHT_RADIUS, 3, RELIGHT_RADIUS))) {
-            if (Snuffing.canRelight(level.getBlockState(pos))) {
+            if (Snuffing.canRelight(level.getBlockState(pos)) && compounds.mayRelight(pos)) {
                 Snuffing.relight(level, pos.immutable(), null);
             }
         }
