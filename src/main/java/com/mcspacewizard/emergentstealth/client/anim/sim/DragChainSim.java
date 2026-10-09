@@ -24,6 +24,7 @@ public final class DragChainSim implements ProceduralSim {
     public static final double LEGS = 0.75;
     private static final double RADIUS = 0.12;
     private static final float BLEND_TICKS = 8.0F;
+    private static final double HIP_PULL = 0.2;
 
     @Override
     public void tick(LivingEntity entity, ClientLevel level, ProceduralState s) {
@@ -47,6 +48,9 @@ public final class DragChainSim implements ProceduralSim {
             s.chain = chain;
         }
         chain.step(hand[0], hand[1], hand[2], (x, y, z) -> Floors.below(level, x, y, z), 0.9, 6);
+        // The server decides where the body is (evidence, hiding): keep the hips near it, so the chain can't
+        // swing round to a side the server doesn't agree with (walking backwards, turning on the spot).
+        chain.pull(2, npc.getX(), npc.getZ(), HIP_PULL);
         s.dragBlend = Math.min(1.0F, s.dragBlend + 1.0F / BLEND_TICKS);
     }
 

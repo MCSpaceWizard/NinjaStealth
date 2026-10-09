@@ -258,5 +258,6 @@
   "message.emergentstealth.tool.none": "No active tool: hold the Tool Wheel key to choose one",
   "message.emergentstealth.tool.out": "No %s left",
   "death.attack.emergentstealth.caltrops": "%1$s stepped on caltrops one time too many",
-  "death.attack.emergentstealth.caltrops.player": "%1$s stepped on caltrops while trying to escape %2$s"
+  "death.attack.emergentstealth.caltrops.player": "%1$s stepped on caltrops while trying to escape %2$s",
+  "commands.emergentstealth.npc.knocked_out": "Knocked out %s NPC(s)"
 }

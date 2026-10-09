@@ -16,6 +16,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.CalculatePlayerTurnEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.ComputeFovModifierEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent;
 
 /**
@@ -60,6 +61,17 @@ public final class AnimClientEvents {
         double factor = ESConfig.ACTION_MOUSE_SCALE.get();
         double base = event.getMouseSensitivity() * 0.6 + 0.2;
         event.setMouseSensitivity((Math.cbrt(factor) * base - 0.2) / 0.6);
+    }
+
+    /**
+     * The server holds you still during an action by zeroing your movement speed, which vanilla would read as a
+     * slowdown and zoom the view in. Keep the field of view steady instead.
+     */
+    @SubscribeEvent
+    static void onFovModifier(ComputeFovModifierEvent event) {
+        if (event.getPlayer() instanceof LocalPlayer player && inAction(player, 0.0F)) {
+            event.setNewFovModifier(1.0F);
+        }
     }
 
     /** In first person the camera turns with a takedown (angles only). */

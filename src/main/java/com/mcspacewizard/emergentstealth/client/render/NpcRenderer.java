@@ -73,7 +73,8 @@ public class NpcRenderer extends HumanoidMobRenderer<StealthNpc, NpcRenderState,
         extractAnimation(npc, state, partialTick);
         state.outfitLayers.clear();
         state.body = DEFAULT_BODY;
-        state.indicator = ESConfig.SHOW_DETECTION_INDICATORS.get() ? DetectionIndicator.build(ClientDetection.get(npc.getId())) : null;
+        state.indicator = ESConfig.SHOW_DETECTION_INDICATORS.get() && !npc.isBody()
+                ? DetectionIndicator.build(ClientDetection.get(npc.getId())) : null;
         state.bark = ESConfig.SHOW_BARKS.get() ? com.mcspacewizard.emergentstealth.client.hud.ClientBarks.get(npc.getId()) : null;
         state.indicatorAttachment = state.indicator == null && state.bark == null ? null
                 : npc.getAttachments().getNullable(EntityAttachment.NAME_TAG, 0, npc.getYRot(partialTick));
