@@ -154,6 +154,23 @@ public final class LedgerScreen extends UiScreen {
                     .tooltip(Component.translatable("ui.emergentstealth.ledger.take_out_spawn.tip"))).size(60, 16);
             row.size(-1, ROW_H);
         }
+        UiFlex lightsRow = list.add(UiFlex.row().gap(6).center());
+        lightsRow.add(new UiLabel(Component.translatable("ui.emergentstealth.ledger.lights"))).size(70, -1);
+        lightsRow.add(new UiLabel(state.lights().isEmpty() ? Component.translatable("ui.emergentstealth.ledger.no_lights")
+                : Component.translatable("ui.emergentstealth.ledger.lights_found", state.lights().size())).color(SumiTheme.TEXT_MUTED)).flex(1);
+        lightsRow.add(new UiButton(Component.translatable(state.relightAll() ? "ui.emergentstealth.ledger.relight_all" : "ui.emergentstealth.ledger.relight_none"),
+                UiButton.Style.SECONDARY, () -> send(LedgerPayloads.Kind.LIGHT_RULE, "", 0))
+                .tooltip(Component.translatable("ui.emergentstealth.ledger.relight.tip"))).size(84, 16);
+        lightsRow.size(-1, ROW_H);
+        for (LedgerPayloads.Entry light : state.lights()) {
+            UiFlex row = list.add(UiFlex.row().gap(6).center());
+            row.add(new UiLabel(Component.literal(light.name()))).flex(2);
+            row.add(new UiLabel(Component.literal(light.detail())).color(SumiTheme.TEXT_MUTED)).flex(2);
+            row.add(new UiButton(Component.translatable(light.inDraft() ? "ui.emergentstealth.ledger.relit" : "ui.emergentstealth.ledger.dark"),
+                    light.inDraft() ? UiButton.Style.SECONDARY : UiButton.Style.GHOST, () -> send(LedgerPayloads.Kind.TOGGLE_LIGHT, light.name(), 0))
+                    .tooltip(Component.translatable("ui.emergentstealth.ledger.light.tip"))).size(60, 16);
+            row.size(-1, ROW_H);
+        }
         UiScroll scroll = panel.add(new UiScroll(list));
         scroll.flex(1);
 

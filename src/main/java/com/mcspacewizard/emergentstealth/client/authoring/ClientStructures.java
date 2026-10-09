@@ -31,80 +31,101 @@ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * What the client knows about structures (design doc 32 §1): the id list from the server, and previews
- * reassembled from their parts. Previews are small copies: solid blocks only.
+ * What the client knows about structures (design doc 32 §1): the structure and compound id lists from the server,
+ * and previews reassembled from their parts. Previews are small copies: solid blocks only (a compound's: all its
+ * structures', placed as the compound places them).
  */
 public final class ClientStructures {
     private ClientStructures() {}
 
-    /** A structure's solid blocks, untransformed, for the browser and the ghost. */
-    public record Preview(Identifier id, Vec3i size, BlockPos[] positions, BlockState[] states, List<Map.Entry<Block, Integer>> commonest) {
+    /** A structure or a compound. */
+    public record Key(Identifier id, boolean compound) {}
+
+    /** What a compound brings besides its blocks. */
+    public record CompoundInfo(int modules, int missing, int zones, int routes, int spawns, int npcs) {}
+
+    /** A structure's (or compound's) solid blocks, untransformed, for the browser and the ghost. */
+    public record Preview(Key key, Vec3i size, BlockPos[] positions, BlockState[] states, List<Map.Entry<Block, Integer>> commonest,
+                          @Nullable CompoundInfo info) {
         public int solid() {
             return positions.length;
+        }
+
+        public Identifier id() {
+            return key.id();
         }
     }
 
     private static final int KEEP = 4;
     private static List<Identifier> ids = List.of();
-    private static final Map<Identifier, Preview> PREVIEWS = new LinkedHashMap<>(8, 0.75F, true) {
+    private static List<Identifier> compounds = List.of();
+    private static final Map<Key, Preview> PREVIEWS = new LinkedHashMap<>(8, 0.75F, true) {
         @Override
-        protected boolean removeEldestEntry(Map.Entry<Identifier, Preview> eldest) {
+        protected boolean removeEldestEntry(Map.Entry<Key, Preview> eldest) {
             return size() > KEEP;
         }
     };
     /** Parts received so far, per structure. */
-    private static final Map<Identifier, byte[][]> PENDING = new HashMap<>();
+    private static final Map<Key, byte[][]> PENDING = new HashMap<>();
     /** When each preview was last asked for: the server may refuse (no permission, unknown id), so ask again later. */
-    private static final Map<Identifier, Long> ASKED = new HashMap<>();
+    private static final Map<Key, Long> ASKED = new HashMap<>();
     private static final long RETRY_MS = 3000L;
 
     public static List<Identifier> ids() {
         return ids;
     }
 
-    public static @Nullable Preview preview(Identifier id) {
-        return PREVIEWS.get(id);
+    public static List<Identifier> compounds() {
+        return compounds;
+    }
+
+    public static @Nullable Preview preview(Key key) {
+        return PREVIEWS.get(key);
     }
 
     /** Asks the server for a preview unless it's here, arriving, or was asked for in the last few seconds. */
-    public static void request(Identifier id) {
+    public static void request(Key key) {
         long now = net.minecraft.util.Util.getMillis();
-        Long asked = ASKED.get(id);
-        if (PREVIEWS.containsKey(id) || PENDING.containsKey(id) || (asked != null && now - asked < RETRY_MS)) {
+        Long asked = ASKED.get(key);
+        if (PREVIEWS.containsKey(key) || PENDING.containsKey(key) || (asked != null && now - asked < RETRY_MS)) {
             return;
         }
-        ASKED.put(id, now);
-        ClientPacketDistributor.sendToServer(new StructurePayloads.RequestPreview(id));
+        ASKED.put(key, now);
+        ClientPacketDistributor.sendToServer(new StructurePayloads.RequestPreview(key.id(), key.compound()));
     }
 
     public static void handleList(StructurePayloads.StructureList payload, IPayloadContext context) {
         ids = List.copyOf(payload.ids());
+        compounds = List.copyOf(payload.compounds());
+        // A compound may have been saved again since its preview came: ask afresh.
+        PREVIEWS.keySet().removeIf(Key::compound);
         if (payload.open()) {
             Minecraft.getInstance().setScreen(new StructureBrowserScreen());
         }
     }
 
     public static void handlePart(StructurePayloads.PreviewPart payload, IPayloadContext context) {
-        byte[][] parts = PENDING.get(payload.id());
+        Key key = new Key(payload.id(), payload.compound());
+        byte[][] parts = PENDING.get(key);
         if (parts == null || parts.length != payload.parts()) {
             parts = new byte[payload.parts()][];
-            PENDING.put(payload.id(), parts);
+            PENDING.put(key, parts);
         }
         parts[payload.part()] = payload.data();
         byte[] whole = StructureCatalog.join(parts);
         if (whole == null) {
             return;
         }
-        PENDING.remove(payload.id());
-        ASKED.remove(payload.id());
+        PENDING.remove(key);
+        ASKED.remove(key);
         try {
-            PREVIEWS.put(payload.id(), parse(payload.id(), whole));
+            PREVIEWS.put(key, parse(key, whole));
         } catch (Exception e) {
             EmergentStealth.LOGGER.warn("Structure viewer: couldn't read the preview of {}", payload.id(), e);
         }
     }
 
-    private static Preview parse(Identifier id, byte[] bytes) throws java.io.IOException {
+    private static Preview parse(Key key, byte[] bytes) throws java.io.IOException {
         CompoundTag tag = NbtIo.readCompressed(new ByteArrayInputStream(bytes), NbtAccounter.unlimitedHeap());
         ListTag size = tag.getListOrEmpty("size");
         HolderGetter<Block> blocks = Minecraft.getInstance().level.holderLookup(Registries.BLOCK);
@@ -126,12 +147,19 @@ public final class ClientStructures {
         }
         List<Map.Entry<Block, Integer>> commonest = new ArrayList<>(counts.entrySet());
         commonest.sort(Map.Entry.<Block, Integer>comparingByValue(Comparator.reverseOrder()));
-        return new Preview(id, new Vec3i(size.getInt(0).orElse(0), size.getInt(1).orElse(0), size.getInt(2).orElse(0)),
-                positions, states, List.copyOf(commonest.subList(0, Math.min(6, commonest.size()))));
+        CompoundInfo info = null;
+        if (tag.contains("compound")) {
+            CompoundTag c = tag.getCompoundOrEmpty("compound");
+            info = new CompoundInfo(c.getIntOr("modules", 0), c.getIntOr("missing", 0), c.getIntOr("zones", 0), c.getIntOr("routes", 0),
+                    c.getIntOr("spawns", 0), c.getIntOr("npcs", 0));
+        }
+        return new Preview(key, new Vec3i(size.getInt(0).orElse(0), size.getInt(1).orElse(0), size.getInt(2).orElse(0)),
+                positions, states, List.copyOf(commonest.subList(0, Math.min(6, commonest.size()))), info);
     }
 
     public static void clear() {
         ids = List.of();
+        compounds = List.of();
         PREVIEWS.clear();
         PENDING.clear();
         ASKED.clear();

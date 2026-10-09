@@ -74,6 +74,17 @@ public final class Snuffing {
         return unlitToLit.containsKey(state.getBlock());
     }
 
+    /** A light the lamplighter cares about: a torch, lantern or campfire, lit or not. */
+    public static boolean isLight(BlockState state) {
+        return canSnuff(state) || canRelight(state) || state.getBlock() instanceof CampfireBlock;
+    }
+
+    /** The lit form of a light block (an unlit torch is a torch); other blocks are themselves. */
+    public static Block litForm(Block block) {
+        ensureMaps();
+        return unlitToLit.getOrDefault(block, block);
+    }
+
     /** Puts out the light at {@code pos}. Returns true if something was put out. */
     public static boolean snuff(ServerLevel level, BlockPos pos, @Nullable Player player) {
         ensureMaps();

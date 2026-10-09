@@ -1,5 +1,6 @@
 package com.mcspacewizard.emergentstealth.client.authoring;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -28,16 +29,19 @@ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 /**
  * The structure browser (design doc 32 §1), opened by the Surveyor's Plan or {@code /es structure browse}: a
- * searchable list of every structure, grouped by folder, and the selected one's size and main blocks. "Preview"
- * closes the screen and hands the structure to the ghost preview for placing.
+ * searchable list of every compound and structure, grouped by folder (compounds first), and the selected one's
+ * size and main blocks (and what a compound brings). "Preview" closes the screen and hands it to the ghost
+ * preview for placing; a compound places as a whole, with its guards, routes and zones.
  */
 public final class StructureBrowserScreen extends UiScreen {
-    private static @Nullable Identifier lastSelected;
+    private static ClientStructures.@Nullable Key lastSelected;
     private static String lastFilter = "";
     /** How many of the commonest blocks the details list (they have to fit beside the list at small GUI sizes). */
     private static final int MAIN_BLOCKS = 5;
+    /** Fewer for a compound: what it brings takes two lines. */
+    private static final int MAIN_BLOCKS_COMPOUND = 2;
 
-    private @Nullable Identifier selected = lastSelected;
+    private ClientStructures.@Nullable Key selected = lastSelected;
     private String filter = lastFilter;
     private @Nullable UiFlex list;
     private @Nullable UiScroll scroll;
@@ -60,7 +64,8 @@ public final class StructureBrowserScreen extends UiScreen {
 
         UiFlex header = panel.add(UiFlex.row().gap(8).center());
         header.add(new UiLabel(Component.translatable("ui.emergentstealth.structures.title")).scale(1.5F)).size(-1, 14);
-        header.add(new UiLabel(() -> Component.translatable("ui.emergentstealth.structures.count", ClientStructures.ids().size()))
+        header.add(new UiLabel(() -> Component.translatable("ui.emergentstealth.structures.count_with_compounds", ClientStructures.ids().size(),
+                ClientStructures.compounds().size()))
                 .color(SumiTheme.TEXT_MUTED)).flex(1);
         header.size(-1, 20);
         panel.add(new UiDivider(5151L).thickness(3.0F)).size(-1, 6);
@@ -77,7 +82,7 @@ public final class StructureBrowserScreen extends UiScreen {
         });
         // Enter selects the first match; Enter again previews it.
         search.onSubmit(text -> {
-            List<Identifier> shown = filtered();
+            List<ClientStructures.Key> shown = filtered();
             if (shown.isEmpty()) {
                 return;
             }
@@ -138,19 +143,33 @@ public final class StructureBrowserScreen extends UiScreen {
         }
     }
 
-    private List<Identifier> filtered() {
+    /** Compounds first, then structures, that match the search ("compound" matches every compound). */
+    private List<ClientStructures.Key> filtered() {
         String needle = filter.toLowerCase(Locale.ROOT).trim();
-        return ClientStructures.ids().stream().filter(id -> needle.isEmpty() || id.toString().contains(needle)).toList();
+        List<ClientStructures.Key> shown = new ArrayList<>();
+        for (Identifier id : ClientStructures.compounds()) {
+            if (needle.isEmpty() || id.toString().contains(needle) || "compound".contains(needle)) {
+                shown.add(new ClientStructures.Key(id, true));
+            }
+        }
+        for (Identifier id : ClientStructures.ids()) {
+            if (needle.isEmpty() || id.toString().contains(needle)) {
+                shown.add(new ClientStructures.Key(id, false));
+            }
+        }
+        return shown;
     }
 
-    /** "emergentstealth:edo/kofun" is listed under "emergentstealth:edo". */
-    private static String folder(Identifier id) {
+    /** "emergentstealth:edo/kofun" is listed under "emergentstealth:edo"; compounds under "Compounds · …". */
+    private static Component folder(ClientStructures.Key key) {
+        Identifier id = key.id();
         int slash = id.getPath().lastIndexOf('/');
-        return slash < 0 ? id.getNamespace() : id.getNamespace() + ":" + id.getPath().substring(0, slash);
+        String folder = slash < 0 ? id.getNamespace() : id.getNamespace() + ":" + id.getPath().substring(0, slash);
+        return key.compound() ? Component.translatable("ui.emergentstealth.structures.compound_folder", folder) : Component.literal(folder);
     }
 
-    private static String leaf(Identifier id) {
-        return id.getPath().substring(id.getPath().lastIndexOf('/') + 1);
+    private static String leaf(ClientStructures.Key key) {
+        return key.id().getPath().substring(key.id().getPath().lastIndexOf('/') + 1);
     }
 
     private void fillList() {
@@ -158,14 +177,14 @@ public final class StructureBrowserScreen extends UiScreen {
             return;
         }
         list.clearChildren();
-        String lastFolder = null;
-        for (Identifier id : filtered()) {
-            String folder = folder(id);
+        Component lastFolder = null;
+        for (ClientStructures.Key key : filtered()) {
+            Component folder = folder(key);
             if (!folder.equals(lastFolder)) {
-                list.add(new UiLabel(Component.literal(folder)).color(SumiTheme.INK_SOFT)).size(-1, 13);
+                list.add(new UiLabel(folder).color(key.compound() ? SumiTheme.LACQUER : SumiTheme.INK_SOFT)).size(-1, 13);
                 lastFolder = folder;
             }
-            list.add(new UiListRow(() -> Component.literal(leaf(id)), () -> id.equals(selected), () -> select(id))
+            list.add(new UiListRow(() -> Component.literal(leaf(key)), () -> key.equals(selected), () -> select(key))
                     .onActivate(this::startPreview));
         }
         if (filtered().isEmpty()) {
@@ -174,10 +193,10 @@ public final class StructureBrowserScreen extends UiScreen {
         relayout();
     }
 
-    private void select(Identifier id) {
-        selected = id;
-        lastSelected = id;
-        ClientStructures.request(id);
+    private void select(ClientStructures.Key key) {
+        selected = key;
+        lastSelected = key;
+        ClientStructures.request(key);
     }
 
     private void startPreview() {
@@ -193,7 +212,7 @@ public final class StructureBrowserScreen extends UiScreen {
     }
 
     private Component folderText() {
-        return selected == null ? Component.empty() : Component.literal(folder(selected));
+        return selected == null ? Component.empty() : folder(selected);
     }
 
     private Component sizeText() {
@@ -210,11 +229,25 @@ public final class StructureBrowserScreen extends UiScreen {
 
     private Component blocksText() {
         ClientStructures.Preview preview = selected == null ? null : ClientStructures.preview(selected);
-        if (preview == null || preview.commonest().isEmpty()) {
+        if (preview == null) {
             return Component.empty();
         }
-        Component text = Component.translatable("ui.emergentstealth.structures.main_blocks");
-        for (Map.Entry<Block, Integer> entry : preview.commonest().subList(0, Math.min(MAIN_BLOCKS, preview.commonest().size()))) {
+        Component text = Component.empty();
+        ClientStructures.CompoundInfo info = preview.info();
+        if (info != null) {
+            text = Component.translatable("ui.emergentstealth.structures.compound_info", info.modules(), info.npcs(), info.routes(), info.zones());
+            if (info.missing() > 0) {
+                text = text.copy().append("\n").append(Component.translatable("ui.emergentstealth.structures.compound_missing", info.missing()));
+            }
+            if (preview.commonest().isEmpty()) {
+                return text;
+            }
+            text = text.copy().append("\n");
+        } else if (preview.commonest().isEmpty()) {
+            return text;
+        }
+        text = text.copy().append(Component.translatable("ui.emergentstealth.structures.main_blocks"));
+        for (Map.Entry<Block, Integer> entry : preview.commonest().subList(0, Math.min(info != null ? MAIN_BLOCKS_COMPOUND : MAIN_BLOCKS, preview.commonest().size()))) {
             text = text.copy().append("\n  ").append(entry.getKey().getName()).append(" × " + entry.getValue());
         }
         return text;

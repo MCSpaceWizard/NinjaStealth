@@ -41,10 +41,12 @@ public final class LedgerPayloads {
      * @param startFrom  the template a new draft would start from (the author's last placed structure, when the
      *                   ledger was used on it), or empty
      * @param spawns     one line per spawn marker
+     * @param relightAll the draft's light rule: the lamplighter relights all lights but the exceptions (or none but them)
+     * @param lights     the lights found in the draft's structures: name is the position, {@code inDraft} whether it is relit
      * @param open       open the panel if it isn't (false: only refresh an open one)
      */
     public record State(String draft, BlockPos origin, int structures, String startFrom, List<Entry> zones, List<Entry> routes, List<String> spawns,
-                        boolean open)
+                        boolean relightAll, List<Entry> lights, boolean open)
             implements CustomPacketPayload {
         public static final Type<State> TYPE = new Type<>(EmergentStealth.id("ledger_state"));
         public static final StreamCodec<ByteBuf, State> STREAM_CODEC = StreamCodec.composite(
@@ -55,6 +57,8 @@ public final class LedgerPayloads {
                 Entry.STREAM_CODEC.apply(ByteBufCodecs.list(MAX_LIST)), State::zones,
                 Entry.STREAM_CODEC.apply(ByteBufCodecs.list(MAX_LIST)), State::routes,
                 ByteBufCodecs.stringUtf8(256).apply(ByteBufCodecs.list(MAX_LIST)), State::spawns,
+                ByteBufCodecs.BOOL, State::relightAll,
+                Entry.STREAM_CODEC.apply(ByteBufCodecs.list(MAX_LIST)), State::lights,
                 ByteBufCodecs.BOOL, State::open,
                 State::new);
 
@@ -78,6 +82,10 @@ public final class LedgerPayloads {
         TOGGLE_ROUTE,
         /** Take the spawn marker {@code index} out of the draft. */
         REMOVE_SPAWN,
+        /** Switch the light at {@code text} ("x y z") between relit and left dark. */
+        TOGGLE_LIGHT,
+        /** Switch the draft's light rule between relighting all and none. */
+        LIGHT_RULE,
         /** Save the draft. */
         SAVE,
         /** Throw the draft away. */

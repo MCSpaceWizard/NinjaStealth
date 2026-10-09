@@ -23,6 +23,8 @@ import com.mojang.serialization.JsonOps;
 import net.minecraft.resources.FileToIdConverter;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.FileUtil;
@@ -71,16 +73,36 @@ public final class Compounds {
         return file;
     }
 
-    /** Copies a compound into {@code compounds/<namespace>/<path>.json} under the server directory. */
-    public static @Nullable Path export(MinecraftServer server, Identifier id) throws IOException {
+    /**
+     * Copies a compound into {@code compounds/<namespace>/<path>.json} under the server directory, and the templates
+     * saving made for its edited modules ({@code <namespace>:compound/...}) into {@code compounds/<namespace>/structure/},
+     * ready for a datapack's {@code structure} folder.
+     */
+    public static @Nullable Exported export(MinecraftServer server, Identifier id) throws IOException {
         Compound compound = get(id);
         if (compound == null) {
             return null;
         }
-        Path file = resolve(server.getServerDirectory().resolve("compounds"), id, null);
+        Path root = server.getServerDirectory().resolve("compounds");
+        Path file = resolve(root, id, null);
         write(file, compound);
-        return file;
+        int templates = 0;
+        for (Compound.Module module : compound.structures()) {
+            if (!module.template().getPath().startsWith("compound/")) {
+                continue;
+            }
+            StructureTemplate template = server.getStructureManager().get(module.template()).orElse(null);
+            if (template != null) {
+                Path nbt = resolve(root, module.template(), "structure");
+                StructureTemplateManager.save(nbt.resolveSibling(nbt.getFileName().toString().replace(".json", ".nbt")), template, false);
+                templates++;
+            }
+        }
+        return new Exported(file, templates);
     }
+
+    /** An exported compound file and how many of its own templates came with it. */
+    public record Exported(Path file, int templates) {}
 
     /** Arrays of plain numbers (positions) on one line; Gson's pretty printing gives each number its own. */
     private static final java.util.regex.Pattern NUMBER_ARRAY = java.util.regex.Pattern.compile("\\[\\s*(-?[0-9.]+(?:,\\s*-?[0-9.]+)*)\\s*]");
