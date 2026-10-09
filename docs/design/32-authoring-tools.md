@@ -78,6 +78,8 @@ A **compound** is one or more structure templates plus markers, all relative to 
 - `/es compound info`, `save`, `cancel`. Then `place <name> [pos] [rotation] [mirror]`, `list`, `copies`, `export <name>`, `remove <copy>`. Undo (`/es structure undo`) takes back a whole placed copy.
 - Not yet: re-saving edited templates on save, `reset`, automatic ground lines, and the browser listing compounds.
 
+> **Examples (2026-10-09):** three compounds ship in the mod as `emergentstealth:examples/{samurai_fort, shrine_watch, cherry_grove_estate}` (a garrisoned fort with a lamplighter, a shrine watched at night, and two Cherry Grove modules on one ground line). `tools/compounds/make_examples.py` writes them and checks every waypoint, post and spawn against the templates (a floor to stand on, a walkable leg between waypoints); the `compounds/examples` GameTest places each at every rotation. Ground lines are set by hand there: a module's offset y is `-1 - ground`, so the ground layer replaces the block under the placer's feet.
+
 The planned flow:
 1. Place a structure with the viewer.
 2. Use the **Compound Ledger** item on it to start a compound. It takes the structure's bounds and origin.

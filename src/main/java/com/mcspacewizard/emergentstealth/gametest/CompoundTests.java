@@ -60,7 +60,8 @@ public final class CompoundTests {
     private static final Map<Identifier, Consumer<GameTestHelper>> TESTS = Map.of(
             EmergentStealth.id("compounds/transform_algebra"), CompoundTests::transformAlgebra,
             EmergentStealth.id("compounds/file_format"), CompoundTests::fileFormat,
-            EmergentStealth.id("compounds/round_trip"), CompoundTests::roundTrip);
+            EmergentStealth.id("compounds/round_trip"), CompoundTests::roundTrip,
+            EmergentStealth.id("compounds/examples"), CompoundTests::examples);
 
     @SubscribeEvent
     static void onRegister(RegisterEvent event) {
@@ -216,5 +217,74 @@ public final class CompoundTests {
             helper.assertTrue(PlacedCompounds.get(level).get(copy.id()).isEmpty(), t + ": the copy record is gone after undo");
         }
         helper.succeed();
+    }
+
+    /** The example compounds shipped in the mod (made by {@code tools/compounds/make_examples.py}). */
+    private static final List<String> EXAMPLES = List.of("samurai_fort", "shrine_watch", "cherry_grove_estate");
+
+    /**
+     * Each example compound loads, and placed at every rotation, every route waypoint, post and NPC stands on
+     * the floor of its structure: a solid block below, and room to stand (doors and gates count, NPCs open them).
+     * Placed far from the other tests, then undone.
+     */
+    static void examples(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        UUID author = UUID.randomUUID();
+        for (int i = 0; i < EXAMPLES.size(); i++) {
+            Identifier id = EmergentStealth.id("examples/" + EXAMPLES.get(i));
+            Compound compound = Compounds.get(id);
+            helper.assertTrue(compound != null, id + " should load from the mod's data");
+            java.util.Set<String> routeNames = new java.util.HashSet<>();
+            compound.routes().forEach(r -> routeNames.add(r.name()));
+            for (Compound.Spawn spawn : compound.spawns()) {
+                for (Schedule.Entry entry : spawn.schedule().entries()) {
+                    helper.assertTrue(!(entry.activity() instanceof Schedule.Route r) || routeNames.contains(r.route()),
+                            id + ": a spawn walks an unknown route " + entry.activity());
+                }
+            }
+
+            BlockPos origin = new BlockPos(20_000 + 300 * i, 120, 20_000);
+            for (Rotation rotation : Rotation.values()) {
+                Transform t = new Transform(Mirror.NONE, rotation);
+                CompoundPlacer.Result result = CompoundPlacer.place(level, author, id, compound, origin, t);
+                PlacedCompounds.Copy copy = result.copy();
+                helper.assertTrue(copy != null, id + " " + t + ": missing templates " + result.missing());
+                String where = id + " " + rotation.getSerializedName();
+                for (PatrolRoute route : compound.routes()) {
+                    for (PatrolRoute.Waypoint waypoint : route.waypoints()) {
+                        assertStands(helper, level, t.apply(waypoint.pos()).offset(origin), where + " route " + route.name() + " " + waypoint.pos());
+                    }
+                }
+                int npcs = 0;
+                for (Compound.Spawn spawn : compound.spawns()) {
+                    npcs += spawn.count();
+                    assertStands(helper, level, t.apply(spawn.pos()).offset(origin), where + " spawn " + spawn.archetype() + " " + spawn.pos());
+                    for (Schedule.Entry entry : spawn.schedule().entries()) {
+                        if (entry.activity() instanceof Schedule.Post post) {
+                            assertStands(helper, level, t.apply(post.pos()).offset(origin), where + " post " + post.pos());
+                        }
+                    }
+                }
+                helper.assertTrue(copy.npcs().size() == npcs, where + ": " + npcs + " NPCs, got " + copy.npcs().size());
+                helper.assertTrue(copy.routes().size() == compound.routes().size() && copy.zones().size() == compound.zones().size(),
+                        where + ": every route and zone is registered");
+                helper.assertTrue(StructurePlacement.undo(author) != null, where + ": undo");
+            }
+        }
+        helper.succeed();
+    }
+
+    private static void assertStands(GameTestHelper helper, ServerLevel level, BlockPos pos, String what) {
+        boolean floor = !level.getBlockState(pos.below()).getCollisionShape(level, pos.below()).isEmpty();
+        helper.assertTrue(floor && roomAt(level, pos) && roomAt(level, pos.above()),
+                what + " at " + pos + " is no place to stand: " + level.getBlockState(pos.below()) + " / " + level.getBlockState(pos)
+                        + " / " + level.getBlockState(pos.above()));
+    }
+
+    private static boolean roomAt(ServerLevel level, BlockPos pos) {
+        net.minecraft.world.level.block.state.BlockState state = level.getBlockState(pos);
+        return state.isPathfindable(net.minecraft.world.level.pathfinder.PathComputationType.LAND)
+                || state.getBlock() instanceof net.minecraft.world.level.block.DoorBlock
+                || state.getBlock() instanceof net.minecraft.world.level.block.FenceGateBlock;
     }
 }

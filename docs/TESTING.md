@@ -68,6 +68,30 @@ Design doc [32](design/32-authoring-tools.md) §2. Mark zones with the Surveyor'
 | Z.10 | Into a compound | With a draft open (`/es compound start …`), `/es compound add zone yard` | "Added zone yard (…)"; after saving, the compound JSON has the zone's boxes relative to its origin |
 | Z.11 | Permission | In survival, use the rope | "Authoring tools need creative mode and operator permission", nothing changes |
 
+## Example compounds: a garrisoned fort, a shrine watch, a Cherry Grove estate 🧪
+
+Three ready-made compounds ship in the mod (`data/emergentstealth/emergentstealth/compound/examples/`), so you can try guards, routes, schedules and zones without authoring anything. They're written by `tools/compounds/make_examples.py`, which checks that every waypoint, post and spawn is a place an NPC can stand and that every route leg is walkable through the structure; edit the script rather than the JSON. Creative with cheats for placing; test the guards in survival. A flat area helps (a superflat world is easiest): each compound extends east (+x) and south (+z) from where you stand, and its ground layer sinks into the block under your feet.
+
+**Automated check:** `compounds/examples` (each example loads, and at all 4 rotations every waypoint, post and NPC lands on a floor with room to stand; every NPC, route and zone is placed).
+
+| Compound | Size | What's in it |
+|---|---|---|
+| `emergentstealth:examples/samurai_fort` | 46 × 46 | The samurai mini fort. Zones: `grounds` restricted, `residence` hostile, `storehouse` hostile at night (18-6). Routes: `yard` (loop round the courtyard, pausing at the gate), `rampart` (ping-pong along the north earthwork), `lanterns` (relights the courtyard lanterns). 8 NPCs: two gate guards (by night one walks the yard and one the rampart), two day patrols that swap to posts at dusk, a samurai on the gate tower, a samurai at the residence door, the daimyo (by the hearth by day, to bed at 20:00) and a labourer lamplighter (lantern round 17-23) |
+| `emergentstealth:examples/shrine_watch` | 34 × 42 | The large shrine. Zones: `precinct` restricted only at night (20-6), `honden` (the main hall) restricted always. Routes: `night_round`, `lanterns`. 5 NPCs: an ashigaru at the gate by day who walks the precinct at night, a samurai before the hall, two townsfolk visitors who wander by day, and a lamplighter (18-22) |
+| `emergentstealth:examples/cherry_grove_estate` | 45 × 72 | Two Cherry Grove modules (the gatehouse, with the teahouse behind it), each with its ground line. Zones: `teahouse` restricted, `gatehouse` restricted at night. Routes: `front` (ping-pong outside the gate, all day), `garden` (a loop through both modules). 6 NPCs: a gate patrol, two garden guards on opposite shifts, a taisho inside the teahouse, two townsfolk |
+
+| # | Test | Steps | Expected |
+|---|---|---|---|
+| X.1 | Listed | `/es compound list` | The three `emergentstealth:examples/...` ids are listed |
+| X.2 | Place the fort | Stand on flat ground, `/es compound place emergentstealth:examples/samurai_fort` | The fort appears with its grass floor level with the ground; "Placed … 8 NPCs, 3 routes, 3 zones". Guards stand at the gate, on the gate tower, at the residence door; nobody is stuck in a wall |
+| X.3 | Routes | `/es patrol list`, `/esdebug on`, `/time set noon` | Routes `examples/samurai_fort#<n>/yard`, `…/rampart`, `…/lanterns`. One guard loops the courtyard and stops at the gate looking out; another walks up the earthwork and paces the north rampart |
+| X.4 | Night shift | `/time set 13000` (19:00), then `/time set 18000` (midnight) | At dusk the day patrols go to their posts and the gate guards take over the yard and rampart; the daimyo goes to the bedroom at 20:00. `/es routine show @e[type=emergentstealth:stealth_npc,limit=1,sort=nearest]` shows each schedule |
+| X.5 | Lamplighter | Snuff a few courtyard lanterns, `/time set 11000` (17:00) | The labourer walks the lantern round and relights unlit lanterns within 4 blocks of each stop |
+| X.6 | Zones | Hold the Surveyor's Rope, or `/es zone at` in each part | `grounds` amber over the whole fort, `residence` red round the main house, `storehouse` red with `18-6h`. In survival, guards notice you faster in the grounds, and seeing you in the residence is detection |
+| X.7 | Turned | `/es compound place emergentstealth:examples/shrine_watch ~60 ~ ~ clockwise_90` | The shrine, turned; the gate guard stands at the (turned) gate, and the night round follows the turned precinct at night |
+| X.8 | Multi-module | `/es compound place emergentstealth:examples/cherry_grove_estate ~ ~ ~80` | Gatehouse and teahouse side by side on one ground line (no step between them); the gate patrol paces outside the gate; at noon a guard walks the garden loop through both gardens |
+| X.9 | Undo | `/es structure undo` after any of them | The whole copy, blocks and NPCs, is gone |
+
 ## Compounds: author, save, place turned or mirrored 🧪
 
 Design doc [32](design/32-authoring-tools.md) §3. A compound is structures plus guards, patrol routes and zones, saved as one file and placed anywhere, turned or mirrored. Authoring is by command for now (the Compound Ledger item comes later). Creative with cheats. Screenshot: [compound_copy.png](screenshots/structures/compound_copy.png).
