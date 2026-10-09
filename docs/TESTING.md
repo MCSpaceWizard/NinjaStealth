@@ -16,19 +16,30 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
-## Tool wheel on Sumi and tool effects 🧪
+## Toolbelt, tool wheel on Sumi and tool effects 🧪
 
 Design: [doc 34](design/34-tool-wheel-and-effects.md). Screenshots: [screenshots/tools](screenshots/tools/).
 
-**Automated checks (already passing):** `ui/radial_menu` (which wedge the pointer picks, the wrap at the top, the dead zone, wheel and number-key stepping); 105 GameTests in total.
+**Automated checks (already passing):** `ui/radial_menu` (which wedge the pointer picks, the wrap at the top, the dead zone, wheel and number-key stepping); `toolkit/toolbelt_menu` (the belt takes tools but not stone, arrows, darts or belts; shift-click saves into the item; the open belt's slot is locked and a number-key swap can't move it); `toolkit/toolbelt_hand_tools` (quick use draws the blowgun and lockpick into the hand, the held sword goes to the inventory, a held tool swaps into the belt, a held belt is put away with its contents); `toolkit/quick_use_keeps_held_item` now throws from the belt. 107 GameTests in total.
 
 | # | Feature | How to test | Expected |
 |---|---|---|---|
-| W.1 | Wheel look | Carry several tools, hold **R** | Paper wedges unfold clockwise round a paper disc; the world stays visible behind a soft vignette. Each wedge: icon, count, a small number 1–9. The active tool's wedge has a red seal |
+| B.1 | Toolbelt recipe | Recipe book, or craft leather ×5, iron nugget, string ×2 (`LIL / S S / LLL`) | A Toolbelt |
+| B.2 | Belt panel | Hold the belt, right-click | A paper panel: an ink belt band with 8 slots numbered 1–8 over your inventory; the belt's own slot is tinted red and can't be picked up. A line under the panel says what the belt is for |
+| B.3 | What fits | Shift-click or drag stealth tools, a stone, arrows and darts | Throwables, blowgun, lockpick and spyglass go in; stone, water/fire arrows, sleep darts and other belts don't |
+| B.4 | Contents stay | Close, drop the belt, pick it up, reopen; put it in a chest | The tools are still in it |
+| B.5 | Wheel from the belt | Hold **R** | Exactly the belt's 8 slots, in belt order: same tool, same wedge every time. Empty slots are faint wedges with a small ring; pointing at one says "Empty slot". 1–8 pick by slot |
+| B.6 | No belt | Put the belt in a chest, hold R | The disc says "No toolbelt", the strip says to carry one. V says you need a toolbelt |
+| B.7 | Quick use from the belt | Choose the smoke bomb, tap V with a sword in hand | It's thrown from the belt (its count in the belt drops); you still hold the sword. Caltrops outside the belt can't be chosen |
+| B.8 | Hand tools | Choose the blowgun, tap V with a sword in hand | The blowgun comes out of the belt into your hand and the sword goes to a free inventory slot. Holding a tool instead swaps it into the belt slot. Full inventory: "No room to put away what you're holding" |
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| W.1 | Wheel look | Fill a toolbelt, hold **R** | Paper wedges unfold clockwise round a paper disc; the world stays visible behind a soft vignette. Each wedge: icon, count, a small number 1–8. The active tool's wedge has a red seal |
 | W.2 | Pointing | Hold R and move the mouse | The pointed wedge slides out and turns to ink; an ink notch on the disc points at it; a soft tick. The disc shows its name and count, the strip below says how it's used |
-| W.3 | Choosing | Release R on a wedge; or press 1–9; or scroll the wheel and press Enter; or click | It becomes the active tool (stamp sound, seal moves). Releasing in the centre or Esc keeps the old one |
+| W.3 | Choosing | Release R on a wedge; or press 1–8; or scroll the wheel and press Enter; or click | It becomes the active tool (stamp sound, seal moves). Releasing in the centre or Esc keeps the old one |
 | W.4 | Reduced motion | Turn on `ui.reducedMotion` (config screen) and reopen | No unfolding or easing; everything appears at once |
-| W.5 | Active tool icon | Pick a tool | Its icon sits on a small paper diamond right of the light gem; ink-dimmed when you run out |
+| W.5 | Active tool icon | Pick a tool | Its icon sits on a small paper diamond right of the light gem with the belt's count; ink-dimmed when the belt runs out (not while a drawn hand tool is in your hand) |
 | W.6 | Lockpick ring | Pick a locked door (T.7) | A paper card: an ink ring with a gold window, a needle sweeping round, three diamond seals that turn red as pins set. A good click flashes green, a miss red; the window glides to its next spot |
 | W.7 | Spyglass ring | Scope a guard (T.9) | A smooth arc fills round under the crosshair, gold when tagged, and a gold ring pings round the guard |
 | E.1 | Water arrow | Shoot one at torches and a lantern | Droplets trail behind it; a splash with falling drips; a hiss and a puff of steam over each light it puts out |
@@ -228,7 +239,7 @@ All five are in the creative tab and the `#emergentstealth:tools` tag. The cheap
 | # | Feature | How to test | Expected |
 |---|---|---|---|
 | A.1 | Tool wheel | Hold **R** with some tools in your inventory, point at one, release | A radial wheel of the tools you carry, with counts. The chosen one shows as the active tool icon near the hotbar. With no tools: "No stealth tools in your inventory" |
-| A.2 | Quick use | With a sword in hand and an active tool, **tap V** (lob) or **hold V** and release (charged throw) | The tool is thrown/used; you still hold the sword. When you run out: "No *tool* left" |
+| A.2 | Quick use | With a filled toolbelt (B.7), a sword in hand and an active tool, **tap V** (lob) or **hold V** and release (charged throw) | The tool is thrown/used; you still hold the sword. When you run out: "No *tool* left" |
 | A.3 | Pebble | Throw one past a calm guard | A clack where it lands; the guard investigates **the landing spot**, not you. Nothing is left behind |
 | A.4 | Smoke bomb | Throw one between you and a guard who can see you | A pop, then a grey cloud (3-block radius) for 10 s. The guard loses sight of you completely. A guard standing in the cloud is blinded. `/esdebug` shows the smoke volume |
 | A.5 | Firecracker | Throw one far from you, behind a guard | 2 s of fizzing, then 3 s of bangs. Guards come to the firecracker, not to you |

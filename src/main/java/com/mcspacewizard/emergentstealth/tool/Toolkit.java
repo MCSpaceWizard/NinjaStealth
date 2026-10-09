@@ -17,9 +17,9 @@ import com.mcspacewizard.emergentstealth.registry.ESDebugSubscriptions;
 import com.mcspacewizard.emergentstealth.registry.ESNetwork;
 import com.mcspacewizard.emergentstealth.stealth.SmokeVolumes;
 
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
@@ -38,7 +38,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 /**
  * Server side of the tool wheel and quick use (design doc 21 §1): validates the client's intents, keeps the
- * {@link ESAttachments#ACTIVE_TOOL active tool}, and uses it from the inventory without touching the held item.
+ * {@link ESAttachments#ACTIVE_TOOL active tool}, and uses it from the {@link Toolbelt} without touching the held item.
  * Also prunes smoke volumes and sends them to the AI debug view. Registers its own payloads.
  */
 @EventBusSubscriber(modid = EmergentStealth.MODID)
@@ -81,7 +81,8 @@ public final class Toolkit {
     }
 
     /**
-     * Makes {@code tool} the player's active tool if it's a stealth tool they carry. {@link ActiveTool#NONE} clears it.
+     * Makes {@code tool} the player's active tool if it's a stealth tool in their {@link Toolbelt}.
+     * {@link ActiveTool#NONE} clears it.
      *
      * @return whether the selection was accepted
      */
@@ -90,7 +91,8 @@ public final class Toolkit {
             player.setData(ESAttachments.ACTIVE_TOOL, ActiveTool.NONE);
             return true;
         }
-        if (!tool.item().builtInRegistryHolder().is(TOOLS) || findSlot(player.getInventory(), tool.item()) < 0) {
+        ItemStack belt = Toolbelt.belt(player.getInventory());
+        if (!tool.item().builtInRegistryHolder().is(TOOLS) || Toolbelt.slotOf(belt, tool.item()) < 0) {
             return false;
         }
         player.setData(ESAttachments.ACTIVE_TOOL, tool);
@@ -98,9 +100,9 @@ public final class Toolkit {
     }
 
     /**
-     * Quick use (V): uses one of the active tool from wherever it is in the inventory, without changing the held
-     * item. Throwables are thrown ({@code charge} 0 = lob, 1 = long throw). A tool that isn't a {@link StealthTool}
-     * (ranged tools: bows, blowguns) is equipped into the main hand instead.
+     * Quick use (V): uses one of the active tool from the toolbelt, without changing the held item. Throwables are
+     * thrown ({@code charge} 0 = lob, 1 = long throw). A tool that isn't a {@link StealthTool} (blowgun, spyglass,
+     * lockpick, caltrops) is taken out of the belt into the main hand instead.
      *
      * @return whether anything happened
      */
@@ -114,75 +116,62 @@ public final class Toolkit {
             return false;
         }
         Inventory inventory = player.getInventory();
-        int slot = findSlot(inventory, tool.item());
+        ItemStack belt = Toolbelt.belt(inventory);
+        if (belt.isEmpty()) {
+            player.sendOverlayMessage(Component.translatable("message.emergentstealth.tool.no_belt"));
+            return false;
+        }
+        int slot = Toolbelt.slotOf(belt, tool.item());
         if (slot < 0) {
             player.sendOverlayMessage(Component.translatable("message.emergentstealth.tool.out",
                     tool.item().getName(new ItemStack(tool.item()))));
             return false;
         }
         float t = Float.isNaN(charge) ? 0.0F : Mth.clamp(charge, 0.0F, 1.0F);
-        ItemStack stack = inventory.getItem(slot);
+        NonNullList<ItemStack> contents = Toolbelt.contents(belt);
         if (tool.item() instanceof StealthTool stealthTool) {
-            boolean used = stealthTool.quickUse(player, stack, t);
+            boolean used = stealthTool.quickUse(player, contents.get(slot), t);
             if (used) {
+                Toolbelt.store(belt, contents);
                 inventory.setChanged();
             }
             return used;
         }
-        return equip(player, slot);
+        return equip(player, belt, contents, slot);
+    }
+
+    /** How many of {@code item} the player's toolbelt holds. */
+    public static int count(Inventory inventory, Item item) {
+        return Toolbelt.count(Toolbelt.belt(inventory), item);
     }
 
     /**
-     * The inventory slot quick use takes the tool from, or -1: the offhand first, then the main inventory, then the
-     * hotbar, and the selected slot last, so the held stack is only touched when it's the only one.
+     * Hand tools are used from the hand: take the tool out of the belt into the main hand. The held item goes into
+     * the belt slot if it fits there, else into a free inventory slot; with neither, nothing happens.
      */
-    public static int findSlot(Inventory inventory, Item item) {
-        if (inventory.getItem(Inventory.SLOT_OFFHAND).is(item)) {
-            return Inventory.SLOT_OFFHAND;
-        }
-        int hotbar = Inventory.getSelectionSize();
-        for (int i = hotbar; i < Inventory.INVENTORY_SIZE; i++) {
-            if (inventory.getItem(i).is(item)) {
-                return i;
-            }
-        }
-        int selected = inventory.getSelectedSlot();
-        for (int i = 0; i < hotbar; i++) {
-            if (i != selected && inventory.getItem(i).is(item)) {
-                return i;
-            }
-        }
-        return inventory.getItem(selected).is(item) ? selected : -1;
-    }
-
-    /** How many of {@code item} the player carries (main inventory and offhand). */
-    public static int count(Inventory inventory, Item item) {
-        int total = 0;
-        for (int i = 0; i < Inventory.INVENTORY_SIZE; i++) {
-            ItemStack stack = inventory.getItem(i);
-            if (stack.is(item)) {
-                total += stack.getCount();
-            }
-        }
-        ItemStack offhand = inventory.getItem(Inventory.SLOT_OFFHAND);
-        return offhand.is(item) ? total + offhand.getCount() : total;
-    }
-
-    /** Ranged tools are used from the hand: select their hotbar slot, or swap them into it. */
-    private static boolean equip(ServerPlayer player, int slot) {
+    private static boolean equip(ServerPlayer player, ItemStack belt, NonNullList<ItemStack> contents, int slot) {
         Inventory inventory = player.getInventory();
         int selected = inventory.getSelectedSlot();
-        if (slot == selected) {
-            return false;
-        }
-        if (Inventory.isHotbarSlot(slot)) {
-            inventory.setSelectedSlot(slot);
-            player.connection.send(new ClientboundSetHeldSlotPacket(slot));
+        ItemStack held = inventory.getItem(selected);
+        ItemStack tool = contents.get(slot);
+        int free = -1;
+        if (held.isEmpty() || Toolbelt.accepts(held)) {
+            contents.set(slot, held);
         } else {
-            ItemStack held = inventory.getItem(selected);
-            inventory.setItem(selected, inventory.getItem(slot));
-            inventory.setItem(slot, held);
+            free = inventory.getFreeSlot();
+            if (free < 0) {
+                player.sendOverlayMessage(Component.translatable("message.emergentstealth.tool.hands_full"));
+                return false;
+            }
+            contents.set(slot, ItemStack.EMPTY);
         }
+        // Store first: the held item may be the belt itself, and moving it must carry the new contents.
+        Toolbelt.store(belt, contents);
+        if (free >= 0) {
+            inventory.setItem(free, held);
+        }
+        inventory.setItem(selected, tool);
+        inventory.setChanged();
         return true;
     }
 

@@ -49,9 +49,11 @@ public final class ActiveToolHud implements GuiLayer {
         Paint.regularRing(graphics, x + 8, y + 8, 12.0F, 4, 0.0F, 1.0F, theme.color(SumiTheme.INK_SOFT));
         ItemStack stack = new ItemStack(tool.item());
         graphics.item(stack, x, y);
-        if (count == 0) {
+        // Out of the belt: dimmed, unless it's the hand tool you just drew from it.
+        boolean inHand = count == 0 && player.getMainHandItem().is(tool.item());
+        if (count == 0 && !inHand) {
             Paint.regular(graphics, x + 8, y + 8, 11.0F, 4, 0.0F, Paint.fade(theme.color(SumiTheme.INK), 0.55F));
         }
-        graphics.itemDecorations(minecraft.font, stack, x, y, count == 1 ? "" : String.valueOf(count));
+        graphics.itemDecorations(minecraft.font, stack, x, y, count == 1 || inHand ? "" : String.valueOf(count));
     }
 }

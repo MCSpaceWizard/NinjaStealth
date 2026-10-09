@@ -862,6 +862,41 @@
         "......bbbb......",
         "................"
       ]
+    },
+    {
+      "path": "item/toolbelt",
+      "shape": "pixelmap",
+      "key": {
+        "G": "gold",
+        "g": "#8a6a12",
+        "H": "#9c6438",
+        "L": "#7a4a2a",
+        "D": "#4a2a17",
+        "P": "#5c3a22",
+        "R": "lacquer",
+        "r": "lacquer_dark",
+        "s": "steel",
+        "w": "wood",
+        "k": "ink"
+      },
+      "rows": [
+        "................",
+        "................",
+        "..........s.....",
+        "..........s..k..",
+        "..........s..w..",
+        "GGGGHHHHHHsHHwHH",
+        "GLLGLLLLLLLLLLLL",
+        "GGGGLLLLLLLLLLLL",
+        "DDgDDDDDDDDDDDDD",
+        "....RRRRR.PPPPP.",
+        "....rRRRr.PPPPP.",
+        "....PPGPP.PPPPP.",
+        "....PPPPP.PPPPP.",
+        "....PPPPP.DPPPD.",
+        "....DDDDD..DDD..",
+        "................"
+      ]
     }
   ]
 }

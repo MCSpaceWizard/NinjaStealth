@@ -39,6 +39,7 @@ Priorities follow the Beta 1 plan: what testers see most comes first.
 | 19b | `particle/dizzy_star.png` | 8×8 | P | A star circling a dazed head (white, tinted gold in code) |
 | 19c | `particle/glint.png` | 8×8 | P | A small four-point glint: caltrops at night, blinded eyes |
 | 19d | `particle/tag_ring.png` | 16×16 | P | Spyglass tag ping: a thin ring (white, tinted gold in code) |
+| 19e | `item/toolbelt.png` | 16×16 | P | Leather toolbelt with a gold buckle, two pouches and tool handles poking out |
 
 ## Priority 2: stealth gear and NPC readability
 

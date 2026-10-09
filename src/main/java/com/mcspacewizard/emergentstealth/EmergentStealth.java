@@ -41,6 +41,7 @@ public final class EmergentStealth {
         ESCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         ESDebugSubscriptions.DEBUG_SUBSCRIPTIONS.register(modEventBus);
         ESSounds.SOUND_EVENTS.register(modEventBus);
+        com.mcspacewizard.emergentstealth.registry.ESMenus.MENUS.register(modEventBus);
         ESGameTests.TEST_FUNCTIONS.register(modEventBus);
 
         modEventBus.addListener(ESRegistries::onNewDataPackRegistries);

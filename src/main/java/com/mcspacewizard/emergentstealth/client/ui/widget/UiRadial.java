@@ -31,7 +31,13 @@ import net.minecraft.world.item.ItemStack;
  * The owner reads {@link #selected()} (for hold-and-release menus) or listens with {@link #onChoose}.
  */
 public class UiRadial extends UiNode {
-    /** One wedge: an item icon, a live count (hidden when 1 or less) and whether to mark it with a seal. */
+    /** Alpha of a wedge with no icon (an empty slot). */
+    private static final float BLANK_ALPHA = 0.55F;
+
+    /**
+     * One wedge: an item icon, a live count (hidden when 1 or less) and whether to mark it with a seal. An empty
+     * icon draws a faint, empty wedge (it can still be pointed at and chosen).
+     */
     public record Entry(ItemStack icon, IntSupplier count, BooleanSupplier marked) {}
 
     private static final float GAP_PX = 1.2F;
@@ -201,7 +207,8 @@ public class UiRadial extends UiNode {
         float gap = n > 1 ? GAP_PX / r1 : 0.0F;
         float start = a - sweep / 2.0F + gap;
         float span = Math.max(0.01F, sweep - gap * 2.0F);
-        float previous = Paint.pushAlpha(Math.min(1.0F, p));
+        boolean blank = entry.icon().isEmpty();
+        float previous = Paint.pushAlpha(Math.min(1.0F, p) * (blank ? BLANK_ALPHA : 1.0F));
 
         Paint.paperArc(g, wx, wy, w0, w1, start, span, Paint.mix(theme.color(SumiTheme.PAPER), theme.color(SumiTheme.PAPER_SHADE), 0.25F * (1.0F - h)));
         if (h > 0.01F) {
@@ -216,11 +223,16 @@ public class UiRadial extends UiNode {
         float ix = wx + ca * rm;
         float iy = wy + sa * rm;
         float scale = (1.0F + 0.3F * h) * Math.min(1.0F, p);
-        g.pose().pushMatrix();
-        g.pose().translate(ix, iy);
-        g.pose().scale(scale, scale);
-        g.item(entry.icon(), -8, -8);
-        g.pose().popMatrix();
+        if (blank) {
+            // An empty slot: a small ink ring where the icon would sit.
+            Paint.ring(g, ix, iy, 3.0F * scale, 4.0F * scale, Paint.fade(theme.color(h > 0.5F ? SumiTheme.TEXT_ON_INK : SumiTheme.INK_SOFT), 0.8F));
+        } else {
+            g.pose().pushMatrix();
+            g.pose().translate(ix, iy);
+            g.pose().scale(scale, scale);
+            g.item(entry.icon(), -8, -8);
+            g.pose().popMatrix();
+        }
 
         Font font = ctx.font();
         int text = h > 0.5F ? theme.color(SumiTheme.TEXT_ON_INK) : theme.color(SumiTheme.TEXT);

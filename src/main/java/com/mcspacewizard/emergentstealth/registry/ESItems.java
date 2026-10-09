@@ -93,4 +93,9 @@ public final class ESItems {
     /** Map-maker tool: locks/unlocks a door or chest and hands out its key. */
     public static final DeferredItem<com.mcspacewizard.emergentstealth.item.LocksmithKitItem> LOCKSMITH_KIT = ITEMS.registerItem("locksmiths_kit",
             com.mcspacewizard.emergentstealth.item.LocksmithKitItem::new, p -> p.stacksTo(1).rarity(net.minecraft.world.item.Rarity.EPIC));
+    /** Holds 8 stealth tools for the tool wheel and quick use. */
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.tool.ToolbeltItem> TOOLBELT = ITEMS.registerItem("toolbelt",
+            com.mcspacewizard.emergentstealth.tool.ToolbeltItem::new,
+            p -> p.stacksTo(1).component(net.minecraft.core.component.DataComponents.CONTAINER,
+                    net.minecraft.world.item.component.ItemContainerContents.EMPTY));
 }

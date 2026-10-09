@@ -252,9 +252,8 @@
   "key.emergentstealth.tool_wheel": "Tool Wheel (hold)",
   "key.emergentstealth.quick_use": "Use Active Tool",
   "gui.emergentstealth.tool_wheel": "Tool Wheel",
-  "gui.emergentstealth.tool_wheel.empty": "No stealth tools in your inventory",
   "gui.emergentstealth.tool_wheel.hint": "Point at a tool",
-  "gui.emergentstealth.tool_wheel.release": "Release %s to choose · 1–9 pick · Esc keeps the current tool",
+  "gui.emergentstealth.tool_wheel.release": "Release %s to choose · 1–8 pick · Esc keeps the current tool",
   "message.emergentstealth.tool.none": "No active tool: hold the Tool Wheel key to choose one",
   "message.emergentstealth.tool.out": "No %s left",
   "death.attack.emergentstealth.caltrops": "%1$s stepped on caltrops one time too many",
@@ -483,5 +482,13 @@
   "item.emergentstealth.blowgun.hint": "Quick use takes it in hand; shoots sleep darts",
   "item.emergentstealth.sleep_dart.hint": "Blowgun ammo: a stagger, then sleep. Silent",
   "item.emergentstealth.lockpick.hint": "Use on a locked door or chest: the timing ring",
-  "item.minecraft.spyglass.hint": "Look at a guard for a second to tag him for 60 s"
+  "item.minecraft.spyglass.hint": "Look at a guard for a second to tag him for 60 s",
+  "item.emergentstealth.toolbelt": "Toolbelt",
+  "container.emergentstealth.toolbelt.hint": "Tools in the belt fill the Tool Wheel. Arrows and darts stay in your inventory.",
+  "gui.emergentstealth.tool_wheel.no_belt": "No toolbelt",
+  "gui.emergentstealth.tool_wheel.no_belt.hint": "Carry a toolbelt and use it to slot in your tools",
+  "gui.emergentstealth.tool_wheel.empty_slot": "Empty slot",
+  "gui.emergentstealth.tool_wheel.empty_slot.hint": "Use your toolbelt to slot a tool here",
+  "message.emergentstealth.tool.no_belt": "You need a toolbelt: tools are drawn from it",
+  "message.emergentstealth.tool.hands_full": "No room to put away what you're holding"
 }
