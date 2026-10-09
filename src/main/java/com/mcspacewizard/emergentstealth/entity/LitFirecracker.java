@@ -5,6 +5,7 @@ import com.mcspacewizard.emergentstealth.registry.ESItems;
 import com.mcspacewizard.emergentstealth.stealth.sound.NoiseEvent;
 import com.mcspacewizard.emergentstealth.stealth.sound.NoiseKind;
 import com.mcspacewizard.emergentstealth.stealth.sound.Noises;
+import com.mcspacewizard.emergentstealth.tool.ToolEffects;
 
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -93,6 +94,7 @@ public class LitFirecracker extends Entity implements ItemSupplier {
             // The fuse fizzing (client only; joiners mid-fuse just see a few extra sparks).
             this.level().addParticle(ParticleTypes.SMALL_FLAME, getX(), getY() + 0.2, getZ(), 0.0, 0.02, 0.0);
             this.level().addParticle(ParticleTypes.SMOKE, getX(), getY() + 0.25, getZ(), 0.0, 0.03, 0.0);
+            ToolEffects.fuseSparks(this.level(), this);
         }
     }
 
@@ -106,6 +108,7 @@ public class LitFirecracker extends Entity implements ItemSupplier {
         level.sendParticles(ParticleTypes.FIREWORK, at.x, at.y, at.z, 10, 0.05, 0.05, 0.05, 0.12);
         level.sendParticles(ParticleTypes.CRIT, at.x, at.y, at.z, 8, 0.1, 0.1, 0.1, 0.3);
         level.sendParticles(ParticleTypes.SMOKE, at.x, at.y, at.z, 4, 0.1, 0.05, 0.1, 0.02);
+        ToolEffects.crackle(level, at, this.random);
         if (big) {
             level.sendParticles(ParticleTypes.EXPLOSION, at.x, at.y, at.z, 1, 0.0, 0.0, 0.0, 0.0);
         }

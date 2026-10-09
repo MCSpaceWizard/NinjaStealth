@@ -1,9 +1,12 @@
 package com.mcspacewizard.emergentstealth.client.tool;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
+import com.mcspacewizard.emergentstealth.client.ui.Paint;
+import com.mcspacewizard.emergentstealth.client.ui.Sumi;
 import com.mcspacewizard.emergentstealth.registry.ESAttachments;
 import com.mcspacewizard.emergentstealth.tool.ActiveTool;
 import com.mcspacewizard.emergentstealth.tool.Toolkit;
+import com.mcspacewizard.emergentstealth.ui.SumiTheme;
 
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -23,7 +26,7 @@ public final class ActiveToolHud implements GuiLayer {
     /** Mirrors LightGemHud's layout: the gem is 32 px wide, centred, 58 px above the bottom edge. */
     private static final int GEM_HALF_WIDTH = 16;
     private static final int BOTTOM_OFFSET = 58;
-    private static final int GAP = 3;
+    private static final int GAP = 7;
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
@@ -39,12 +42,18 @@ public final class ActiveToolHud implements GuiLayer {
         int count = Toolkit.count(player.getInventory(), tool.item());
         int x = graphics.guiWidth() / 2 + GEM_HALF_WIDTH + GAP;
         int y = graphics.guiHeight() - BOTTOM_OFFSET;
-        graphics.fill(x - 1, y - 1, x + 17, y + 17, 0x60000000);
+        // A small paper diamond behind the icon (Sumi), the tool sitting on it.
+        SumiTheme theme = Sumi.theme();
+        Paint.regular(graphics, x + 8, y + 9, 12.5F, 4, 0.0F, Paint.fade(theme.color(SumiTheme.INK), 0.35F));
+        Paint.paperPolygon(graphics, Paint.regularPoints(x + 8, y + 8, 12.0F, 4, 0.0F), Paint.fade(theme.color(SumiTheme.PAPER), 0.92F));
+        Paint.regularRing(graphics, x + 8, y + 8, 12.0F, 4, 0.0F, 1.0F, theme.color(SumiTheme.INK_SOFT));
         ItemStack stack = new ItemStack(tool.item());
         graphics.item(stack, x, y);
-        if (count == 0) {
-            graphics.fill(x, y, x + 16, y + 16, 0xA0303030);
+        // Out of the belt: dimmed, unless it's the hand tool you just drew from it.
+        boolean inHand = count == 0 && player.getMainHandItem().is(tool.item());
+        if (count == 0 && !inHand) {
+            Paint.regular(graphics, x + 8, y + 8, 11.0F, 4, 0.0F, Paint.fade(theme.color(SumiTheme.INK), 0.55F));
         }
-        graphics.itemDecorations(minecraft.font, stack, x, y, count == 1 ? "" : String.valueOf(count));
+        graphics.itemDecorations(minecraft.font, stack, x, y, count == 1 || inHand ? "" : String.valueOf(count));
     }
 }

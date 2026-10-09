@@ -210,7 +210,7 @@ public class UiChip extends UiNode {
 
 **`Paint` helpers** (all take the `GuiGraphicsExtractor` first, float GUI pixels):
 - Shapes: `rect`, `gradientV`, `gradientH`, `polygon` (convex), `outline`, `cutRect` / `cutRectPoints`, `circle`, `regular` / `regularPoints` / `regularRing` (diamonds, hexagons), `ring`, `arc`, `glow`, `line`, `dashed`, `bezier` (points).
-- Ink and paper: `paperPolygon`, `inkPolygon`, `panel` (a full paper card), `brushLine`, `brush` (tapered polyline, with a `progress` for reveals). Brushes take a fixed `seed` so the stroke doesn't change between frames.
+- Ink and paper: `paperPolygon`, `inkPolygon`, `paperArc` / `inkArc` (ring sectors, for wedges), `panel` (a full paper card), `brushLine`, `brush` (tapered polyline, with a `progress` for reveals). Brushes take a fixed `seed` so the stroke doesn't change between frames.
 - Text: `text`, `textCentered`, `textScaled`, `wrapped` (returns height), `wrappedHeight`.
 - Colour: `fade`, `mix`, and `pushAlpha` / `popAlpha` (a global alpha multiplier for fading whole subtrees; always pop with the value push returned).
 - Transforms and clipping come from vanilla: `g.pose().pushMatrix()/translate/scale/rotate/popMatrix()`, `g.enableScissor(...)`/`disableScissor()`. Items: `g.item(stack, x, y)` (see `SkillCanvas`).
@@ -262,6 +262,7 @@ Prefer drawing in code. If a screen really needs a bitmap (an icon, a sprite):
 | `UiScroll` | Inertial vertical scroll | `new UiScroll(content)`, `content()`, `state()` (`InertialScroll`) |
 | `UiPager` | Swipeable pages | `new UiPager(pages, initial)`, `add(page)`, `onChange(IntConsumer)`, `select(i)`, `index()`, `position()`, `dragFrom` / `releaseFrom`, `isDragging()` |
 | `UiTabBar` | Tabs that follow a pager | `new UiTabBar(Orientation.VERTICAL \| HORIZONTAL, pager::position, pager::select)`, `heading(label)`, `tab(label, page[, accent])`, `rowHeight(int)` |
+| `UiRadial` | Radial menu of item wedges round a paper disc (the tool wheel) | `new UiRadial(List<Entry(icon, count, marked)>)`, `centre(IntFunction<List<Component>>)`, `caption(...)`, `onChoose(IntConsumer)`, `selected()`; mouse direction, wheel, arrows, 1–9; an empty icon draws a faint, empty wedge (an empty slot); maths in `ui/RadialMenu` |
 | `UiDialogueBox` | Portrait, name seal, typewriter, choices | `new UiDialogueBox(IntConsumer onChoice, Runnable onContinue)`, `show(Line, now)`, `Line(speaker, text, choices, portrait)`, `MAX_CHOICES` |
 
 Screen-private examples worth copying from: `ConfigRow` (a row composed of a label and a control), `SkillCanvas` (pan/zoom canvas with its own drag, scroll and keyboard handling), `SkillTreeScreen.PointsSeal` and `SumiConfigScreen.Seal` (tiny draw-only nodes).

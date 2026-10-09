@@ -66,8 +66,12 @@ public final class Blinding {
                 if (npc.isBody()) {
                     continue;
                 }
+                boolean wasStaggering = isStaggering(npc, now);
                 npc.blind(now + BLIND_TICKS);
                 stagger(npc, now + BLIND_TICKS);
+                if (!wasStaggering) {
+                    ToolEffects.dizzy(level, npc, BLIND_TICKS);
+                }
             } else if (target instanceof Mob) {
                 target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, BLIND_TICKS, 0));
                 target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, BLIND_TICKS, 1));
@@ -126,6 +130,7 @@ public final class Blinding {
                 continue;
             }
             var random = npc.getRandom();
+            ToolEffects.blindedEyes(level, npc);
             npc.getNavigation().stop();
             float yaw = npc.getYRot() + Mth.nextFloat(random, -60.0F, 60.0F);
             npc.setYRot(yaw);

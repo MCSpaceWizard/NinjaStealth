@@ -70,4 +70,25 @@ public final class ESEntities {
     public static void onAttributeCreation(EntityAttributeCreationEvent event) {
         event.put(STEALTH_NPC.get(), StealthNpc.createAttributes().build());
     }
+
+    // --- Beta toolkit, part B (design doc 21 §2) ---
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.mcspacewizard.emergentstealth.entity.WaterArrow>> WATER_ARROW =
+            arrow("water_arrow", com.mcspacewizard.emergentstealth.entity.WaterArrow::new);
+    public static final DeferredHolder<EntityType<?>, EntityType<com.mcspacewizard.emergentstealth.entity.FireArrow>> FIRE_ARROW =
+            arrow("fire_arrow", com.mcspacewizard.emergentstealth.entity.FireArrow::new);
+    public static final DeferredHolder<EntityType<?>, EntityType<com.mcspacewizard.emergentstealth.entity.SleepDart>> SLEEP_DART =
+            arrow("sleep_dart", com.mcspacewizard.emergentstealth.entity.SleepDart::new);
+
+    /** Arrow-sized projectile, tracked like vanilla arrows. */
+    private static <T extends net.minecraft.world.entity.Entity> DeferredHolder<EntityType<?>, EntityType<T>> arrow(String name, EntityType.EntityFactory<T> factory) {
+        ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, EmergentStealth.id(name));
+        return ENTITY_TYPES.register(name, () -> EntityType.Builder.of(factory, MobCategory.MISC)
+                .noLootTable()
+                .sized(0.5F, 0.5F)
+                .eyeHeight(0.13F)
+                .clientTrackingRange(4)
+                .updateInterval(20)
+                .build(key));
+    }
 }

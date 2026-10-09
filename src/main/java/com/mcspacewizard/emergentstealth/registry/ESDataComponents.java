@@ -32,4 +32,10 @@ public final class ESDataComponents {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<net.minecraft.core.BlockPos>> ROPE_CORNER =
             COMPONENTS.registerComponentType("rope_corner", b -> b.persistent(net.minecraft.core.BlockPos.CODEC)
                     .networkSynchronized(net.minecraft.core.BlockPos.STREAM_CODEC));
+
+    // --- Beta toolkit, part B (design doc 21 §3) ---
+
+    /** The lock a key opens: a key name such as {@code gatehouse}. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> KEY_ID =
+            COMPONENTS.registerComponentType("key_id", b -> b.persistent(Codec.STRING).networkSynchronized(ByteBufCodecs.STRING_UTF8));
 }
