@@ -16,6 +16,38 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Sumi UI framework: config screen, skill tree (K), dialogue preview 🧪
+
+Design: [doc 31](design/31-ui-framework.md) §0. Geometric shapes drawn in code, procedural paper grain and brushed ink, eased animation, inertial scrolling and swipeable tabs. Screenshots: [docs/screenshots/ui/](screenshots/ui/).
+
+**Automated checks (already passing):** 11 GameTests (`ui/*`, 75 total):
+- easing curves and tweens (retargeting mid-flight, zero duration snaps)
+- inertial scroll (wheel glide, fling, rubber band, instant with reduced motion)
+- swipe pager (snap distance, flick, edge resistance)
+- layout maths (flex, offsets, grid)
+- theme JSON parsing and fallbacks (single-token overrides, bad colours, layering)
+- config spec to widget mapping (tabs, toggles, sliders, slider rounding)
+- the skill tree model agrees with the server's unlock rules; keyboard neighbours
+- typewriter timing, paper noise tiling
+- `/es dev dialogue` is registered and only messages modded clients
+- `en_us.json` parses strictly (a merge once broke it and every mod text showed as a raw key)
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| U.1 | Config screen | Mods → Emergent Stealth → Config (or `/esui config` in a world) | A paper sheet with a vermilion seal. Sidebar tabs grouped **Client** (HUD, Visual Lighting, Interface) and **Server** (Perception, Detection, Behaviour, Sound). Toggles, sliders and values for every option |
+| U.2 | Motion | Click between tabs; drag a page sideways; scroll a long tab with the wheel and by dragging | Pages slide and snap; the ink marker glides along the sidebar. Scrolling glides, a quick drag flings and coasts, the ends rubber-band. Rows slide in one after another |
+| U.3 | Editing | Change a toggle and a slider (drag, click, or focus with Tab and use the arrows; Shift = ×10) | The value changes at once; it's saved when you close (check `run/config/emergentstealth-client.toml`). **Reset tab** restores defaults. Hovering a row shows its comment, default and range |
+| U.4 | Server values | Open the config in your own singleplayer world; then on a server or a LAN-opened world | Editable in singleplayer. On a server (or LAN) server tabs are read-only, with a note in the footer. From the main menu: "Join a world to see these settings" |
+| U.5 | Classic list | Footer **Classic list** | NeoForge's standard config screen (fallback) |
+| U.6 | Skill tree | Press **K** (Controls → Emergent Stealth). `/es skills points @s shinobi 3` first | Two paths, **Shinobi** (ink) and **Shogunate** (vermilion). Seals at their grid places with brush-stroke prerequisites; dashed lines for missing ones. Learned seals are inked; buyable ones glow gold with a red ring; capstones are gold hexagons. The red seal top-right shows unspent points; the bar shows Insight towards the next point |
+| U.7 | Hover card | Hover a seal | A paper card: name, description, effects (e.g. "Footsteps -15%"), cost, prerequisites, and a status line (Learned / Click to learn / Not enough points / Learn a prerequisite first / Mastery challenge) |
+| U.8 | Unlock | Click a glowing seal | A spinner while the server answers, then the seal is stamped in ink with a sound and the point counter drops. Clicking a seal you can't buy shakes it. With the server rejecting (e.g. no points) nothing changes |
+| U.9 | Navigation | Wheel to zoom (around the cursor), drag to pan when zoomed in; drag sideways or Q/E to switch path; Tab, then arrows + Enter | Smooth zoom and pan; the path tabs follow the swipe. Keyboard focus shows a rotating dashed ring and the card |
+| U.10 | Dialogue preview | `/es dev dialogue` (op) or `/esui dialogue` | A dialogue box at the bottom: a guard portrait, his name on a seal, typewriter text. Click/Space finishes the line; then up to 4 choices with number keys 1-4 (or click, or arrows + Enter). Choice 3 leads to a second exchange |
+| U.11 | Accessibility | Config → Interface: **High Contrast**, **Reduced Motion**, **Dialogue Text Speed** (0 = instant). Reopen a screen | High contrast: brighter paper, black text, stronger lines. Reduced motion: no slides, glides or flings. GUI scale follows vanilla |
+| U.12 | Theming | Resource pack with `assets/emergentstealth/ui/theme.json` overriding e.g. `"colors": {"paper": "#f4efe2"}`, or `textures/gui/sumi/paper.png` | Only that token changes; everything else keeps the defaults. A paper PNG replaces the generated grain |
+| U.13 | Dedicated server | `./gradlew runServer` | Starts normally (no client classes on the server) |
+
 ## Beta toolkit, part A: pebble, smoke bomb, firecracker, blinding powder, caltrops 🧪
 
 **Automated checks (already passing):** 8 more GameTests (64 total):
@@ -50,7 +82,7 @@ All five are in the creative tab and the `#emergentstealth:tools` tag. The cheap
 - Insight becomes skill points
 - Still Breath: works only crouched and still, with cooldown
 
-The skill tree **screen** (K) is coming with the Sumi UI framework. Until then, use the commands below.
+The skill tree **screen** is on **K** (see the Sumi section above). The commands below still work for testing.
 
 | # | Feature | How to test | Expected |
 |---|---|---|---|

@@ -69,8 +69,11 @@ final class ConfigRow extends UiNode {
         if (entry.comment() != null && !entry.comment().isBlank()) {
             lines.add(Component.literal(entry.comment().strip()));
         }
-        lines.add(Component.translatable("ui.emergentstealth.config.default", formatValue(entry.value().getDefault()))
-                .withStyle(ChatFormatting.ITALIC));
+        if (entry.comment() == null || !entry.comment().contains("Default:")) {
+            // NeoForge usually appends "Default:" and "Range:" to spec comments itself.
+            lines.add(Component.translatable("ui.emergentstealth.config.default", formatValue(entry.value().getDefault()))
+                    .withStyle(ChatFormatting.ITALIC));
+        }
         if (entry.restart() != ModConfigSpec.RestartType.NONE) {
             lines.add(Component.translatable("ui.emergentstealth.config.restart"));
         }

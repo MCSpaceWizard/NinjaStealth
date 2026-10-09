@@ -173,7 +173,10 @@ final class UiTests {
     static void configMapping(GameTestHelper helper) {
         List<ConfigMapping.Section> client = ConfigMapping.sections(ESConfig.CLIENT_SPEC);
         List<String> names = client.stream().map(ConfigMapping.Section::name).toList();
-        helper.assertTrue(names.equals(List.of("hud", "visual_lighting", "ui")), "Client tabs in spec order, got " + names);
+        helper.assertTrue(names.size() >= 3 && names.subList(0, 3).equals(List.of("hud", "visual_lighting", "ui")),
+                "Client tabs in spec order, top level only, got " + names);
+        helper.assertTrue(client.stream().filter(sec -> sec.name().equals("ui")).findFirst().orElseThrow().entries().size() == 3,
+                "The ui tab holds only its own three options (sections must be popped), got " + client.get(2).entries().size());
         ConfigMapping.Entry lightGem = client.getFirst().entries().getFirst();
         helper.assertTrue(lightGem.name().equals("showLightGem") && lightGem.kind() == ConfigMapping.Kind.TOGGLE, "Booleans are toggles");
         helper.assertTrue(lightGem.langKey().equals("emergentstealth.configuration.showLightGem"), "Label lang key");
@@ -276,6 +279,23 @@ final class UiTests {
                     "A client without our channel gets nothing (and nothing throws)");
         } finally {
             TestPlayers.remove(player);
+        }
+        helper.succeed();
+    }
+
+    /**
+     * The mod's language file parses strictly. Several branches append to it; one missing comma in a merge
+     * makes the game skip the whole file, so every mod text shows as a raw key.
+     */
+    static void langFileValid(GameTestHelper helper) {
+        try (var stream = UiTests.class.getResourceAsStream("/assets/emergentstealth/lang/en_us.json")) {
+            helper.assertTrue(stream != null, "en_us.json is packaged");
+            var reader = new com.google.gson.stream.JsonReader(new java.io.InputStreamReader(stream, java.nio.charset.StandardCharsets.UTF_8));
+            com.google.gson.JsonObject lang = new com.google.gson.GsonBuilder().setStrictness(com.google.gson.Strictness.STRICT).create()
+                    .fromJson(reader, com.google.gson.JsonObject.class);
+            helper.assertTrue(lang.has("ui.emergentstealth.config.title") && lang.has("key.emergentstealth.skills"), "Sumi keys present");
+        } catch (java.io.IOException | RuntimeException e) {
+            helper.fail("en_us.json doesn't parse: " + e.getMessage());
         }
         helper.succeed();
     }

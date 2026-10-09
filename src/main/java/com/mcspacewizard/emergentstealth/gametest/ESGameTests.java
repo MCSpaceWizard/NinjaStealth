@@ -91,6 +91,7 @@ public final class ESGameTests {
         test("ui/typewriter", UiTests::typewriter);
         test("ui/paper_noise", UiTests::paperNoise);
         test("ui/dev_dialogue_command", UiTests::devDialogueCommand);
+        test("ui/lang_file_valid", UiTests::langFileValid);
     }
 
     private static void isolated(String name, Consumer<GameTestHelper> function, int maxTicks) {

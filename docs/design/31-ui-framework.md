@@ -1,8 +1,10 @@
-# 31 — UI framework: "Sumi" (ink and paper) 📄
+# 31 — UI framework: "Sumi" (ink and paper) ✅ first pass implemented
+
+> **Status (2026-10-09):** implemented and merged (PR #2): the Sumi core, the config screen, the skill tree on **K** and the dialogue preview, with 11 `ui/*` GameTests. Screenshots: [docs/screenshots/ui](../screenshots/ui/). §0 lists the decisions to review. Not yet: text field, dropdown, list widgets, a gamepad mapping, a custom brush font.
 
 You asked (2026-10-08) for a **custom GUI framework** so the config, the skill tree, and later menus and dialogue look attractive and consistent. It follows the ink-and-paper accent theme (U-02).
 
-## 0. Direction and design pass (2026-10-08) 📄 for review
+## 0. Direction and design pass (2026-10-08) 📄 for review (implemented)
 
 **Direction (your request, going with the recommendation from HANDOFF):**
 - No flat colours anywhere in the GUI.

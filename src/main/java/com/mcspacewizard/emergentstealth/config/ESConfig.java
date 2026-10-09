@@ -173,6 +173,8 @@ public final class ESConfig {
                 .define("reducedMotion", false);
         UI_TYPEWRITER_SPEED = client.comment("Dialogue text speed in characters per second. 0 shows each line at once.")
                 .defineInRange("typewriterSpeed", 45, 0, 400);
+        client.pop();
+
         client.push("animation");
         PROCEDURAL_CRAWL = client.comment("Crawling players use the procedural elbow crawl instead of vanilla's swimming arms.")
                 .define("proceduralCrawl", true);

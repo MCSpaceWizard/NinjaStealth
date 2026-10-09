@@ -86,7 +86,7 @@ public class UiDialogueBox extends UiNode {
         Font font = net.minecraft.client.Minecraft.getInstance().font;
         int textH = line == null ? 20 : font.split(line.text(), Math.max(20, textW)).size() * (font.lineHeight + 2);
         int choices = line == null ? 0 : Math.min(MAX_CHOICES, line.choices().size());
-        int body = textH + (choices > 0 ? 6 + choices * 15 : 12);
+        int body = 8 + textH + (choices > 0 ? 8 + choices * 15 : 12); // text starts 8 below the padding
         return Math.max(PORTRAIT + pad * 2, body + pad * 2) + 6;
     }
 
