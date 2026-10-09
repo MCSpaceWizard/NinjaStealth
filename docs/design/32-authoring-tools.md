@@ -86,6 +86,8 @@ A **compound** is one or more structure templates plus markers, all relative to 
 > - Code: `authoring/Ledger`, `LedgerPayloads`, `item/CompoundLedgerItem`, `client/authoring/LedgerScreen`. Test: `authoring/ledger_flow`.
 > **Examples (2026-10-09):** three compounds ship in the mod as `emergentstealth:examples/{samurai_fort, shrine_watch, cherry_grove_estate}` (a garrisoned fort with a lamplighter, a shrine watched at night, and two Cherry Grove modules on one ground line). `tools/compounds/make_examples.py` writes them and checks every waypoint, post and spawn against the templates (a floor to stand on, a walkable leg between waypoints); the `compounds/examples` GameTest places each at every rotation. Ground lines are set by hand there: a module's offset y is `-1 - ground`, so the ground layer replaces the block under the placer's feet.
 
+> **Large compound (2026-10-09):** `emergentstealth:examples/takamori_castle`, 150 × 150 on three levels. Its ground, curtain wall, corner towers, gate, terraces and stairs are one generated **site** template (`emergentstealth:sites/takamori_castle`, from `tools/compounds/sites.py`), with a 6-deep foundation and the air above cleared; the keep, residence, shrine and barracks are the builder's modules placed on it, each module's `level` raising its ground line onto a terrace (offset y = `level - 1 - ground`). The checker now composes modules in order, so a later module's blocks win and the site shows through where a template stores nothing. How compounds should meet real terrain (fitting on placement, worldgen): [doc 33](33-compound-terrain.md).
+
 The planned flow:
 1. Place a structure with the viewer.
 2. Use the **Compound Ledger** item on it to start a compound. It takes the structure's bounds and origin.

@@ -220,7 +220,7 @@ public final class CompoundTests {
     }
 
     /** The example compounds shipped in the mod (made by {@code tools/compounds/make_examples.py}). */
-    private static final List<String> EXAMPLES = List.of("samurai_fort", "shrine_watch", "cherry_grove_estate");
+    private static final List<String> EXAMPLES = List.of("samurai_fort", "shrine_watch", "cherry_grove_estate", "takamori_castle");
 
     /**
      * Each example compound loads, and placed at every rotation, every route waypoint, post and NPC stands on
