@@ -1,4 +1,4 @@
-# 32 — Authoring tools: structure viewer, zones, compounds 📄 for review
+# 32 — Authoring tools: structure viewer, zones, compounds ⏳ approved, in progress
 
 > **2026-10-09.** The user's top priority: browse the builder's structures and turn them into playable compounds. This pulls the zone tool forward from S9 and the NPC spawner GUI forward from S19. Zone *gameplay* (alert levels, propagation, bells) stays in S9 (doc 18); this doc adds the tools, the data and a minimal trespass rule.
 
@@ -102,11 +102,15 @@ Saving adds a spawn marker to the compound under the cursor, or spawns the NPC r
 - **Viewer:** place and undo restore the world exactly, and template payload chunking reassembles.
 - **Spawner:** a saved spawn produces an NPC with the right archetype, schedule and activity.
 
-## 7. Open questions
+## 7. Decisions (2026-10-09)
 
-1. **Tools:** creative-only items (Surveyor's Plan, Surveyor's Rope, Compound Ledger, Muster Roll) plus matching commands? Or commands only for now?
-2. **Where saved compounds go:** the world's generated datapack plus an export command (proposed), or straight into a folder you then commit?
-3. **Trespass rule now:** OK to add the minimal restricted/hostile reaction now, or keep zones as data only until S9?
-4. **NPC persistence:** spawned guards are normal saved entities, and missing ones come back only on `/es compound reset` until the garrison rules arrive (Q6, S9). OK?
-5. **First compound:** samurai_mini_fort, or a Cherry Grove estate assembled from modules (gatehouse, courtyard manor, teahouse, pagoda)?
-6. **Module ground lines:** should the viewer find each module's ground line automatically (the highest layer that is mostly ground or water at the edges), with a manual override saved per module?
+**Answered by the user:**
+1. **Tools:** creative/op-only items (Surveyor's Plan, Surveyor's Rope, Compound Ledger, Muster Roll) **plus** matching commands.
+2. **Trespass rule now:** yes, the minimal restricted/hostile reaction (§2). S9 builds on it.
+3. **First compound:** samurai_mini_fort. It also serves as the M1 test compound.
+
+**Proposals taken as the default** (say if you want them changed):
+
+4. Saved compounds go to the world's generated datapack. `/es compound export` copies them to `run/compounds/` for adding to the mod.
+5. Spawned guards are normal saved entities. Missing ones come back only on `/es compound reset` until the garrison rules arrive (Q6, S9).
+6. Each module's ground line is found automatically: the highest layer that is mostly ground or water at the edges. A manual override is saved per module.
