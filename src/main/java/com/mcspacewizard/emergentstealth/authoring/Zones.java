@@ -50,4 +50,13 @@ public final class Zones extends SavedData {
         }
         return removed;
     }
+
+    /** The first free {@code zone_<n>} name. */
+    public String nextName() {
+        int i = 1;
+        while (zones.containsKey("zone_" + i)) {
+            i++;
+        }
+        return "zone_" + i;
+    }
 }

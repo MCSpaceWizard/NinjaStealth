@@ -57,4 +57,7 @@ public final class ESItems {
     // Authoring tools (design doc 32): creative and game masters only, checked on the server.
     /** Browse and place structures with a ghost preview. */
     public static final DeferredItem<Item> SURVEYORS_PLAN = ITEMS.registerItem("surveyors_plan", Item::new, p -> p.stacksTo(1));
+    /** Mark zones: click two corners for a box, shift-click the second to add it to the selected zone, use in the air to edit. */
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.item.SurveyorsRopeItem> SURVEYORS_ROPE = ITEMS.registerItem("surveyors_rope",
+            com.mcspacewizard.emergentstealth.item.SurveyorsRopeItem::new, p -> p.stacksTo(1));
 }

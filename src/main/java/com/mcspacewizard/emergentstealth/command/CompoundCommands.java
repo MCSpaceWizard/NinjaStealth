@@ -87,7 +87,8 @@ final class CompoundCommands {
                                 .executes(CompoundCommands::addRoute)))
                         .then(Commands.literal("npcs").then(Commands.argument("targets", EntityArgument.entities())
                                 .executes(CompoundCommands::addNpcs)))
-                        .then(Commands.literal("zone").then(Commands.argument("zone", StringArgumentType.word())
+                        .then(Commands.literal("zone").then(Commands.argument("zone", StringArgumentType.word()).suggests(ZoneCommands.ZONES)
+                                .executes(CompoundCommands::copyZone)
                                 .then(Commands.argument("access", StringArgumentType.word()).suggests(ACCESS)
                                         .then(Commands.argument("from", BlockPosArgument.blockPos())
                                                 .then(Commands.argument("to", BlockPosArgument.blockPos())
@@ -204,6 +205,16 @@ final class CompoundCommands {
         BoundingBox box = BoundingBox.fromCorners(BlockPosArgument.getLoadedBlockPos(ctx, "from"), BlockPosArgument.getLoadedBlockPos(ctx, "to"));
         CompoundDrafts.addZone(author(source), draft, name, access, box, hours);
         source.sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.added_zone", name, accessName), false);
+        return 1;
+    }
+
+    private static int copyZone(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        CommandSourceStack source = ctx.getSource();
+        CompoundDrafts.Draft draft = draftHere(source);
+        Zone zone = ZoneCommands.zone(ctx, "zone");
+        CompoundDrafts.addZone(author(source), draft, zone);
+        source.sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.added_zone", zone.name(),
+                zone.access().getSerializedName()), false);
         return 1;
     }
 

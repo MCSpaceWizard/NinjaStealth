@@ -104,6 +104,11 @@ public final class CompoundDrafts {
         return update(author, draft.compound().withZone(new Zone(name, access, java.util.List.of(local), hours)));
     }
 
+    /** Copies a world zone (all its boxes, made with the Surveyor's Rope) into the draft, keeping its name. */
+    public static Draft addZone(UUID author, Draft draft, Zone worldZone) {
+        return update(author, draft.compound().withZone(worldZone.placed(worldZone.name(), Transform.IDENTITY, BlockPos.ZERO.subtract(draft.origin()))));
+    }
+
     private static Draft update(UUID author, Compound compound) {
         Draft draft = DRAFTS.get(author).with(compound);
         DRAFTS.put(author, draft);

@@ -4,6 +4,7 @@ import org.lwjgl.glfw.GLFW;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
 import com.mcspacewizard.emergentstealth.authoring.StructurePayloads;
+import com.mcspacewizard.emergentstealth.authoring.ZonePayloads;
 import com.mcspacewizard.emergentstealth.registry.ESItems;
 
 import net.minecraft.client.DeltaTracker;
@@ -30,7 +31,7 @@ import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlers
 /**
  * Client side of the authoring tools (design doc 32): the Surveyor's Plan opens the structure browser, and while
  * a ghost preview is active, the scroll wheel rotates it, M mirrors, Page Up/Down raise or lower it, use places
- * it and attack cancels.
+ * it and attack cancels. The Surveyor's Rope's zones are drawn by {@link ZoneRenderer}.
  */
 @EventBusSubscriber(modid = EmergentStealth.MODID, value = Dist.CLIENT)
 public final class AuthoringClientEvents {
@@ -44,11 +45,14 @@ public final class AuthoringClientEvents {
     static void onRegisterClientPayloadHandlers(RegisterClientPayloadHandlersEvent event) {
         event.register(StructurePayloads.StructureList.TYPE, ClientStructures::handleList);
         event.register(StructurePayloads.PreviewPart.TYPE, ClientStructures::handlePart);
+        event.register(ZonePayloads.Sync.TYPE, ZoneRenderer::handle);
+        event.register(ZonePayloads.OpenEditor.TYPE, ZoneRenderer::handleOpen);
     }
 
     @SubscribeEvent
     static void onRegisterDebugRenderers(RegisterDebugRenderersEvent event) {
         event.register(new GhostPreview());
+        event.register(new ZoneRenderer());
     }
 
     @SubscribeEvent
@@ -114,6 +118,7 @@ public final class AuthoringClientEvents {
     static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         GhostPreview.stop();
         ClientStructures.clear();
+        ZoneRenderer.clear();
     }
 
     /** What the preview is and how to drive it, above the hotbar. */

@@ -68,6 +68,8 @@ Priorities follow the Beta 1 plan: what testers see most comes first.
 | 40 | `item/patrol_baton.png` | 16×16 | P | Map-maker tool: lacquered baton with a cord |
 | 41 | `item/debug_lens.png` | 16×16 | P | Developer tool: jade lens |
 | 42 | `item/stealth_npc_spawn_egg.png` | 16×16 | P | Spawn egg (ink and paper) |
+| 42a | `item/surveyors_plan.png` | 16×16 | P | Map-maker tool: a framed plan on paper (opens the structure browser) |
+| 42b | `item/surveyors_rope.png` | 16×16 | P | Map-maker tool: a coil of hemp rope with a red-tagged stake (marks zones) |
 
 ## Priority 4: Sumi UI (with the UI framework, next phase)
 

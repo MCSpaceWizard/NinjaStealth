@@ -14,6 +14,7 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 ## State at handoff (2026-10-09)
 
 - **`main`** (after PR #4): v0.1.0 (Alpha 1), toolkit part A, S7 animation (crawl, bodies, drag, carry, takedowns), the Sumi UI, the builder's structures and the Cherry Grove modules, the **structure viewer** and **compounds** (doc 32 §1 and §3, `/es structure ...`, `/es compound ...`). All checked in the real client. **88 GameTests pass**; the dedicated server starts clean.
+- **`claude/project-thread-2f8uv4`** (not merged yet): the **zone tool and trespass rule** (doc 32 §2, §5 step 3). The Surveyor's Rope item (two corners make a zone, sneak adds a box, use in the air opens a Sumi zone panel), tinted zone volumes while held, `/es zone ...`, `/es compound add zone <zone>`, and the minimal rule: restricted doubles awareness gain and guards bark a warning, hostile turns notice into detection, hours respected. 4 new `zones/*` GameTests; see TESTING.md "Zones". Not yet checked in the real client (Z.1–Z.11 there).
 - **Docs:** [docs/sumi-guide.md](sumi-guide.md) (extending Sumi), [doc 32](design/32-authoring-tools.md) (authoring tools; progress at the top). PROGRESS.md is out of date (2026-10-08).
 - **Feature branches still to finish** (stopped by usage limits; the last commit is **WIP** and may not compile):
 
@@ -25,8 +26,9 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 ## Next up (the user's priorities, 2026-10-09)
 
 1. **Structures, structure viewer and zone authoring.**
-   - ✅ Structures imported; ✅ structure viewer (doc 32 §1); ✅ compound format, save and place (§3, by command).
-   - **Next, in doc 32 §5 order:** the zone tool (Surveyor's Rope) plus the minimal trespass rule (zones are already stored in `authoring/Zones`, per dimension, and placed with compounds), the spawner GUI (Muster Roll), the Compound Ledger item, then the first compound: **samurai mini fort**. Compound leftovers: re-save edited templates on save, `reset`, automatic ground lines, compounds in the browser.
+   - ✅ Structures imported; ✅ structure viewer (doc 32 §1); ✅ compound format, save and place (§3, by command); ✅ zone tool (Surveyor's Rope) and minimal trespass rule (§2, branch `claude/project-thread-2f8uv4`: get it checked in the real client and merged).
+   - **Next, in doc 32 §5 order:** the spawner GUI (Muster Roll), the Compound Ledger item, then the first compound: **samurai mini fort**. Compound leftovers: re-save edited templates on save, `reset`, automatic ground lines, compounds in the browser.
+   - Zone leftovers: zones have no outfit rules yet (S11); a rope zone joins a compound only via `/es compound add zone` (the Ledger should do it); the trespass bark has no cooldown beyond the usual 2 s bark gap.
    - **Zone tool and compound authoring** (S9 zone design, pulled forward): mark zones (public / restricted / hostile), guard posts and patrol routes (the S5 baton does routes), NPC spawn points with archetypes and schedules, lights, and **save and load a compound as one config file** (datapack JSON + structure).
    - **NPC spawner tool with a GUI** (pick archetype, behaviour, route/post, schedule), built on Sumi.
 2. **Toolkit B:** finish and merge (see the table).
@@ -76,6 +78,8 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 
 **Real client (animation checks):** `/esphoto <yaw> [pitch]` orbits the third-person camera; `/es npc knockout` makes bodies. Give each concurrent client its own Xvfb display (`XIN_DISPLAY`/`DISPLAY`). A container restart kills Xvfb and the client: check with `pgrep -a Xvfb` before driving it, or the client loops on an early-display y/n prompt and fills the log.
 
+**Zones:** `Zone.Access` is ordered from lenient to strict and `Trespass` relies on that order. Zones are per-dimension world data shared by every GameTest in a batch, so tests use unique names (`ZoneTests.name`) and remove them in `finally`. Perception looks up the zone at the *player's* block on every sighting; `Trespass.accessAt` returns early when a level has no zones.
+
 **Code conventions:**
 - **Payloads:** always use `ESNetwork.sendIfSupported`. Attachment syncs use the `hasMod` predicate. Players without our channel would otherwise crash the server.
 - **Shared design contracts:** small API stubs are committed first (sound API, S7 attachments, progression data), then parallel agents build against them, each on its own branch, registering from their own classes and appending only to shared files.
@@ -103,5 +107,6 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 | Sound propagation, footsteps, masking, throwing | `stealth/sound/`, `entity/ThrownItem` |
 | Player verbs: crawl, takedowns, carrying | `action/` |
 | Skills, techniques, stealth stats, gear | `progression/` |
-| Commands | `command/` (`/es npc`, `/es patrol`, `/es routine`, `/es skills`, `/esdebug`) |
+| Authoring: structures, compounds, zones and the trespass rule | `authoring/` (server), `client/authoring/` (browser, ghost preview, zone drawing and panel), `item/SurveyorsRopeItem` |
+| Commands | `command/` (`/es npc`, `/es patrol`, `/es routine`, `/es skills`, `/es structure`, `/es compound`, `/es zone`, `/esdebug`) |
 | Tests | `gametest/` (`ESGameTests` registry + self-registering classes) |

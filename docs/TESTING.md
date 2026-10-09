@@ -48,6 +48,26 @@ Design: [doc 31](design/31-ui-framework.md) §0. Geometric shapes drawn in code,
 | U.12 | Theming | Resource pack with `assets/emergentstealth/ui/theme.json` overriding e.g. `"colors": {"paper": "#f4efe2"}`, or `textures/gui/sumi/paper.png` | Only that token changes; everything else keeps the defaults. A paper PNG replaces the generated grain |
 | U.13 | Dedicated server | `./gradlew runServer` | Starts normally (no client classes on the server) |
 
+## Zones: Surveyor's Rope and the trespass rule 🧪
+
+Design doc [32](design/32-authoring-tools.md) §2. Mark zones with the Surveyor's Rope (or `/es zone`), and guards react to intruders there: **restricted** zones make them suspicious twice as fast and they warn you off; on **hostile** ground, a guard who notices you has detected you. Creative with cheats for the tool; test the guards in survival.
+
+**Automated checks:** `zones/restricted_doubles_gain`, `zones/hostile_is_detection`, `zones/time_window` (hours wrap past midnight, the strictest zone wins), `zones/rope_and_panel` (rope clicks make and extend a zone; the panel's rename, rule, hours, undo box and delete, and a bad name is refused).
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| Z.1 | Make a zone | `/give @s emergentstealth:surveyors_rope`. Right-click a block, then the opposite corner of a room | After the first click a white box follows your crosshair from the corner. After the second: "New restricted zone zone_1 …" and an amber tinted volume with its name above it |
+| Z.2 | Add a box | Right-click a corner, then **sneak** and right-click the opposite corner | "Added a box to zone_1 (2 boxes)"; both boxes tint |
+| Z.3 | Zone panel | Use the rope in the air | The Zone panel: name, access (‹ Public / Restricted / Hostile ›, with a tooltip), "Only at hours" switch with From/To sliders when on, Delete, Undo box, Save |
+| Z.4 | Edit | Rename to `yard`, set Hostile, switch hours on (18 to 6), Save | "Saved zone yard (hostile)"; the volume turns red and its label shows `yard  hostile  18-6h`. A bad name (`Yard!`) is refused with a message |
+| Z.5 | Inside view | Walk into a zone while holding the rope | The tint still shows around you (not just the outline) |
+| Z.6 | Restricted | Set the zone to Restricted. `/es npc spawn emergentstealth:ashigaru` inside it, switch to survival, walk into view | The guard's meter fills about twice as fast as outside, and it barks a warning ("You there! You're not allowed here.") before investigating |
+| Z.7 | Hostile | Set it to Hostile and repeat | As soon as the guard notices you ("huh?"), it's full detection: it attacks |
+| Z.8 | Hours | Hostile with hours 18 to 6; `/time set noon`, then `/time set midnight` | At noon the zone is public (guards react as usual); at midnight hostile. `/es zone at` shows the rule and hour where you stand |
+| Z.9 | Commands | `/es zone list`, `/es zone add gate restricted ~ ~ ~ ~5 ~3 ~5`, `/es zone set gate public`, `/es zone remove gate`, `/es zone select yard` (holding the rope) | Each reports what it did; select makes the rope edit `yard` |
+| Z.10 | Into a compound | With a draft open (`/es compound start …`), `/es compound add zone yard` | "Added zone yard (…)"; after saving, the compound JSON has the zone's boxes relative to its origin |
+| Z.11 | Permission | In survival, use the rope | "Authoring tools need creative mode and operator permission", nothing changes |
+
 ## Compounds: author, save, place turned or mirrored 🧪
 
 Design doc [32](design/32-authoring-tools.md) §3. A compound is structures plus guards, patrol routes and zones, saved as one file and placed anywhere, turned or mirrored. Authoring is by command for now (the Compound Ledger item comes later). Creative with cheats. Screenshot: [compound_copy.png](screenshots/structures/compound_copy.png).

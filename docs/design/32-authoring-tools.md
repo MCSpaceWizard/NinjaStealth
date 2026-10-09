@@ -2,7 +2,7 @@
 
 > **2026-10-09.** The user's top priority: browse the builder's structures and turn them into playable compounds. This pulls the zone tool forward from S9 and the NPC spawner GUI forward from S19. Zone *gameplay* (alert levels, propagation, bells) stays in S9 (doc 18); this doc adds the tools, the data and a minimal trespass rule.
 
-**Progress:** §5 steps 1 (structure viewer) and 2 (compound format, save, place) are done; next is step 3, the zone tool and trespass rule.
+**Progress:** §5 steps 1 (structure viewer), 2 (compound format, save, place) and 3 (zone tool and trespass rule) are done; next is step 4, the spawner GUI (Muster Roll).
 
 **Goal:** place any structure, mark it up (zones, posts, patrol routes, NPC spawns, lights), **save it as one compound file**, and re-place it anywhere, rotated or mirrored, fully working.
 
@@ -34,6 +34,13 @@
   - **Restricted:** a guard who sees you there is suspicious much faster (awareness ×2), and barks a warning before hunting.
   - **Hostile:** being seen there is detection.
   - **Public:** unchanged.
+
+> **Implemented (2026-10-09):**
+> - **Rope:** right-click a block for the first corner (a white box follows the crosshair), then the opposite corner: a new **restricted** zone `zone_<n>`, which the rope then edits. Sneak on the second corner to add the box to the rope's zone instead. Use in the air opens the Sumi **zone panel** (name, access, "only at hours" with From/To, Undo box, Delete, Save); sneak-use in the air drops a marked corner. Boxes are capped at 256 blocks an edge and 64 per zone. Names are `a-z 0-9 _ . -`; a placed compound's zones (`<compound>#<n>/<name>`) keep their names.
+> - **Drawing:** while holding the rope, zones within 96 blocks are tinted volumes (public blue, restricted amber, hostile red), the rope's zone brighter and labelled with its rule and hours; inside a zone the tint is drawn both ways round.
+> - **Commands:** `/es zone list | add <name> <access> <from> <to> [hours] | set <zone> <access> [hours] | remove <zone> | select <zone> | at [pos]`; `/es compound add zone <zone>` copies a rope zone into the open compound draft.
+> - **Rule:** where zones overlap, the strictest whose hours hold wins (`Trespass`). Restricted multiplies awareness gain **and** the grace-period cap by 2, so detection really is twice as fast, and a guard entering curious or suspicious about someone it sees there barks a `trespass` warning. Hostile: once awareness reaches the "noticed" threshold, it jumps to detection, so darkness and cover still matter.
+> - Code: `authoring/Zone`, `Zones`, `Trespass`, `ZoneTool`, `ZonePayloads`, `item/SurveyorsRopeItem`, `client/authoring/ZoneRenderer`, `ZoneEditorScreen`, `command/ZoneCommands`. Tests: `zones/*`.
 
 ## 3. Compounds
 
@@ -67,7 +74,7 @@ A **compound** is one or more structure templates plus markers, all relative to 
 
 **Authoring flow** (built with commands first, 2026-10-09; the Compound Ledger item will drive the same steps):
 - `/es compound start <name> [origin]` opens a draft at your last placed structure (it becomes the first module) or at `origin`. Every structure you place while the draft is open joins it.
-- `/es compound add route <route>` copies a patrol route made with the baton; `add npcs <targets>` records NPCs as they stand (archetype, place, facing, behaviour, schedule); `add zone <name> <access> <from> <to> [hours]` adds a box zone.
+- `/es compound add route <route>` copies a patrol route made with the baton; `add npcs <targets>` records NPCs as they stand (archetype, place, facing, behaviour, schedule); `add zone <zone>` copies a zone made with the Surveyor's Rope, and `add zone <name> <access> <from> <to> [hours]` adds a box zone.
 - `/es compound info`, `save`, `cancel`. Then `place <name> [pos] [rotation] [mirror]`, `list`, `copies`, `export <name>`, `remove <copy>`. Undo (`/es structure undo`) takes back a whole placed copy.
 - Not yet: re-saving edited templates on save, `reset`, automatic ground lines, and the browser listing compounds.
 
