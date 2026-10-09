@@ -13,9 +13,10 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 
 ## State at handoff (2026-10-09)
 
-- **`main`** (after PR #4): v0.1.0 (Alpha 1), toolkit part A, S7 animation (crawl, bodies, drag, carry, takedowns), the Sumi UI, the builder's structures and the Cherry Grove modules, the **structure viewer** and **compounds** (doc 32 §1 and §3, `/es structure ...`, `/es compound ...`). All checked in the real client. **88 GameTests pass**; the dedicated server starts clean.
-- **`claude/project-thread-2f8uv4`** (not merged yet): the **zone tool and trespass rule** (doc 32 §2, §5 step 3). The Surveyor's Rope item (two corners make a zone, sneak adds a box, use in the air opens a Sumi zone panel), tinted zone volumes while held, `/es zone ...`, `/es compound add zone <zone>`, and the minimal rule: restricted doubles awareness gain and guards bark a warning, hostile turns notice into detection, hours respected. 4 new `zones/*` GameTests; see TESTING.md "Zones". Not yet checked in the real client (Z.1–Z.11 there).
-- **Muster Roll and Compound Ledger** (PR #6, merged): the NPC spawner panel (doc 32 §4) and compound authoring by item (§3). Zones and routes copied into a draft stay linked and are re-copied on save; NPCs a draft recorded aren't recorded twice. TESTING.md rows M.1–M.5, L.1–L.7.
+- **`main`** (after PR #10 and the compound-upkeep PR): v0.1.0 (Alpha 1), toolkit part A, S7 animation (crawl, bodies, drag, carry, takedowns), the Sumi UI, the builder's structures and the Cherry Grove modules, the **structure viewer** and **compounds** (doc 32 §1 and §3, `/es structure ...`, `/es compound ...`), plus everything in the three entries below. **113 GameTests pass** (with the terrain branch); the dedicated server starts clean.
+- **Merged (PR #8, via #6):** the **zone tool and trespass rule** (doc 32 §2, §5 step 3). The Surveyor's Rope item (two corners make a zone, sneak adds a box, use in the air opens a Sumi zone panel), tinted zone volumes while held, `/es zone ...`, `/es compound add zone <zone>`, and the minimal rule: restricted doubles awareness gain and guards bark a warning, hostile turns notice into detection, hours respected. 4 new `zones/*` GameTests; see TESTING.md "Zones". Not yet checked in the real client (Z.1–Z.11 there).
+- **Merged (PR #6):** the **Muster Roll** (NPC spawner panel, doc 32 §4) and the **Compound Ledger** (compound authoring by item, §3). Zones and routes copied into a draft stay linked and are re-copied on save; NPCs a draft recorded aren't recorded twice. 3 new `authoring/*` GameTests (95 pass); both panels checked in the real client (screenshots in `docs/screenshots/authoring/`). TESTING.md rows M.1–M.5, L.1–L.7.
+- **Merged (PR #10):** **toolkit B finished** (ported from `claude/toolkit-b` onto current main; Shinobi Insight on a successful pick, Nimble Fingers widens the lockpick window, Keen Eye adds a spyglass tag), the **toolbelt** (8-slot item the wheel and quick use draw from; `tool/Toolbelt`, `ToolbeltMenu`, `client/tool/ToolbeltScreen`), the **tool wheel on Sumi** (`UiRadial` widget, maths in `ui/RadialMenu`), the lockpick ring, active-tool icon and spyglass ring on Sumi, and **tool effects** (doc 34: steam, embers, dizzy stars, drowsy marks, smoke core, crackle, glints, tag ping). 107 GameTests pass; checked in the real client (screenshots in `docs/screenshots/tools/`). TESTING.md rows K.1–K.8, W.1–W.7, E.1–E.9, T.1–T.10.
 - **Q5 answered (2026-10-09):** the player belongs to neither faction; most Shinobi and Shogunate are enemies, some of each may help (doc 01 §8).
 - **Takamori castle** (PR #7, merged into #5's branch after #5 landed, so it reaches `main` with the terrain branch): the 150 × 150 castle example on a generated site (`tools/compounds/sites.py`) with a nature pass and site pieces, and [doc 33](design/33-compound-terrain.md) (approved).
 - **Compound terrain pass** (branch `claude/project-thread-87a3dn`): `/es compound place ... [fit|replace|exact]` and a `terrain` block in compound JSON (`authoring/TerrainFit`, doc 33 §4). `fit` (default) levels the footprint and slopes a 16-block ring 1:1 back to the world. GameTest `compounds/terrain`; checked in the real client on a hilly world (TESTING X.14–X.17). Next for doc 33: scatter rules for site pieces (§6.3), moats as a site piece, then worldgen (S15).
@@ -24,19 +25,19 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 
 | Branch | What's done | What's left |
 |---|---|---|
-| `claude/toolkit-b` | Water/fire arrows, blowgun + sleep darts, locks/keys/Locksmith's Kit, lockpicking minigame, spyglass tagging | WIP: GameTests, final tagging fix. Then merge. Also call `Skills.awardInsight(..., INSIGHT_LOCKPICK)` on a successful pick, and read `StealthStats` (`LOCKPICK_WINDOW`, `TAG_COUNT`) |
 | `claude/visual-lighting` | Light nuance in progress: sky openness (`SkyCells`), penumbra, smoother falloff | WIP: finish, tests, light gem tiers, docs |
 
 ## Next up (the user's priorities, 2026-10-09)
 
 1. **Structures, structure viewer and zone authoring.**
-   - ✅ Structures imported; ✅ structure viewer (doc 32 §1); ✅ compound format, save and place (§3, by command); ✅ zone tool (Surveyor's Rope) and minimal trespass rule (§2, branch `claude/project-thread-2f8uv4`: get it checked in the real client and merged).
+   - ✅ Structures imported; ✅ structure viewer (doc 32 §1); ✅ compound format, save and place (§3, by command); ✅ zone tool (Surveyor's Rope) and minimal trespass rule (§2, merged; still to check in the real client, TESTING.md Z.1–Z.11).
    - ✅ Muster Roll (spawner GUI) and Compound Ledger (branch `claude/project-thread-8nzno9`). The first compound, **samurai mini fort**, is being built on another thread.
-   - **Next (the user, 2026-10-09: authoring comes before more items):** compound leftovers: re-save edited templates on save, `/es compound reset`, automatic ground lines, compounds listed in the structure browser, `lights` / lamplighter relight in the file. Muster Roll leftovers: an archetype colour swatch (archetypes have no colour field), editing a *placed* copy's spawns.
+   - **Compound upkeep (done 2026-10-09, merged):** `/es compound reset`, re-saving edited modules on save (`CompoundSaver`), automatic ground lines (`GroundLine`, with `/es compound ground` to override), the `lights` rule (ledger + `lights`/`light` commands; the lamplighter honours placed copies), and compounds in the structure browser. Gotcha: the 26.1 `#minecraft:dirt` tag is only dirt, coarse and rooted dirt (grass, podzol, moss are listed by hand in `GroundLine`).
+   - **Next (authoring before items):** Muster Roll leftovers: an archetype colour swatch (archetypes have no colour field), editing a *placed* copy's spawns. Terrain fitting under compounds is doc 33's thread (PR #7).
    - Zone leftovers: zones have no outfit rules yet (S11); the trespass bark has no cooldown beyond the usual 2 s bark gap.
    - **Zone tool and compound authoring** (S9 zone design, pulled forward): mark zones (public / restricted / hostile), guard posts and patrol routes (the S5 baton does routes), NPC spawn points with archetypes and schedules, lights, and **save and load a compound as one config file** (datapack JSON + structure).
    - **NPC spawner tool with a GUI** (pick archetype, behaviour, route/post, schedule), built on Sumi.
-2. **Toolkit B:** finish and merge (see the table).
+2. **Toolkit B:** ✅ finished on `claude/project-thread-5a6xgb` with the toolbelt, the Sumi tool wheel and tool effects (doc 34); `claude/toolkit-b` is superseded. Left: check it in the real client and merge.
 3. **Light nuance:** finish and merge.
 4. Then **more weapons and armour** for the player, and **NPC work** (distinct placeholder silhouettes per archetype: hats, armour shapes, sashes, banners per [STYLE_GUIDE](art/STYLE_GUIDE.md) §4; extend `tools/programmer_art/generate.py` with part shapes).
 5. **Sumi must stay easy to extend and modify** (user, 2026-10-09): keep [docs/sumi-guide.md](sumi-guide.md) (how to add a screen, widget or theme token) current, and build new GUIs (tool wheel, spawner) from its widgets rather than one-offs. Cleanups found while writing the guide, worth doing when touching Sumi:
@@ -45,7 +46,6 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
    - consistency: `enabledWhen` on every input widget (toggle, slider and cycle take a fixed `editable`), theme tokens rather than raw ARGB (`UiProgressBar`, `UiTabBar` accents, `DialogueScreen.guardPortrait`), widget heights from theme metrics
    - `SumiTextures.invalidate()` is never called, so F3+T probably keeps the cached paper and ink
    - `UiTextField` has no caret movement, selection or paste
-   - `ToolWheelScreen` is still a vanilla `Screen`
 6. **Artist support:** keep [TEXTURE_LIST](art/TEXTURE_LIST.md) updated as textures are added.
 
 **Getting files to Claude:** upload a zip in the chat (it lands in the session's uploads) or commit it to `_incoming/`.
@@ -78,6 +78,9 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 - `GameTestHelper.relativePos` is buggy in 26.1.2: subtract `absolutePos(BlockPos.ZERO)` instead.
 - Vanilla only re-fits a changed hitbox after an entity's first tick: test size changes a few ticks after spawning.
 - `visual/shadow_matches_gameplay` failed once in about ten runs (2026-10-09); not investigated yet.
+- `verbs/knocked_out_gets_woken` failed once in about fifteen runs (2026-10-09, the guard was still investigating evidence at tick 602); not investigated yet.
+- `toolkit/firecracker_draws_guard` failed once in five runs (2026-10-09: the guard had no HEARD cause at tick 402, after the bangs); it does not touch the toolbelt or quick use. Not investigated yet.
+- A fresh test player's **head** yaw is random and `snapTo` only sets the body: tests that use `getViewVector` must `setYHeadRot` too (the spyglass test failed about one run in three until it did).
 
 **Merging branches:** append-only shared files (`en_us.json`, `textures.json`, `ESConfig`, registries) can merge into something broken without a conflict (a lost comma, a lost `pop()`). After every merge, run the GameTests (`ui/lang_file_valid` parses the lang file strictly) and check `ESConfig` push/pop pairs.
 

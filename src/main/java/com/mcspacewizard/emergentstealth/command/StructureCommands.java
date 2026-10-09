@@ -93,7 +93,7 @@ final class StructureCommands {
         }
         ctx.getSource().sendSuccess(() -> Component.translatable("message.emergentstealth.structure.placed", id.toString(),
                 box.minX(), box.minY(), box.minZ()), true);
-        CompoundDrafts.joinDraft(author(ctx.getSource()), message -> ctx.getSource().sendSuccess(() -> message, false));
+        CompoundDrafts.joinDraft(ctx.getSource().getServer(), author(ctx.getSource()), message -> ctx.getSource().sendSuccess(() -> message, false));
         return 1;
     }
 

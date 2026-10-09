@@ -31,11 +31,12 @@ public final class StructurePayloads {
         }
     }
 
-    /** Server → client: every structure template id, and whether to open the browser now. */
-    public record StructureList(List<Identifier> ids, boolean open) implements CustomPacketPayload {
+    /** Server → client: every structure template id and every compound id, and whether to open the browser now. */
+    public record StructureList(List<Identifier> ids, List<Identifier> compounds, boolean open) implements CustomPacketPayload {
         public static final Type<StructureList> TYPE = new Type<>(EmergentStealth.id("structure_list"));
         public static final StreamCodec<ByteBuf, StructureList> STREAM_CODEC = StreamCodec.composite(
                 Identifier.STREAM_CODEC.apply(ByteBufCodecs.list()), StructureList::ids,
+                Identifier.STREAM_CODEC.apply(ByteBufCodecs.list()), StructureList::compounds,
                 ByteBufCodecs.BOOL, StructureList::open,
                 StructureList::new);
 
@@ -45,11 +46,13 @@ public final class StructurePayloads {
         }
     }
 
-    /** Client → server: send me this structure's blocks for the ghost preview. */
-    public record RequestPreview(Identifier id) implements CustomPacketPayload {
+    /** Client → server: send me this structure's (or compound's, all its structures') blocks for the ghost preview. */
+    public record RequestPreview(Identifier id, boolean compound) implements CustomPacketPayload {
         public static final Type<RequestPreview> TYPE = new Type<>(EmergentStealth.id("structure_preview_request"));
-        public static final StreamCodec<ByteBuf, RequestPreview> STREAM_CODEC =
-                Identifier.STREAM_CODEC.map(RequestPreview::new, RequestPreview::id);
+        public static final StreamCodec<ByteBuf, RequestPreview> STREAM_CODEC = StreamCodec.composite(
+                Identifier.STREAM_CODEC, RequestPreview::id,
+                ByteBufCodecs.BOOL, RequestPreview::compound,
+                RequestPreview::new);
 
         @Override
         public Type<? extends CustomPacketPayload> type() {
@@ -61,10 +64,11 @@ public final class StructurePayloads {
      * Server → client: one part of a structure's preview ({@link StructureCatalog#previewBytes}, compressed NBT
      * without air), split so no packet gets near the payload size limit.
      */
-    public record PreviewPart(Identifier id, int part, int parts, byte[] data) implements CustomPacketPayload {
+    public record PreviewPart(Identifier id, boolean compound, int part, int parts, byte[] data) implements CustomPacketPayload {
         public static final Type<PreviewPart> TYPE = new Type<>(EmergentStealth.id("structure_preview"));
         public static final StreamCodec<ByteBuf, PreviewPart> STREAM_CODEC = StreamCodec.composite(
                 Identifier.STREAM_CODEC, PreviewPart::id,
+                ByteBufCodecs.BOOL, PreviewPart::compound,
                 ByteBufCodecs.VAR_INT, PreviewPart::part,
                 ByteBufCodecs.VAR_INT, PreviewPart::parts,
                 ByteBufCodecs.BYTE_ARRAY, PreviewPart::data,
@@ -76,11 +80,12 @@ public final class StructurePayloads {
         }
     }
 
-    /** Client → server: place this structure with its origin here. */
-    public record Place(Identifier id, BlockPos origin, Rotation rotation, Mirror mirror) implements CustomPacketPayload {
+    /** Client → server: place this structure (or compound) with its origin here. */
+    public record Place(Identifier id, boolean compound, BlockPos origin, Rotation rotation, Mirror mirror) implements CustomPacketPayload {
         public static final Type<Place> TYPE = new Type<>(EmergentStealth.id("structure_place"));
         public static final StreamCodec<ByteBuf, Place> STREAM_CODEC = StreamCodec.composite(
                 Identifier.STREAM_CODEC, Place::id,
+                ByteBufCodecs.BOOL, Place::compound,
                 BlockPos.STREAM_CODEC, Place::origin,
                 ROTATION, Place::rotation,
                 MIRROR, Place::mirror,

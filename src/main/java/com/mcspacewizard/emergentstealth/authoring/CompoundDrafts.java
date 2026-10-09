@@ -15,6 +15,7 @@ import com.mcspacewizard.emergentstealth.ai.routine.PatrolRoute;
 import com.mcspacewizard.emergentstealth.ai.routine.PatrolRoutes;
 import com.mcspacewizard.emergentstealth.ai.routine.Schedule;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
+import com.mcspacewizard.emergentstealth.stealth.light.Snuffing;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -24,6 +25,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
 /**
  * Compounds being authored (design doc 32 §3 "Authoring flow"), one per author. A draft has an origin in the
@@ -97,32 +99,74 @@ public final class CompoundDrafts {
     }
 
     /** Adds a placed structure to the author's draft, if they have one in that dimension. Returns the draft, or null. */
-    public static @Nullable Draft onPlaced(UUID author, StructurePlacement.Placed placed) {
+    public static @Nullable Draft onPlaced(MinecraftServer server, UUID author, StructurePlacement.Placed placed) {
         Draft draft = DRAFTS.get(author);
         if (draft == null || !draft.dimension().equals(placed.dimension())) {
             return null;
         }
-        return update(author, draft.compound().withModule(module(draft, placed)));
+        return update(author, draft.compound().withModule(module(server, draft, placed)));
     }
 
     /**
      * After the author placed a structure (viewer or command): adds it to their open draft and tells them, or tells
      * them why not.
      */
-    public static void joinDraft(UUID author, Consumer<Component> tell) {
+    public static void joinDraft(MinecraftServer server, UUID author, Consumer<Component> tell) {
         StructurePlacement.Placed placed = StructurePlacement.last(author);
         Draft open = DRAFTS.get(author);
         if (placed == null || open == null) {
             return;
         }
-        Draft draft = onPlaced(author, placed);
+        Draft draft = onPlaced(server, author, placed);
         tell.accept(draft == null
                 ? Component.translatable("message.emergentstealth.compound.other_dimension", open.id().toString())
-                : Component.translatable("message.emergentstealth.compound.module_added", draft.id().toString(), draft.compound().structures().size()));
+                : Component.translatable("message.emergentstealth.compound.module_added", draft.id().toString(), draft.compound().structures().size(),
+                        draft.compound().structures().getLast().ground()));
     }
 
-    private static Compound.Module module(Draft draft, StructurePlacement.Placed placed) {
-        return new Compound.Module(placed.template(), draft.local(placed.origin()), placed.rotation(), placed.mirror(), 0);
+    /** A placed structure as a module, with its ground line found ({@link GroundLine}). */
+    private static Compound.Module module(MinecraftServer server, Draft draft, StructurePlacement.Placed placed) {
+        return new Compound.Module(placed.template(), draft.local(placed.origin()), placed.rotation(), placed.mirror(),
+                GroundLine.of(server, placed.template()));
+    }
+
+    /** Sets module {@code index}'s ground line by hand. */
+    public static Draft setGround(UUID author, Draft draft, int index, int ground) {
+        Compound.Module m = draft.compound().structures().get(index);
+        return update(author, draft.compound().withModule(index, new Compound.Module(m.template(), m.offset(), m.rotation(), m.mirror(), ground)));
+    }
+
+    public static Draft setLights(UUID author, Draft draft, Compound.Lights lights) {
+        return update(author, draft.compound().withLights(lights));
+    }
+
+    /** Puts a changed draft in place (saving does, when it re-saves edited modules). */
+    static Draft replace(UUID author, Draft draft) {
+        return put(author, draft);
+    }
+
+    /**
+     * The lights inside the draft's modules (doc 32 §3: found automatically): every torch, lantern or campfire,
+     * lit or not, as world positions, in a stable order. Modules that aren't loaded are skipped.
+     */
+    public static List<BlockPos> lightsIn(ServerLevel level, Draft draft) {
+        Set<BlockPos> found = new LinkedHashSet<>();
+        for (Compound.Module module : draft.compound().structures()) {
+            StructureTemplate template = level.getServer().getStructureManager().get(module.template()).orElse(null);
+            if (template == null) {
+                continue;
+            }
+            BoundingBox box = StructurePlacement.box(template, draft.origin().offset(module.offset()), module.rotation(), module.mirror());
+            if (!level.hasChunksAt(box.minX(), box.minZ(), box.maxX(), box.maxZ())) {
+                continue;
+            }
+            for (BlockPos pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
+                if (Snuffing.isLight(level.getBlockState(pos))) {
+                    found.add(pos.immutable());
+                }
+            }
+        }
+        return List.copyOf(found);
     }
 
     /** Copies a world patrol route into the draft (keeping its name) and links it, so saving copies it again. */

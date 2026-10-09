@@ -50,7 +50,7 @@ public final class StructureViewer {
     /** Sends the structure list; {@code open} opens the browser when it arrives. */
     public static void sendList(ServerPlayer player, boolean open) {
         List<net.minecraft.resources.Identifier> ids = StructureCatalog.ids(player.level().getServer());
-        ESNetwork.sendIfSupported(player, new StructurePayloads.StructureList(ids, open));
+        ESNetwork.sendIfSupported(player, new StructurePayloads.StructureList(ids, Compounds.ids(), open));
     }
 
     static void handleList(StructurePayloads.RequestList payload, IPayloadContext context) {
@@ -63,14 +63,16 @@ public final class StructureViewer {
         if (!(context.player() instanceof ServerPlayer player) || !mayAuthor(player)) {
             return;
         }
-        byte[] bytes = StructureCatalog.previewBytes(player.level().getServer(), payload.id());
+        byte[] bytes = payload.compound() ? StructureCatalog.compoundPreviewBytes(player.level().getServer(), payload.id())
+                : StructureCatalog.previewBytes(player.level().getServer(), payload.id());
         if (bytes == null) {
-            player.sendSystemMessage(Component.translatable("message.emergentstealth.structure.unknown", payload.id().toString()));
+            player.sendSystemMessage(Component.translatable(payload.compound() ? "commands.emergentstealth.compound.unknown"
+                    : "message.emergentstealth.structure.unknown", payload.id().toString()));
             return;
         }
         List<byte[]> parts = StructureCatalog.split(bytes, StructureCatalog.PART_BYTES);
         for (int i = 0; i < parts.size(); i++) {
-            ESNetwork.sendIfSupported(player, new StructurePayloads.PreviewPart(payload.id(), i, parts.size(), parts.get(i)));
+            ESNetwork.sendIfSupported(player, new StructurePayloads.PreviewPart(payload.id(), payload.compound(), i, parts.size(), parts.get(i)));
         }
     }
 
@@ -82,6 +84,10 @@ public final class StructureViewer {
         if (player.position().distanceTo(origin.getCenter()) > MAX_PLACE_DISTANCE) {
             return;
         }
+        if (payload.compound()) {
+            placeCompound(player, payload);
+            return;
+        }
         BoundingBox box = StructurePlacement.place(player.level(), player.getUUID(), payload.id(), origin, payload.rotation(), payload.mirror());
         if (box == null) {
             player.sendSystemMessage(Component.translatable("message.emergentstealth.structure.unknown", payload.id().toString()));
@@ -89,7 +95,26 @@ public final class StructureViewer {
         }
         player.sendSystemMessage(Component.translatable("message.emergentstealth.structure.placed", payload.id().toString(),
                 box.minX(), box.minY(), box.minZ()));
-        CompoundDrafts.joinDraft(player.getUUID(), player::sendSystemMessage);
+        CompoundDrafts.joinDraft(player.level().getServer(), player.getUUID(), player::sendSystemMessage);
+    }
+
+    /** A compound from the browser: placed like {@code /es compound place} (one undoable placement). */
+    private static void placeCompound(ServerPlayer player, StructurePayloads.Place payload) {
+        Compound compound = Compounds.get(payload.id());
+        if (compound == null) {
+            player.sendSystemMessage(Component.translatable("commands.emergentstealth.compound.unknown", payload.id().toString()));
+            return;
+        }
+        BlockPos origin = payload.origin();
+        CompoundPlacer.Result result = CompoundPlacer.place(player.level(), player.getUUID(), payload.id(), compound, origin,
+                new Transform(payload.mirror(), payload.rotation()));
+        PlacedCompounds.Copy copy = result.copy();
+        if (copy == null) {
+            player.sendSystemMessage(Component.translatable("commands.emergentstealth.compound.missing_templates", result.missing().toString()));
+            return;
+        }
+        player.sendSystemMessage(Component.translatable("commands.emergentstealth.compound.placed", payload.id().toString(), copy.id(),
+                origin.getX(), origin.getY(), origin.getZ(), copy.npcs().size(), copy.routes().size(), copy.zones().size()));
     }
 
     static void handleUndo(StructurePayloads.Undo payload, IPayloadContext context) {

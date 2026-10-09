@@ -55,10 +55,10 @@ public final class CompoundTests {
     private CompoundTests() {}
 
     private static final Identifier ARENA = EmergentStealth.id("arena");
-    private static final Identifier SHRINE = EmergentStealth.id("edo/small_shrine_v1");
+    static final Identifier SHRINE = EmergentStealth.id("edo/small_shrine_v1");
     private static final Identifier GUARD = EmergentStealth.id("ashigaru");
     /** Templates only: these tests are about markers, and place in the air or inside the test arena. */
-    private static final Compound.Terrain EXACT = Compound.Terrain.DEFAULT.withMode(TerrainFit.Mode.EXACT);
+    static final Compound.Terrain EXACT = Compound.Terrain.DEFAULT.withMode(TerrainFit.Mode.EXACT);
 
     private static final Map<Identifier, Consumer<GameTestHelper>> TESTS = Map.of(
             EmergentStealth.id("compounds/transform_algebra"), CompoundTests::transformAlgebra,
@@ -159,7 +159,7 @@ public final class CompoundTests {
      * The shrine with a route whose first waypoint stands on its chest, a guard there with a post on the same spot,
      * and a zone round the chest.
      */
-    private static Compound sample(BlockPos chest) {
+    static Compound sample(BlockPos chest) {
         BlockPos stand = chest.above();
         PatrolRoute route = new PatrolRoute("shrine_walk",
                 List.of(new PatrolRoute.Waypoint(stand, 20, Optional.of(90.0F), false), PatrolRoute.Waypoint.at(stand.offset(2, 0, 0))),

@@ -29,6 +29,8 @@ import com.mcspacewizard.emergentstealth.tool.Blinding;
 import com.mcspacewizard.emergentstealth.tool.CaltropsItem;
 import com.mcspacewizard.emergentstealth.tool.PebbleItem;
 import com.mcspacewizard.emergentstealth.tool.SmokeBombItem;
+import com.mcspacewizard.emergentstealth.tool.Toolbelt;
+import com.mcspacewizard.emergentstealth.tool.ToolbeltMenu;
 import com.mcspacewizard.emergentstealth.tool.Toolkit;
 
 import net.minecraft.core.BlockPos;
@@ -48,6 +50,8 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
@@ -81,6 +85,8 @@ public final class ToolkitATests {
         TESTS.put("toolkit/blinding_cone_only", new Spec(ToolkitATests::blindingConeOnly, 100));
         TESTS.put("toolkit/caltrops_slow_and_hurt", new Spec(ToolkitATests::caltropsSlowAndHurt, 100));
         TESTS.put("toolkit/quick_use_keeps_held_item", new Spec(ToolkitATests::quickUseKeepsHeldItem, 100));
+        TESTS.put("toolkit/toolbelt_menu", new Spec(ToolkitATests::toolbeltMenu, 40));
+        TESTS.put("toolkit/toolbelt_hand_tools", new Spec(ToolkitATests::toolbeltHandTools, 40));
         TESTS.put("toolkit/pebble_noise_no_trace", new Spec(ToolkitATests::pebbleNoiseNoTrace, 100));
     }
 
@@ -289,20 +295,23 @@ public final class ToolkitATests {
         try {
             player.getInventory().setSelectedSlot(0);
             player.getInventory().setItem(0, new ItemStack(Items.IRON_SWORD));
-            player.getInventory().setItem(5, new ItemStack(ESItems.SMOKE_BOMB.get(), 4));
-            player.getInventory().setItem(20, new ItemStack(ESItems.FIRECRACKER.get(), 2));
+            ItemStack belt = new ItemStack(ESItems.TOOLBELT.get());
+            Toolbelt.store(belt, List.of(new ItemStack(ESItems.SMOKE_BOMB.get(), 4), ItemStack.EMPTY, ItemStack.EMPTY,
+                    new ItemStack(ESItems.FIRECRACKER.get(), 2)));
+            player.getInventory().setItem(20, belt);
+            player.getInventory().setItem(5, new ItemStack(ESItems.CALTROPS.get(), 2));
 
             helper.assertTrue(!Toolkit.quickUse(player, 0.0F), "Nothing happens without an active tool");
             helper.assertTrue(!Toolkit.select(player, new ActiveTool(Items.STONE)), "Stone isn't a stealth tool");
-            helper.assertTrue(!Toolkit.select(player, new ActiveTool(ESItems.CALTROPS.get())), "Can't select a tool you don't carry");
+            helper.assertTrue(!Toolkit.select(player, new ActiveTool(ESItems.CALTROPS.get())), "Can't select a tool that isn't in the belt");
             helper.assertTrue(Toolkit.select(player, new ActiveTool(ESItems.SMOKE_BOMB.get())), "Selecting a carried tool works");
             helper.assertTrue(Toolkit.activeItem(player) == ESItems.SMOKE_BOMB.get(), "The active tool is the smoke bomb");
 
             helper.assertTrue(Toolkit.quickUse(player, 0.0F), "Quick use should throw the smoke bomb");
             helper.assertTrue(player.getMainHandItem().is(Items.IRON_SWORD) && player.getMainHandItem().getCount() == 1,
                     "The held item is unchanged, got " + player.getMainHandItem());
-            helper.assertTrue(player.getInventory().getItem(5).getCount() == 3, "One smoke bomb was used, left "
-                    + player.getInventory().getItem(5));
+            int smokeLeft = Toolkit.count(player.getInventory(), ESItems.SMOKE_BOMB.get());
+            helper.assertTrue(smokeLeft == 3, "One smoke bomb was used from the belt, left " + smokeLeft);
             List<ThrownItem> thrown = level.getEntitiesOfClass(ThrownItem.class, new AABB(player.position(), player.position()).inflate(4.0),
                     t -> t.getItem().is(ESItems.SMOKE_BOMB.get()));
             helper.assertTrue(thrown.size() == 1 && thrown.getFirst().getOwner() == player, "A thrown smoke bomb is in flight");
@@ -313,7 +322,8 @@ public final class ToolkitATests {
                 try {
                     helper.assertTrue(Toolkit.quickUse(player, 1.0F), "After the throw cooldown, quick use throws the firecracker");
                     helper.assertTrue(player.getMainHandItem().is(Items.IRON_SWORD), "Still holding the sword");
-                    helper.assertTrue(player.getInventory().getItem(20).getCount() == 1, "One firecracker used from the main inventory");
+                    helper.assertTrue(Toolkit.count(player.getInventory(), ESItems.FIRECRACKER.get()) == 1, "One firecracker used from the belt");
+                    helper.assertTrue(player.getInventory().getItem(5).getCount() == 2, "The caltrops outside the belt are untouched");
                 } finally {
                     TestPlayers.remove(player);
                 }
@@ -324,6 +334,88 @@ public final class ToolkitATests {
                 TestPlayers.remove(player);
             }
         }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // 9. The toolbelt takes stealth tools only, saves into the item, and locks its own slot while open
+
+    static void toolbeltMenu(GameTestHelper helper) {
+        helper.assertTrue(Toolbelt.accepts(new ItemStack(ESItems.SMOKE_BOMB.get())) && Toolbelt.accepts(new ItemStack(ESItems.LOCKPICK.get()))
+                && Toolbelt.accepts(new ItemStack(Items.SPYGLASS)) && Toolbelt.accepts(new ItemStack(ESItems.BLOWGUN.get())),
+                "Throwables and hand tools fit in the belt");
+        helper.assertTrue(!Toolbelt.accepts(new ItemStack(Items.STONE)) && !Toolbelt.accepts(new ItemStack(ESItems.WATER_ARROW.get()))
+                && !Toolbelt.accepts(new ItemStack(ESItems.SLEEP_DART.get())) && !Toolbelt.accepts(new ItemStack(Items.ARROW))
+                && !Toolbelt.accepts(new ItemStack(ESItems.TOOLBELT.get())), "Non-tools, ammo and belts don't");
+
+        ServerPlayer player = TestPlayers.spawn(helper, new Vec3(4.5, 1, 4.5), 0.0F);
+        try {
+            Inventory inventory = player.getInventory();
+            inventory.setSelectedSlot(0);
+            inventory.setItem(0, new ItemStack(ESItems.TOOLBELT.get()));
+            inventory.setItem(9, new ItemStack(ESItems.SMOKE_BOMB.get(), 3));
+            inventory.setItem(10, new ItemStack(Items.STONE));
+            inventory.setItem(11, new ItemStack(ESItems.WATER_ARROW.get(), 4));
+            ToolbeltMenu menu = new ToolbeltMenu(1, inventory, 0);
+            // Menu slots: the belt's 8, then inventory 9..35, then the hotbar.
+            int first = Toolbelt.SIZE;
+            menu.quickMoveStack(player, first);
+            menu.quickMoveStack(player, first + 1);
+            menu.quickMoveStack(player, first + 2);
+            helper.assertTrue(Toolkit.count(inventory, ESItems.SMOKE_BOMB.get()) == 3 && inventory.getItem(9).isEmpty(),
+                    "Shift-click moved the smoke bombs into the belt item, got " + Toolbelt.contents(inventory.getItem(0)));
+            helper.assertTrue(inventory.getItem(10).is(Items.STONE) && inventory.getItem(11).is(ESItems.WATER_ARROW.get()),
+                    "Stone and arrows stay in the inventory");
+            helper.assertTrue(!menu.slots.get(first + 27).mayPickup(player), "The open belt's own slot is locked");
+            menu.clicked(first, 0, ContainerInput.SWAP, player);
+            helper.assertTrue(Toolbelt.isBelt(inventory.getItem(0)), "A number-key swap can't move the open belt");
+            helper.assertTrue(menu.stillValid(player), "The menu is valid while the belt stays put");
+            inventory.setItem(0, ItemStack.EMPTY);
+            helper.assertTrue(!menu.stillValid(player), "The menu closes once the belt is gone");
+        } finally {
+            TestPlayers.remove(player);
+        }
+        helper.succeed();
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // 10. Quick use takes hand tools out of the belt into the hand, putting the held item away
+
+    static void toolbeltHandTools(GameTestHelper helper) {
+        ServerPlayer player = TestPlayers.spawn(helper, new Vec3(4.5, 1, 4.5), 0.0F);
+        try {
+            Inventory inventory = player.getInventory();
+            inventory.setSelectedSlot(0);
+            inventory.setItem(0, new ItemStack(Items.IRON_SWORD));
+            ItemStack belt = new ItemStack(ESItems.TOOLBELT.get());
+            Toolbelt.store(belt, List.of(new ItemStack(ESItems.BLOWGUN.get()), new ItemStack(ESItems.LOCKPICK.get())));
+            inventory.setItem(9, belt);
+
+            helper.assertTrue(Toolkit.select(player, new ActiveTool(ESItems.BLOWGUN.get())) && Toolkit.quickUse(player, 0.0F),
+                    "Quick use equips the blowgun");
+            helper.assertTrue(player.getMainHandItem().is(ESItems.BLOWGUN.get()), "Blowgun in hand, got " + player.getMainHandItem());
+            helper.assertTrue(inventory.contains(new ItemStack(Items.IRON_SWORD)), "The sword was put away in the inventory");
+            helper.assertTrue(Toolbelt.contents(inventory.getItem(9)).getFirst().isEmpty(), "The blowgun left the belt");
+
+            helper.assertTrue(Toolkit.select(player, new ActiveTool(ESItems.LOCKPICK.get())) && Toolkit.quickUse(player, 0.0F),
+                    "Quick use equips the lockpick");
+            helper.assertTrue(player.getMainHandItem().is(ESItems.LOCKPICK.get()), "Lockpick in hand");
+            helper.assertTrue(Toolbelt.slotOf(inventory.getItem(9), ESItems.BLOWGUN.get()) == 1,
+                    "The held blowgun went back into the lockpick's belt slot");
+
+            // Holding the belt itself: it is put away with its new contents.
+            inventory.setSelectedSlot(2);
+            inventory.setItem(2, inventory.getItem(9));
+            inventory.setItem(9, ItemStack.EMPTY);
+            helper.assertTrue(Toolkit.select(player, new ActiveTool(ESItems.BLOWGUN.get())) && Toolkit.quickUse(player, 0.0F),
+                    "Quick use works with the belt in hand");
+            helper.assertTrue(player.getMainHandItem().is(ESItems.BLOWGUN.get()), "Blowgun in hand instead of the belt");
+            ItemStack moved = Toolbelt.belt(inventory);
+            helper.assertTrue(!moved.isEmpty() && Toolbelt.contents(moved).stream().allMatch(ItemStack::isEmpty),
+                    "The belt was put away, now empty: " + Toolbelt.contents(moved));
+        } finally {
+            TestPlayers.remove(player);
+        }
+        helper.succeed();
     }
 
     // ------------------------------------------------------------------------------------------------

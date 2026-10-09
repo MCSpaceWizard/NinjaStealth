@@ -1,7 +1,6 @@
 package com.mcspacewizard.emergentstealth.command;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -10,6 +9,8 @@ import com.mcspacewizard.emergentstealth.ai.routine.PatrolRoutes;
 import com.mcspacewizard.emergentstealth.authoring.Compound;
 import com.mcspacewizard.emergentstealth.authoring.CompoundDrafts;
 import com.mcspacewizard.emergentstealth.authoring.CompoundPlacer;
+import com.mcspacewizard.emergentstealth.authoring.CompoundSaver;
+import com.mcspacewizard.emergentstealth.authoring.Ledger;
 import com.mcspacewizard.emergentstealth.authoring.Compounds;
 import com.mcspacewizard.emergentstealth.authoring.PlacedCompounds;
 import com.mcspacewizard.emergentstealth.authoring.StructurePlacement;
@@ -73,6 +74,8 @@ final class CompoundCommands {
             Compounds.ids().stream().map(Identifier::toString), builder);
     private static final SuggestionProvider<CommandSourceStack> ROUTES = (ctx, builder) -> SharedSuggestionProvider.suggest(
             PatrolRoutes.get(ctx.getSource().getLevel()).all().stream().map(PatrolRoute::name), builder);
+    private static final SuggestionProvider<CommandSourceStack> COPIES = (ctx, builder) -> SharedSuggestionProvider.suggest(
+            PlacedCompounds.get(ctx.getSource().getLevel()).all().stream().map(c -> String.valueOf(c.id())), builder);
     private static final SuggestionProvider<CommandSourceStack> ACCESS = (ctx, builder) -> SharedSuggestionProvider.suggest(
             java.util.Arrays.stream(Zone.Access.values()).map(Zone.Access::getSerializedName), builder);
 
@@ -101,6 +104,13 @@ final class CompoundCommands {
                                                                                 IntegerArgumentType.getInteger(ctx, "hours_to")))))))))))))
                 .then(Commands.literal("info").executes(CompoundCommands::info))
                 .then(Commands.literal("save").executes(CompoundCommands::save))
+                .then(Commands.literal("lights").then(Commands.literal("all").executes(ctx -> lightRule(ctx, Compound.Relight.ALL)))
+                        .then(Commands.literal("none").executes(ctx -> lightRule(ctx, Compound.Relight.NONE))))
+                .then(Commands.literal("light").then(Commands.argument("pos", BlockPosArgument.blockPos())
+                        .executes(CompoundCommands::toggleLight)))
+                .then(Commands.literal("ground").then(Commands.argument("module", IntegerArgumentType.integer(1))
+                        .then(Commands.argument("layer", IntegerArgumentType.integer(0, 512))
+                                .executes(CompoundCommands::ground))))
                 .then(Commands.literal("cancel").executes(CompoundCommands::cancel))
                 .then(Commands.literal("place").then(Commands.argument("id", IdentifierArgument.id()).suggests(IDS)
                         .executes(ctx -> place(ctx, BlockPos.containing(ctx.getSource().getPosition()), Rotation.NONE, Mirror.NONE, null))
@@ -123,7 +133,9 @@ final class CompoundCommands {
                 .then(Commands.literal("copies").executes(CompoundCommands::copies))
                 .then(Commands.literal("export").then(Commands.argument("id", IdentifierArgument.id()).suggests(IDS)
                         .executes(CompoundCommands::export)))
-                .then(Commands.literal("remove").then(Commands.argument("copy", IntegerArgumentType.integer(1))
+                .then(Commands.literal("reset").then(Commands.argument("copy", IntegerArgumentType.integer(1)).suggests(COPIES)
+                        .executes(CompoundCommands::reset)))
+                .then(Commands.literal("remove").then(Commands.argument("copy", IntegerArgumentType.integer(1)).suggests(COPIES)
                         .executes(CompoundCommands::remove)));
     }
 
@@ -169,7 +181,7 @@ final class CompoundCommands {
                 throw NOTHING_PLACED.create();
             }
             draft = CompoundDrafts.start(author, id, last.dimension(), last.origin(), Compound.EMPTY);
-            draft = CompoundDrafts.onPlaced(author, last);
+            draft = CompoundDrafts.onPlaced(source.getServer(), author, last);
         }
         BlockPos at = draft.origin();
         source.sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.started", id.toString(),
@@ -230,23 +242,76 @@ final class CompoundCommands {
         ctx.getSource().sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.info", draft.id().toString(),
                 draft.origin().getX(), draft.origin().getY(), draft.origin().getZ(),
                 c.structures().size(), c.routes().size(), c.spawns().size(), c.zones().size()), false);
-        for (Compound.Module module : c.structures()) {
-            ctx.getSource().sendSuccess(() -> Component.literal("  " + module.template() + " @ " + module.offset().toShortString()
-                    + " " + module.rotation().getSerializedName()), false);
+        for (int i = 0; i < c.structures().size(); i++) {
+            Compound.Module module = c.structures().get(i);
+            int number = i + 1;
+            ctx.getSource().sendSuccess(() -> Component.literal("  " + number + ". " + module.template() + " @ " + module.offset().toShortString()
+                    + " " + module.rotation().getSerializedName() + ", ground " + module.ground()), false);
         }
+        ctx.getSource().sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.lights_info",
+                c.lights().relight().getSerializedName(), c.lights().except().size()), false);
         return 1;
     }
 
     private static int save(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
-        CompoundDrafts.Draft draft = CompoundDrafts.refreshLinks(source.getServer(), author(source), draft(source));
         try {
-            Path file = Compounds.saveToWorld(source.getServer(), draft.id(), draft.compound());
-            source.sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.saved", draft.id().toString(), file.toString()), true);
+            CompoundSaver.Saved saved = CompoundSaver.save(source.getServer(), author(source), draft(source));
+            Ledger.savedMessages(saved).forEach(message -> source.sendSuccess(() -> message, true));
         } catch (IOException e) {
             throw SAVE_FAILED.create(e.getMessage());
         }
         return 1;
+    }
+
+    private static int lightRule(CommandContext<CommandSourceStack> ctx, Compound.Relight relight) throws CommandSyntaxException {
+        CommandSourceStack source = ctx.getSource();
+        CompoundDrafts.Draft draft = draft(source);
+        CompoundDrafts.setLights(author(source), draft, new Compound.Lights(relight, java.util.List.of()));
+        source.sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.lights_rule", relight.getSerializedName()), false);
+        return 1;
+    }
+
+    private static int toggleLight(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        CommandSourceStack source = ctx.getSource();
+        CompoundDrafts.Draft draft = draftHere(source);
+        BlockPos pos = BlockPosArgument.getLoadedBlockPos(ctx, "pos");
+        Compound.Lights lights = draft.compound().lights().toggled(draft.local(pos));
+        CompoundDrafts.setLights(author(source), draft, lights);
+        boolean relit = lights.relights(draft.local(pos));
+        source.sendSuccess(() -> Component.translatable(relit ? "commands.emergentstealth.compound.light_relit" : "commands.emergentstealth.compound.light_dark",
+                pos.getX(), pos.getY(), pos.getZ()), false);
+        return 1;
+    }
+
+    private static int ground(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        CommandSourceStack source = ctx.getSource();
+        CompoundDrafts.Draft draft = draft(source);
+        int module = IntegerArgumentType.getInteger(ctx, "module");
+        int layer = IntegerArgumentType.getInteger(ctx, "layer");
+        if (module > draft.compound().structures().size()) {
+            throw new SimpleCommandExceptionType(Component.translatable("commands.emergentstealth.compound.no_module", module)).create();
+        }
+        CompoundDrafts.setGround(author(source), draft, module - 1, layer);
+        source.sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.ground_set", module, layer), false);
+        return 1;
+    }
+
+    private static int reset(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        CommandSourceStack source = ctx.getSource();
+        int id = IntegerArgumentType.getInteger(ctx, "copy");
+        PlacedCompounds.Copy copy = PlacedCompounds.get(source.getLevel()).get(id).orElseThrow(() -> UNKNOWN_COPY.create(id));
+        Compound compound = Compounds.get(copy.compound());
+        if (compound == null) {
+            throw UNKNOWN.create(copy.compound());
+        }
+        CompoundPlacer.ResetResult result = CompoundPlacer.reset(source.getLevel(), copy, compound);
+        source.sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.reset", id, result.kept(), result.respawned(),
+                result.cleared()), true);
+        if (result.skipped() > 0) {
+            source.sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.reset_skipped", result.skipped()), false);
+        }
+        return result.respawned();
     }
 
     private static int cancel(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -309,11 +374,12 @@ final class CompoundCommands {
     private static int export(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         Identifier id = compoundId(ctx, "id");
         try {
-            Path file = Compounds.export(ctx.getSource().getServer(), id);
-            if (file == null) {
+            Compounds.Exported exported = Compounds.export(ctx.getSource().getServer(), id);
+            if (exported == null) {
                 throw UNKNOWN.create(id);
             }
-            ctx.getSource().sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.exported", id.toString(), file.toString()), false);
+            ctx.getSource().sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.exported", id.toString(),
+                    exported.file().toString(), exported.templates()), false);
         } catch (IOException e) {
             throw SAVE_FAILED.create(e.getMessage());
         }

@@ -11,6 +11,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 
@@ -22,19 +23,21 @@ import net.minecraft.world.level.block.Rotation;
  * <p>Routes use the patrol route format (doc 15 §2) with relative waypoints. A spawn's schedule refers to the
  * compound's routes by their names here; placing renames them per copy.
  */
-public record Compound(List<Module> structures, List<Zone> zones, List<PatrolRoute> routes, List<Spawn> spawns, Terrain terrain) {
+public record Compound(List<Module> structures, List<Zone> zones, List<PatrolRoute> routes, List<Spawn> spawns, Lights lights, Terrain terrain) {
     public static final Codec<Compound> CODEC = RecordCodecBuilder.create(i -> i.group(
             Module.CODEC.listOf().optionalFieldOf("structures", List.of()).forGetter(Compound::structures),
             Zone.CODEC.listOf().optionalFieldOf("zones", List.of()).forGetter(Compound::zones),
             PatrolRoute.CODEC.listOf().optionalFieldOf("routes", List.of()).forGetter(Compound::routes),
             Spawn.CODEC.listOf().optionalFieldOf("spawns", List.of()).forGetter(Compound::spawns),
+            Lights.CODEC.optionalFieldOf("lights", Lights.ALL).forGetter(Compound::lights),
             Terrain.CODEC.optionalFieldOf("terrain", Terrain.DEFAULT).forGetter(Compound::terrain)
     ).apply(i, Compound::new));
 
     public static final Compound EMPTY = new Compound(List.of(), List.of(), List.of(), List.of());
 
+    /** A compound whose lights are all relit, fitted to the terrain. */
     public Compound(List<Module> structures, List<Zone> zones, List<PatrolRoute> routes, List<Spawn> spawns) {
-        this(structures, zones, routes, spawns, Terrain.DEFAULT);
+        this(structures, zones, routes, spawns, Lights.ALL, Terrain.DEFAULT);
     }
 
     /**
@@ -94,34 +97,95 @@ public record Compound(List<Module> structures, List<Zone> zones, List<PatrolRou
         ).apply(i, Spawn::new));
     }
 
+    /**
+     * Which lights inside the compound the lamplighter relights (doc 32 §3): all or none, except the listed ones
+     * (positions relative to the origin, like every marker). Only lights a route's {@code relight} waypoint reaches
+     * are ever relit; this rule lets some of them stay dark (a lantern left out for the player, a ruined wing).
+     */
+    public record Lights(Relight relight, List<BlockPos> except) {
+        public static final Codec<Lights> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Relight.CODEC.optionalFieldOf("relight", Relight.ALL).forGetter(Lights::relight),
+                BlockPos.CODEC.listOf().optionalFieldOf("except", List.of()).forGetter(Lights::except)
+        ).apply(i, Lights::new));
+
+        public static final Lights ALL = new Lights(Relight.ALL, List.of());
+
+        /** Whether the light at {@code local} (compound space) is relit. */
+        public boolean relights(BlockPos local) {
+            return (relight == Relight.ALL) != except.contains(local);
+        }
+
+        /** The light at {@code local} switched to the other side of the rule. */
+        public Lights toggled(BlockPos local) {
+            List<BlockPos> list = new ArrayList<>(except);
+            if (!list.remove(local)) {
+                list.add(local.immutable());
+            }
+            return new Lights(relight, List.copyOf(list));
+        }
+
+        /** The other rule, with no exceptions. */
+        public Lights flipped() {
+            return new Lights(relight == Relight.ALL ? Relight.NONE : Relight.ALL, List.of());
+        }
+    }
+
+    public enum Relight implements StringRepresentable {
+        ALL("all"),
+        NONE("none");
+
+        public static final Codec<Relight> CODEC = StringRepresentable.fromEnum(Relight::values);
+        private final String name;
+
+        Relight(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getSerializedName() {
+            return name;
+        }
+    }
+
     public Compound withModule(Module module) {
-        return new Compound(append(structures, module), zones, routes, spawns, terrain);
+        return new Compound(append(structures, module), zones, routes, spawns, lights, terrain);
+    }
+
+    /** With module {@code index} replaced. */
+    public Compound withModule(int index, Module module) {
+        List<Module> list = new ArrayList<>(structures);
+        list.set(index, module);
+        return new Compound(List.copyOf(list), zones, routes, spawns, lights, terrain);
+    }
+
+    public Compound withLights(Lights newLights) {
+        return new Compound(structures, zones, routes, spawns, newLights, terrain);
     }
 
     public Compound withZone(Zone zone) {
         List<Zone> list = new ArrayList<>(zones);
         list.removeIf(z -> z.name().equals(zone.name()));
         list.add(zone);
-        return new Compound(structures, List.copyOf(list), routes, spawns, terrain);
+        return new Compound(structures, List.copyOf(list), routes, spawns, lights, terrain);
     }
 
     public Compound withRoute(PatrolRoute route) {
         List<PatrolRoute> list = new ArrayList<>(routes);
         list.removeIf(r -> r.name().equals(route.name()));
         list.add(route);
-        return new Compound(structures, zones, List.copyOf(list), spawns, terrain);
+        return new Compound(structures, zones, List.copyOf(list), spawns, lights, terrain);
     }
 
     public Compound withSpawn(Spawn spawn) {
-        return new Compound(structures, zones, routes, append(spawns, spawn), terrain);
+        return new Compound(structures, zones, routes, append(spawns, spawn), lights, terrain);
     }
 
     public Compound withoutZone(String name) {
-        return new Compound(structures, zones.stream().filter(z -> !z.name().equals(name)).toList(), routes, spawns, terrain);
+        return new Compound(structures, zones.stream().filter(z -> !z.name().equals(name)).toList(), routes, spawns, lights, terrain);
     }
 
     public Compound withoutRoute(String name) {
-        return new Compound(structures, zones, routes.stream().filter(r -> !r.name().equals(name)).toList(), spawns, terrain);
+        return new Compound(structures, zones, routes.stream().filter(r -> !r.name().equals(name)).toList(), spawns, lights, terrain);
     }
 
     /** Without the spawn at {@code index} (unchanged if there's none). */
@@ -131,7 +195,7 @@ public record Compound(List<Module> structures, List<Zone> zones, List<PatrolRou
         }
         List<Spawn> list = new ArrayList<>(spawns);
         list.remove(index);
-        return new Compound(structures, zones, routes, List.copyOf(list), terrain);
+        return new Compound(structures, zones, routes, List.copyOf(list), lights, terrain);
     }
 
     private static <T> List<T> append(List<T> list, T item) {

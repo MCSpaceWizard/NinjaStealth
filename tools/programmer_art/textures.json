@@ -681,6 +681,222 @@
         "................",
         "................"
       ]
+    },
+    {
+      "path": "item/water_arrow",
+      "shape": "arrow_item",
+      "colors": [
+        "wood",
+        "#5fb4e8",
+        "#3d6fb0"
+      ]
+    },
+    {
+      "path": "item/fire_arrow",
+      "shape": "arrow_item",
+      "colors": [
+        "wood",
+        "#f08a24",
+        "lacquer"
+      ]
+    },
+    {
+      "path": "item/sleep_dart",
+      "shape": "dart_item",
+      "colors": [
+        "straw",
+        "jade",
+        "paper"
+      ]
+    },
+    {
+      "path": "item/blowgun",
+      "shape": "blowgun",
+      "colors": [
+        "#8fae4a",
+        "#5d7430",
+        "ink"
+      ]
+    },
+    {
+      "path": "item/key",
+      "shape": "key",
+      "colors": [
+        "gold",
+        "#7a5f14",
+        "lacquer"
+      ]
+    },
+    {
+      "path": "item/lockpick",
+      "shape": "lockpick",
+      "colors": [
+        "steel",
+        "dark_steel",
+        "lacquer_dark"
+      ]
+    },
+    {
+      "path": "item/locksmiths_kit",
+      "shape": "kit",
+      "colors": [
+        "lacquer",
+        "ink",
+        "gold"
+      ]
+    },
+    {
+      "path": "entity/projectiles/water_arrow",
+      "shape": "arrow_entity",
+      "size": 32,
+      "colors": [
+        "wood",
+        "#5fb4e8",
+        "#3d6fb0"
+      ]
+    },
+    {
+      "path": "entity/projectiles/fire_arrow",
+      "shape": "arrow_entity",
+      "size": 32,
+      "colors": [
+        "wood",
+        "#f08a24",
+        "lacquer"
+      ]
+    },
+    {
+      "path": "entity/projectiles/sleep_dart",
+      "shape": "arrow_entity",
+      "size": 32,
+      "colors": [
+        "straw",
+        "jade",
+        "paper"
+      ]
+    },
+    {
+      "path": "particle/drowsy",
+      "shape": "pixelmap",
+      "size": 8,
+      "_note": "Sleep-dart drowsiness: a 'z', tinted in code",
+      "key": {
+        "a": "#ffffff",
+        "b": "#c8c8c8"
+      },
+      "rows": [
+        "........",
+        ".aaaaaa.",
+        ".bbbbab.",
+        "....ab..",
+        "...ab...",
+        "..ab....",
+        ".abbbbb.",
+        ".aaaaaa."
+      ]
+    },
+    {
+      "path": "particle/dizzy_star",
+      "shape": "pixelmap",
+      "size": 8,
+      "_note": "A dizzy star orbiting a staggered head, tinted in code",
+      "key": {
+        "a": "#ffffff",
+        "b": "#c8c8c8"
+      },
+      "rows": [
+        "...a....",
+        "...a....",
+        "..aaa...",
+        "aaaaaaa.",
+        "..aaa...",
+        "..b.b...",
+        ".b...b..",
+        "........"
+      ]
+    },
+    {
+      "path": "particle/glint",
+      "shape": "pixelmap",
+      "size": 8,
+      "_note": "A small four-point glint (caltrops, blinded eyes)",
+      "key": {
+        "a": "#ffffff",
+        "b": "#c8c8c8"
+      },
+      "rows": [
+        "........",
+        "...b....",
+        "...a....",
+        ".baaab..",
+        "...a....",
+        "...b....",
+        "........",
+        "........"
+      ]
+    },
+    {
+      "path": "particle/tag_ring",
+      "shape": "pixelmap",
+      "size": 16,
+      "_note": "Spyglass tag ping: a ring, tinted gold in code",
+      "key": {
+        "a": "#ffffff",
+        "b": "#c8c8c8"
+      },
+      "rows": [
+        "................",
+        "......bbbb......",
+        "....baaaaaab....",
+        "...aab....baa...",
+        "..ab........ba..",
+        "..a..........a..",
+        ".ba..........ab.",
+        ".b............b.",
+        ".b............b.",
+        ".ba..........ab.",
+        "..a..........a..",
+        "..ab........ba..",
+        "...aab....baa...",
+        "....baaaaaab....",
+        "......bbbb......",
+        "................"
+      ]
+    },
+    {
+      "path": "item/toolbelt",
+      "shape": "pixelmap",
+      "key": {
+        "G": "gold",
+        "g": "#8a6a12",
+        "H": "#9c6438",
+        "L": "#7a4a2a",
+        "D": "#4a2a17",
+        "P": "#5c3a22",
+        "R": "lacquer",
+        "r": "lacquer_dark",
+        "s": "steel",
+        "w": "wood",
+        "k": "ink"
+      },
+      "rows": [
+        "................",
+        "................",
+        "..........s.....",
+        "..........s..k..",
+        "..........s..w..",
+        "GGGGHHHHHHsHHwHH",
+        "GLLGLLLLLLLLLLLL",
+        "GGGGLLLLLLLLLLLL",
+        "DDgDDDDDDDDDDDDD",
+        "....RRRRR.PPPPP.",
+        "....rRRRr.PPPPP.",
+        "....PPGPP.PPPPP.",
+        "....PPPPP.PPPPP.",
+        "....PPPPP.DPPPD.",
+        "....DDDDD..DDD..",
+        "................"
+      ]
     }
   ]
 }
