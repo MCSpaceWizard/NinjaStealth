@@ -72,6 +72,13 @@ public final class ToolClientEvents {
     static void onRegisterParticles(RegisterParticleProvidersEvent event) {
         event.registerSpriteSet(ESParticles.SMOKE_CLOUD, ToolParticles.SmokeCloudProvider::new);
         event.registerSpriteSet(ESParticles.BLINDING_PUFF, ToolParticles.BlindingPuffProvider::new);
+        event.registerSpriteSet(ESParticles.SMOKE_CORE, ToolEffectParticles::smokeCore);
+        event.registerSpriteSet(ESParticles.STEAM, ToolEffectParticles::steam);
+        event.registerSpriteSet(ESParticles.EMBER, ToolEffectParticles::ember);
+        event.registerSpriteSet(ESParticles.DROWSY, ToolEffectParticles::drowsy);
+        event.registerSpriteSet(ESParticles.DIZZY_STAR, ToolEffectParticles::dizzyStar);
+        event.registerSpriteSet(ESParticles.GLINT, ToolEffectParticles::glint);
+        event.registerSpriteSet(ESParticles.TAG_PING, ToolEffectParticles::tagPing);
     }
 
     @SubscribeEvent

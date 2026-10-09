@@ -52,16 +52,19 @@ public final class ArrowEffects {
             BlockState state = level.getBlockState(pos);
             if (Snuffing.canSnuff(state)) {
                 if (Snuffing.snuff(level, pos.immutable(), null)) {
+                    ToolEffects.steam(level, pos.immutable());
                     doused++;
                 }
             } else if (state.getBlock() instanceof BaseFireBlock) {
                 level.removeBlock(pos, false);
                 level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 1.6F);
+                ToolEffects.steam(level, pos.immutable());
                 doused++;
             } else if ((state.getBlock() instanceof AbstractCandleBlock) && state.hasProperty(BlockStateProperties.LIT)
                     && state.getValue(BlockStateProperties.LIT)) {
                 AbstractCandleBlock.extinguish(null, state, level, pos.immutable());
                 LightSourceIndex.invalidate(level, pos.immutable());
+                ToolEffects.steam(level, pos.immutable());
                 doused++;
             }
         }
@@ -69,6 +72,7 @@ public final class ArrowEffects {
             entity.clearFire();
         }
         level.sendParticles(ParticleTypes.SPLASH, at.x, at.y, at.z, 24, 0.3, 0.2, 0.3, 0.2);
+        ToolEffects.splash(level, at);
         level.playSound(null, at.x, at.y, at.z, SoundEvents.GENERIC_SPLASH, SoundSource.NEUTRAL, 0.5F, 1.4F);
         Noises.emit(level, new NoiseEvent(at, SPLASH_NOISE, NoiseKind.IMPACT, null, cause != null ? cause.getUUID() : null));
         return doused;
@@ -88,6 +92,7 @@ public final class ArrowEffects {
             BlockPos fixed = pos.immutable();
             if (Snuffing.canRelight(state)) {
                 if (Snuffing.relight(level, fixed, null)) {
+                    ToolEffects.flare(level, fixed);
                     lit++;
                 }
             } else if (CampfireBlock.canLight(state) || CandleBlock.canLight(state) || CandleCakeBlock.canLight(state)) {
@@ -95,6 +100,7 @@ public final class ArrowEffects {
                 level.playSound(null, fixed, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 0.8F, 1.2F);
                 level.gameEvent(cause, GameEvent.BLOCK_CHANGE, fixed);
                 LightSourceIndex.invalidate(level, fixed);
+                ToolEffects.flare(level, fixed);
                 lit++;
             }
         }
@@ -107,6 +113,7 @@ public final class ArrowEffects {
             }
         }
         level.sendParticles(ParticleTypes.FLAME, at.x, at.y, at.z, 10, 0.15, 0.15, 0.15, 0.02);
+        ToolEffects.embers(level, at, 14);
         return lit;
     }
 }

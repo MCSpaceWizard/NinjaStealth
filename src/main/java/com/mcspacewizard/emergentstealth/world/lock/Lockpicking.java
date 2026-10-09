@@ -17,6 +17,7 @@ import com.mcspacewizard.emergentstealth.registry.ESNetwork;
 import com.mcspacewizard.emergentstealth.stealth.sound.NoiseEvent;
 import com.mcspacewizard.emergentstealth.stealth.sound.NoiseKind;
 import com.mcspacewizard.emergentstealth.stealth.sound.Noises;
+import com.mcspacewizard.emergentstealth.tool.ToolEffects;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -182,6 +183,7 @@ public final class Lockpicking {
             if (session.progress >= PINS) {
                 end(player, session, LockpickPayloads.State.SUCCESS, Component.translatable("message.emergentstealth.lockpick.success"));
                 Locks.openOnce(level, session.pos, player);
+                ToolEffects.pickOpen(level, session.pos);
                 Skills.awardInsight(player, SkillPath.SHINOBI, Skills.INSIGHT_LOCKPICK);
                 return PINS;
             }
@@ -190,6 +192,7 @@ public final class Lockpicking {
             level.playSound(null, session.pos, SoundEvents.TRIPWIRE_CLICK_OFF, SoundSource.BLOCKS, 0.8F, 0.6F);
             // The scrape of a slipping pick gives the picker away (design doc 16: attributable).
             Noises.emit(level, new NoiseEvent(at, MISS_NOISE, NoiseKind.OTHER, player.getUUID(), null));
+            ToolEffects.pickSlip(level, session.pos);
             ItemStack pick = player.getItemInHand(session.hand);
             if (level.getRandom().nextFloat() < WEAR_CHANCE) {
                 pick.hurtAndBreak(1, player, session.hand);

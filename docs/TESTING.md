@@ -16,9 +16,34 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Tool wheel on Sumi and tool effects 🧪
+
+Design: [doc 34](design/34-tool-wheel-and-effects.md). Screenshots: [screenshots/tools](screenshots/tools/).
+
+**Automated checks (already passing):** `ui/radial_menu` (which wedge the pointer picks, the wrap at the top, the dead zone, wheel and number-key stepping); 105 GameTests in total.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| W.1 | Wheel look | Carry several tools, hold **R** | Paper wedges unfold clockwise round a paper disc; the world stays visible behind a soft vignette. Each wedge: icon, count, a small number 1–9. The active tool's wedge has a red seal |
+| W.2 | Pointing | Hold R and move the mouse | The pointed wedge slides out and turns to ink; an ink notch on the disc points at it; a soft tick. The disc shows its name and count, the strip below says how it's used |
+| W.3 | Choosing | Release R on a wedge; or press 1–9; or scroll the wheel and press Enter; or click | It becomes the active tool (stamp sound, seal moves). Releasing in the centre or Esc keeps the old one |
+| W.4 | Reduced motion | Turn on `ui.reducedMotion` (config screen) and reopen | No unfolding or easing; everything appears at once |
+| W.5 | Active tool icon | Pick a tool | Its icon sits on a small paper diamond right of the light gem; ink-dimmed when you run out |
+| W.6 | Lockpick ring | Pick a locked door (T.7) | A paper card: an ink ring with a gold window, a needle sweeping round, three diamond seals that turn red as pins set. A good click flashes green, a miss red; the window glides to its next spot |
+| W.7 | Spyglass ring | Scope a guard (T.9) | A smooth arc fills round under the crosshair, gold when tagged, and a gold ring pings round the guard |
+| E.1 | Water arrow | Shoot one at torches and a lantern | Droplets trail behind it; a splash with falling drips; a hiss and a puff of steam over each light it puts out |
+| E.2 | Fire arrow | Shoot one at snuffed torches at night | Smoke and embers trail behind it and it lights the ground as it flies; embers burst where it hits; each relit light flares |
+| E.3 | Sleep dart | Dart a guard | Gold stars circle his head while he staggers, "z" marks drift up, and a slow puff when he drops |
+| E.4 | Blinding powder | Puff a guard | Stars circle his head and glints flicker round his eyes until it wears off |
+| E.5 | Smoke bomb | Throw one in daylight | A billowing cloud with a darker heart and slowly curling edges, thinning out at the end |
+| E.6 | Firecracker | Throw one | Embers sputter from the fuse; each bang flashes with red, gold and pale crackle |
+| E.7 | Caltrops | Look at a patch at night | Now and then a spike glints |
+| E.8 | Lockpicking | Miss a pin, then open a lock | Sparks at the lock on a miss; a puff when it opens |
+| E.9 | Particles setting | Video settings → Particles: Minimal | The effects thin out like vanilla ones |
+
 ## Beta toolkit, part B: water and fire arrows, blowgun, locks and keys, lockpicking, spyglass tagging 🧪
 
-**Automated checks (already passing):** 8 more GameTests (`toolkit/*`, 104 total):
+**Automated checks (already passing):** 8 more GameTests (`toolkit/*`):
 - a water arrow puts out a torch with one quiet splash (noise 2) that doesn't point at the archer
 - a fire arrow relights an unlit torch
 - a sleep dart staggers an NPC for 3 s, then knocks it out without damage

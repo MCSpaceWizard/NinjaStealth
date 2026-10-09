@@ -1,9 +1,12 @@
 package com.mcspacewizard.emergentstealth.client.tool;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
+import com.mcspacewizard.emergentstealth.client.ui.Paint;
+import com.mcspacewizard.emergentstealth.client.ui.Sumi;
 import com.mcspacewizard.emergentstealth.registry.ESAttachments;
 import com.mcspacewizard.emergentstealth.tool.SpyglassTagging;
 import com.mcspacewizard.emergentstealth.tool.SpyglassTags;
+import com.mcspacewizard.emergentstealth.ui.SumiTheme;
 
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -20,7 +23,6 @@ import net.neoforged.neoforge.client.gui.GuiLayer;
 public class SpyglassTagHud implements GuiLayer {
     public static final Identifier LAYER_ID = EmergentStealth.id("spyglass_tags");
     private static final int RADIUS = 9;
-    private static final int SEGMENTS = 24;
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
@@ -40,13 +42,12 @@ public class SpyglassTagHud implements GuiLayer {
             boolean tagged = tags.isTagged(tags.focusEntity(), now);
             float progress = tagged ? 1.0F
                     : Mth.clamp((now - tags.focusStart() + deltaTracker.getGameTimeDeltaPartialTick(false)) / SpyglassTagging.FOCUS_TICKS, 0.0F, 1.0F);
-            int filled = Math.round(progress * SEGMENTS);
-            for (int i = 0; i < SEGMENTS; i++) {
-                double rad = Math.toRadians(i * 360.0 / SEGMENTS);
-                int x = cx + (int) Math.round(Math.sin(rad) * RADIUS);
-                int y = cy - (int) Math.round(Math.cos(rad) * RADIUS);
-                int color = i < filled ? (tagged ? ToolkitBClient.TAG_OUTLINE : 0xFFF2EEE6) : 0x80403A48;
-                graphics.fill(x - 1, y - 1, x + 1, y + 1, color);
+            // A smooth ink arc filling clockwise from the top (Sumi), gold once tagged.
+            SumiTheme theme = Sumi.theme();
+            Paint.ring(graphics, cx, cy, RADIUS - 1.5F, RADIUS + 1.5F, Paint.fade(theme.color(SumiTheme.INK), 0.45F));
+            int fill = tagged ? ToolkitBClient.TAG_OUTLINE : theme.color(SumiTheme.PAPER);
+            if (progress > 0.0F) {
+                Paint.arc(graphics, cx, cy, RADIUS - 1.0F, RADIUS + 1.0F, (float) (-Math.PI / 2.0), (float) (Math.PI * 2.0 * progress), fill);
             }
             if (tagged) {
                 graphics.centeredText(minecraft.font, Component.translatable("hud.emergentstealth.spyglass.tagged"), cx, cy + RADIUS + 4, ToolkitBClient.TAG_OUTLINE);

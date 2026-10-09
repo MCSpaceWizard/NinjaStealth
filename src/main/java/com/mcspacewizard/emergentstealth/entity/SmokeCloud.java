@@ -121,8 +121,12 @@ public class SmokeCloud extends Entity {
             double y = this.getY() + dy * dist * 0.85;
             double z = this.getZ() + dz * dist;
             double out = burst ? 0.12 : (grow < 1.0F ? 0.03 : 0.0);
-            this.level().addParticle(ESParticles.SMOKE_CLOUD, x, y, z,
-                    dx * out + (random.nextDouble() - 0.5) * 0.01, dy * out * 0.5 + 0.002, dz * out + (random.nextDouble() - 0.5) * 0.01);
+            // The heart is darker and denser (design doc 34 §2); the edge curls slowly round the cloud.
+            boolean core = u < 0.6 && random.nextInt(3) == 0;
+            double curl = u > 0.8 ? 0.012 : 0.0;
+            this.level().addParticle(core ? ESParticles.SMOKE_CORE : ESParticles.SMOKE_CLOUD, x, y, z,
+                    dx * out - dz * curl + (random.nextDouble() - 0.5) * 0.01, dy * out * 0.5 + 0.002,
+                    dz * out + dx * curl + (random.nextDouble() - 0.5) * 0.01);
         }
     }
 

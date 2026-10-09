@@ -7,7 +7,6 @@ import com.mcspacewizard.emergentstealth.ai.brain.AlertState;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 import com.mcspacewizard.emergentstealth.registry.ESAttachments;
 
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -49,6 +48,7 @@ public final class Darts {
             }
             boolean knockOut = knocksOut(npc.stealthBrain().state());
             npc.setData(ESAttachments.STAGGER, new Stagger(level.getGameTime() + STAGGER_TICKS, knockOut));
+            ToolEffects.dizzy(level, npc, STAGGER_TICKS);
             npc.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, STAGGER_TICKS, 3, false, false));
         } else if (target instanceof Player) {
             target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, PLAYER_SLOW_TICKS, 0, false, true));
@@ -82,16 +82,17 @@ public final class Darts {
         if (now >= stagger.until()) {
             npc.setData(ESAttachments.STAGGER, Stagger.NONE);
             if (stagger.knockOut()) {
+                ToolEffects.exhale(level, npc);
                 npc.knockOut(level, null);
             }
             return;
         }
-        // The wobble: the head sways and the body drifts off its heading; drowsy particles over the head.
+        // The wobble: the head sways and the body drifts off its heading; drowsy marks over the head.
         float sway = Mth.sin(now * 0.45F) * 25.0F;
         npc.setYHeadRot(npc.yBodyRot + sway);
         npc.setXRot(10.0F + Mth.sin(now * 0.3F) * 12.0F);
-        if (now % 6 == 0) {
-            level.sendParticles(ParticleTypes.ENCHANT, npc.getX(), npc.getEyeY() + 0.4, npc.getZ(), 2, 0.2, 0.1, 0.2, 0.0);
+        if (stagger.knockOut() && (now + npc.getId()) % 10 == 0) {
+            ToolEffects.drowsy(level, npc);
         }
     }
 }

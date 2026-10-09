@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import com.mcspacewizard.emergentstealth.registry.ESEntities;
 import com.mcspacewizard.emergentstealth.registry.ESItems;
 import com.mcspacewizard.emergentstealth.tool.ArrowEffects;
+import com.mcspacewizard.emergentstealth.tool.ToolEffects;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -66,6 +67,14 @@ public class FireArrow extends AbstractArrow {
         if (burning && this.level() instanceof ServerLevel && target.getRemainingFireTicks() > before) {
             // Vanilla sets 5 s for a burning arrow; ours burns briefly.
             target.setRemainingFireTicks(Math.max(before, Math.round(BURN_SECONDS * 20)));
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (this.level().isClientSide() && !this.isInGround() && this.isOnFire()) {
+            ToolEffects.fireTrail(this.level(), this);
         }
     }
 

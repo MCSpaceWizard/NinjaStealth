@@ -774,6 +774,94 @@
         "jade",
         "paper"
       ]
+    },
+    {
+      "path": "particle/drowsy",
+      "shape": "pixelmap",
+      "size": 8,
+      "_note": "Sleep-dart drowsiness: a 'z', tinted in code",
+      "key": {
+        "a": "#ffffff",
+        "b": "#c8c8c8"
+      },
+      "rows": [
+        "........",
+        ".aaaaaa.",
+        ".bbbbab.",
+        "....ab..",
+        "...ab...",
+        "..ab....",
+        ".abbbbb.",
+        ".aaaaaa."
+      ]
+    },
+    {
+      "path": "particle/dizzy_star",
+      "shape": "pixelmap",
+      "size": 8,
+      "_note": "A dizzy star orbiting a staggered head, tinted in code",
+      "key": {
+        "a": "#ffffff",
+        "b": "#c8c8c8"
+      },
+      "rows": [
+        "...a....",
+        "...a....",
+        "..aaa...",
+        "aaaaaaa.",
+        "..aaa...",
+        "..b.b...",
+        ".b...b..",
+        "........"
+      ]
+    },
+    {
+      "path": "particle/glint",
+      "shape": "pixelmap",
+      "size": 8,
+      "_note": "A small four-point glint (caltrops, blinded eyes)",
+      "key": {
+        "a": "#ffffff",
+        "b": "#c8c8c8"
+      },
+      "rows": [
+        "........",
+        "...b....",
+        "...a....",
+        ".baaab..",
+        "...a....",
+        "...b....",
+        "........",
+        "........"
+      ]
+    },
+    {
+      "path": "particle/tag_ring",
+      "shape": "pixelmap",
+      "size": 16,
+      "_note": "Spyglass tag ping: a ring, tinted gold in code",
+      "key": {
+        "a": "#ffffff",
+        "b": "#c8c8c8"
+      },
+      "rows": [
+        "................",
+        "......bbbb......",
+        "....baaaaaab....",
+        "...aab....baa...",
+        "..ab........ba..",
+        "..a..........a..",
+        ".ba..........ab.",
+        ".b............b.",
+        ".b............b.",
+        ".ba..........ab.",
+        "..a..........a..",
+        "..ab........ba..",
+        "...aab....baa...",
+        "....baaaaaab....",
+        "......bbbb......",
+        "................"
+      ]
     }
   ]
 }

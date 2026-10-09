@@ -19,22 +19,26 @@ Priorities follow the Beta 1 plan: what testers see most comes first.
 | 1 | `gui/sprites/hud/light_gem_frame.png` | 32×16 | P | Light gem frame (lozenge rim) |
 | 2 | `gui/sprites/hud/light_gem_dark.png` | 32×16 | P | Gem fill when hidden (near-black glass) |
 | 3 | `gui/sprites/hud/light_gem_lit.png` | 32×16 | P | Gem fill when lit (warm amber), blended over the dark one |
-| 4 | `item/pebble.png` | 16×16 | B | Small grey stone, the basic distraction |
-| 5 | `item/smoke_bomb.png` | 16×16 | B | Round clay or paper ball with a short fuse |
-| 6 | `item/firecracker.png` | 16×16 | B | Red paper tube string, lacquer accent |
-| 7 | `item/blinding_powder.png` | 16×16 | B | Small cloth pouch with pale powder |
-| 8 | `item/caltrops.png` | 16×16 | B | A handful of iron caltrops |
-| 9 | `block/caltrops.png` | 16×16 | B | Caltrops scattered on the ground (cutout, flat) |
-| 10 | `item/water_arrow.png` | 16×16 | B | Arrow with a blue water-filled bulb head |
-| 11 | `item/fire_arrow.png` | 16×16 | B | Arrow with a cloth-wrapped burning head |
-| 12 | `entity/projectiles/water_arrow.png` | 32×32 | B | In-flight water arrow (vanilla arrow layout) |
-| 13 | `entity/projectiles/fire_arrow.png` | 32×32 | B | In-flight fire arrow |
-| 14 | `item/blowgun.png` | 16×16 | B | Bamboo blowgun (diagonal, like a tool) |
-| 15 | `item/sleep_dart.png` | 16×16 | B | Thin dart with a feather tuft |
-| 16 | `entity/projectiles/sleep_dart.png` | 32×32 | B | In-flight dart |
-| 17 | `item/key.png` | 16×16 | B | Old iron key with a lacquer tag |
-| 18 | `item/lockpick.png` | 16×16 | B | Pair of thin picks |
-| 19 | `item/locksmiths_kit.png` | 16×16 | B | Map-maker tool: small wooden box (creative) |
+| 4 | `item/pebble.png` | 16×16 | P | Small grey stone, the basic distraction |
+| 5 | `item/smoke_bomb.png` | 16×16 | P | Round clay or paper ball with a short fuse |
+| 6 | `item/firecracker.png` | 16×16 | P | Red paper tube string, lacquer accent |
+| 7 | `item/blinding_powder.png` | 16×16 | P | Small cloth pouch with pale powder |
+| 8 | `item/caltrops.png` | 16×16 | P | A handful of iron caltrops |
+| 9 | `block/caltrops.png` | 16×16 | P | Caltrops scattered on the ground (cutout, flat) |
+| 10 | `item/water_arrow.png` | 16×16 | P | Arrow with a blue water-filled bulb head |
+| 11 | `item/fire_arrow.png` | 16×16 | P | Arrow with a cloth-wrapped burning head |
+| 12 | `entity/projectiles/water_arrow.png` | 32×32 | P | In-flight water arrow (vanilla arrow layout) |
+| 13 | `entity/projectiles/fire_arrow.png` | 32×32 | P | In-flight fire arrow |
+| 14 | `item/blowgun.png` | 16×16 | P | Bamboo blowgun (diagonal, like a tool) |
+| 15 | `item/sleep_dart.png` | 16×16 | P | Thin dart with a feather tuft |
+| 16 | `entity/projectiles/sleep_dart.png` | 32×32 | P | In-flight dart |
+| 17 | `item/key.png` | 16×16 | P | Old iron key with a lacquer tag |
+| 18 | `item/lockpick.png` | 16×16 | P | Pair of thin picks |
+| 19 | `item/locksmiths_kit.png` | 16×16 | P | Map-maker tool: small wooden box (creative) |
+| 19a | `particle/drowsy.png` | 8×8 | P | A "z" over a drowsy NPC (white, tinted in code) |
+| 19b | `particle/dizzy_star.png` | 8×8 | P | A star circling a dazed head (white, tinted gold in code) |
+| 19c | `particle/glint.png` | 8×8 | P | A small four-point glint: caltrops at night, blinded eyes |
+| 19d | `particle/tag_ring.png` | 16×16 | P | Spyglass tag ping: a thin ring (white, tinted gold in code) |
 
 ## Priority 2: stealth gear and NPC readability
 

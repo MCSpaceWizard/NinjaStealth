@@ -312,17 +312,28 @@ public final class ToolkitBTests {
         StealthNpc npc = SoundTests.listener(helper, new Vec3(4.5, 1, 12.5), 180.0F);
         ServerPlayer player = TestPlayers.spawn(helper, new Vec3(4.5, 1, 2.5), 0.0F);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.SPYGLASS));
-        player.startUsingItem(InteractionHand.MAIN_HAND);
-        helper.assertTrue(player.isScoping(), "Setup: scoping");
-        helper.assertTrue(SpyglassTagging.lookedAt(player) == npc, "The scope ray finds the NPC");
-        long start = level.getGameTime();
-        helper.onEachTick(() -> SpyglassTagging.tick(player));
-        helper.runAfterDelay(SpyglassTagging.FOCUS_TICKS / 2, () -> helper.assertTrue(SpyglassTagging.tags(player).isEmpty(),
+        long[] start = {-1};
+        helper.runAfterDelay(1, () -> {
+            // The view follows the head, which a fresh player gets at random (snapTo only sets the body yaw).
+            player.setYHeadRot(0.0F);
+            player.yHeadRotO = 0.0F;
+            player.startUsingItem(InteractionHand.MAIN_HAND);
+            helper.assertTrue(player.isScoping(), "Setup: scoping");
+            helper.assertTrue(SpyglassTagging.lookedAt(player) == npc, "The scope ray finds the NPC (view " + player.getViewVector(1.0F) + ")");
+            start[0] = level.getGameTime();
+        });
+        helper.onEachTick(() -> {
+            if (start[0] >= 0) {
+                SpyglassTagging.tick(player);
+            }
+        });
+        helper.runAfterDelay(1 + SpyglassTagging.FOCUS_TICKS / 2, () -> helper.assertTrue(SpyglassTagging.tags(player).isEmpty(),
                 "Half a second isn't enough to tag"));
         helper.succeedWhen(() -> {
+            helper.assertTrue(start[0] >= 0, "Waiting to start scoping");
             List<SpyglassTags.Tag> tags = SpyglassTagging.tags(player);
             helper.assertTrue(tags.size() == 1 && tags.getFirst().entityId() == npc.getId(), "The NPC should be tagged, got " + tags);
-            helper.assertTrue(level.getGameTime() - start >= SpyglassTagging.FOCUS_TICKS, "Only after a second of looking");
+            helper.assertTrue(level.getGameTime() - start[0] >= SpyglassTagging.FOCUS_TICKS, "Only after a second of looking");
             helper.assertTrue(tags.getFirst().expiresAt() - level.getGameTime() > SpyglassTagging.TAG_TICKS - 40, "Tags last 60 s");
             // At most three tags: a fourth replaces the oldest.
             SpyglassTags many = SpyglassTags.EMPTY;

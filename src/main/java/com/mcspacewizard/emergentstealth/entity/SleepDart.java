@@ -6,6 +6,8 @@ import com.mcspacewizard.emergentstealth.registry.ESEntities;
 import com.mcspacewizard.emergentstealth.registry.ESItems;
 import com.mcspacewizard.emergentstealth.tool.Darts;
 
+import com.mcspacewizard.emergentstealth.tool.ToolEffects;
+
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -45,6 +47,14 @@ public class SleepDart extends AbstractArrow {
     @Override
     protected SoundEvent getDefaultHitGroundSoundEvent() {
         return SoundEvents.BAMBOO_HIT;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (this.level().isClientSide() && !this.isInGround() && !this.isRemoved()) {
+            ToolEffects.dartTrail(this.level(), this);
+        }
     }
 
     @Override

@@ -85,6 +85,7 @@ public final class SpyglassTagging {
             updated = updated.withFocus(targetId, now);
         } else if (target != null && now - updated.focusStart() >= FOCUS_TICKS && !updated.isTagged(targetId, now)) {
             updated = tag(updated, targetId, now, maxTags(player));
+            ToolEffects.tagPing(player, target);
             level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SPYGLASS_STOP_USING, SoundSource.PLAYERS, 0.6F, 1.8F);
         }
         if (updated != tags) {

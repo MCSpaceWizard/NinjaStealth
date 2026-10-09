@@ -1,5 +1,7 @@
 # 21 — Toolkit I: the beta tool set (Stage 12, pulled forward) 📄
 
+> **Status (2026-10-09):** part A (pebble, smoke, firecracker, blinding powder, caltrops) and part B (water/fire arrows, blowgun and sleep darts, keys, locks, lockpicking, spyglass tagging) are built, with 16 GameTests. The wheel, the lockpick ring and the tool effects were redone in [doc 34](34-tool-wheel-and-effects.md).
+
 You asked (2026-10-08) for tools early, so testers get a **beta stealth experience**. This doc pulls the core of S12 forward and merges in S8's smoke bomb and pebbles. Every tool is server-authoritative, works in survival and multiplayer, and has a crafting recipe (basic tools at the crafting table, E-06), programmer art and a GameTest.
 
 ## 1. Tool wheel and quick use (E-03)

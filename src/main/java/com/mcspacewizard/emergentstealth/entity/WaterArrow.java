@@ -6,6 +6,8 @@ import com.mcspacewizard.emergentstealth.registry.ESEntities;
 import com.mcspacewizard.emergentstealth.registry.ESItems;
 import com.mcspacewizard.emergentstealth.tool.ArrowEffects;
 
+import com.mcspacewizard.emergentstealth.tool.ToolEffects;
+
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -49,6 +51,14 @@ public class WaterArrow extends AbstractArrow {
             hitResult.getEntity().clearFire();
             ArrowEffects.splash(level, hitResult.getLocation(), this);
             this.discard();
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (this.level().isClientSide() && !this.isInGround() && !this.isRemoved()) {
+            ToolEffects.waterTrail(this.level(), this);
         }
     }
 
