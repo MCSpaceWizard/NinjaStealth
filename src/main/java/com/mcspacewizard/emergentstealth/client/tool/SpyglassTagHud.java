@@ -52,7 +52,7 @@ public class SpyglassTagHud implements GuiLayer {
                 graphics.centeredText(minecraft.font, Component.translatable("hud.emergentstealth.spyglass.tagged"), cx, cy + RADIUS + 4, ToolkitBClient.TAG_OUTLINE);
             }
         }
-        Component counter = Component.translatable("hud.emergentstealth.spyglass.count", count, SpyglassTagging.MAX_TAGS);
+        Component counter = Component.translatable("hud.emergentstealth.spyglass.count", count, SpyglassTagging.maxTags(minecraft.player));
         graphics.centeredText(minecraft.font, counter, cx, graphics.guiHeight() - 40, 0xFFE8DCC0);
     }
 }

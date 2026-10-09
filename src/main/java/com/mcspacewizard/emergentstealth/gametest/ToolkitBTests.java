@@ -15,6 +15,8 @@ import com.mcspacewizard.emergentstealth.entity.SleepDart;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 import com.mcspacewizard.emergentstealth.entity.WaterArrow;
 import com.mcspacewizard.emergentstealth.item.KeyItem;
+import com.mcspacewizard.emergentstealth.progression.SkillPath;
+import com.mcspacewizard.emergentstealth.progression.Skills;
 import com.mcspacewizard.emergentstealth.registry.ESAttachments;
 import com.mcspacewizard.emergentstealth.registry.ESBlocks;
 import com.mcspacewizard.emergentstealth.registry.ESEntities;
@@ -261,6 +263,7 @@ public final class ToolkitBTests {
         Locks.lock(level, absDoor, "vault", 3);
         List<NoiseEvent> noises = SoundTests.capture(helper, noise -> true);
         ServerPlayer player = TestPlayers.spawn(helper, new Vec3(4.5, 1, 6.5), 0.0F);
+        helper.assertTrue(Lockpicking.window(player, 3) == Lockpicking.window(3), "No skills: the plain window");
         ItemStack pick = new ItemStack(ESItems.LOCKPICK.get());
         player.setItemInHand(InteractionHand.MAIN_HAND, pick);
         // Using the pick on the door starts a session (and doesn't open the door).
@@ -287,6 +290,8 @@ public final class ToolkitBTests {
                 helper.assertTrue(isOpen(helper, door), "Three pins open the door");
                 helper.assertTrue(Lockpicking.session(player) == null, "The session ends");
                 helper.assertTrue(Locks.isLocked(level, absDoor), "Picking opens it once; the lock stays");
+                helper.assertTrue(Skills.progression(player).insight(SkillPath.SHINOBI) == Skills.INSIGHT_LOCKPICK,
+                        "A successful pick earns Shinobi Insight");
                 BlockState open = level.getBlockState(absDoor);
                 ((DoorBlock) open.getBlock()).setOpen(player, level, open, absDoor, false);
                 player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);

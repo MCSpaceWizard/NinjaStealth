@@ -70,7 +70,7 @@ public final class ToolkitBClient {
     }
 
     private static void onLockpickOpen(LockpickPayloads.Open payload, IPayloadContext context) {
-        Minecraft.getInstance().setScreen(new LockpickScreen(payload.pos(), payload.difficulty(), payload.pins()));
+        Minecraft.getInstance().setScreen(new LockpickScreen(payload.pos(), payload.difficulty(), payload.pins(), payload.window()));
     }
 
     private static void onLockpickState(LockpickPayloads.State payload, IPayloadContext context) {

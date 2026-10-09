@@ -13,13 +13,17 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 public final class LockpickPayloads {
     private LockpickPayloads() {}
 
-    /** Server → client: open the minigame for the lock at {@code pos}. */
-    public record Open(BlockPos pos, int difficulty, int pins) implements CustomPacketPayload {
+    /**
+     * Server → client: open the minigame for the lock at {@code pos}. {@code window} is the timing window in
+     * degrees, already scaled by the picker's {@code lockpick_window} stat.
+     */
+    public record Open(BlockPos pos, int difficulty, int pins, float window) implements CustomPacketPayload {
         public static final Type<Open> TYPE = new Type<>(EmergentStealth.id("lockpick_open"));
         public static final StreamCodec<ByteBuf, Open> STREAM_CODEC = StreamCodec.composite(
                 BlockPos.STREAM_CODEC, Open::pos,
                 ByteBufCodecs.VAR_INT, Open::difficulty,
                 ByteBufCodecs.VAR_INT, Open::pins,
+                ByteBufCodecs.FLOAT, Open::window,
                 Open::new);
 
         @Override

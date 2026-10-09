@@ -9,6 +9,10 @@ import org.jspecify.annotations.Nullable;
 import com.mcspacewizard.emergentstealth.EmergentStealth;
 import com.mcspacewizard.emergentstealth.item.LockpickItem;
 import com.mcspacewizard.emergentstealth.network.LockpickPayloads;
+import com.mcspacewizard.emergentstealth.progression.SkillPath;
+import com.mcspacewizard.emergentstealth.progression.Skills;
+import com.mcspacewizard.emergentstealth.progression.StealthStat;
+import com.mcspacewizard.emergentstealth.progression.StealthStats;
 import com.mcspacewizard.emergentstealth.registry.ESNetwork;
 import com.mcspacewizard.emergentstealth.stealth.sound.NoiseEvent;
 import com.mcspacewizard.emergentstealth.stealth.sound.NoiseKind;
@@ -69,6 +73,11 @@ public final class Lockpicking {
         return Math.max(18.0F, 64.0F - 11.0F * (difficulty - 1));
     }
 
+    /** The window for this player: skills and gear widen it through {@link StealthStat#LOCKPICK_WINDOW}. */
+    public static float window(ServerPlayer player, int difficulty) {
+        return Math.min(180.0F, window(difficulty) * StealthStats.get(player, StealthStat.LOCKPICK_WINDOW));
+    }
+
     /** One player picking one lock. */
     public static final class Session {
         final BlockPos pos;
@@ -77,7 +86,7 @@ public final class Lockpicking {
         final InteractionHand hand;
         final long startedAt;
         int progress;
-        long lastClick = Long.MIN_VALUE;
+        long lastClick = Long.MIN_VALUE / 2; // halved: now - lastClick must not overflow
 
         Session(BlockPos pos, ResourceKey<Level> dimension, int difficulty, InteractionHand hand, long startedAt) {
             this.pos = pos;
@@ -139,7 +148,7 @@ public final class Lockpicking {
         }
         Session session = new Session(Locks.canonical(level, pos), level.dimension(), lock.difficulty(), hand, level.getGameTime());
         SESSIONS.put(player.getUUID(), session);
-        ESNetwork.sendIfSupported(player, new LockpickPayloads.Open(session.pos, session.difficulty, PINS));
+        ESNetwork.sendIfSupported(player, new LockpickPayloads.Open(session.pos, session.difficulty, PINS, window(player, session.difficulty)));
     }
 
     public static void cancel(ServerPlayer player) {
@@ -173,6 +182,7 @@ public final class Lockpicking {
             if (session.progress >= PINS) {
                 end(player, session, LockpickPayloads.State.SUCCESS, Component.translatable("message.emergentstealth.lockpick.success"));
                 Locks.openOnce(level, session.pos, player);
+                Skills.awardInsight(player, SkillPath.SHINOBI, Skills.INSIGHT_LOCKPICK);
                 return PINS;
             }
         } else {

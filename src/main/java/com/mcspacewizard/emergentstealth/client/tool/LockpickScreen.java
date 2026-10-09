@@ -40,13 +40,13 @@ public class LockpickScreen extends Screen {
     private boolean flashHit;
     private boolean finished;
 
-    public LockpickScreen(BlockPos pos, int difficulty, int pins) {
+    public LockpickScreen(BlockPos pos, int difficulty, int pins, float window) {
         super(Component.translatable("screen.emergentstealth.lockpick"));
         this.pos = pos;
         this.difficulty = difficulty;
         this.pins = pins;
         this.speed = Lockpicking.speed(difficulty);
-        this.window = Lockpicking.window(difficulty);
+        this.window = window;
         moveWindow();
     }
 

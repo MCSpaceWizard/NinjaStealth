@@ -8,6 +8,8 @@ import org.jspecify.annotations.Nullable;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
+import com.mcspacewizard.emergentstealth.progression.StealthStat;
+import com.mcspacewizard.emergentstealth.progression.StealthStats;
 import com.mcspacewizard.emergentstealth.registry.ESAttachments;
 
 import net.minecraft.server.level.ServerLevel;
@@ -82,7 +84,7 @@ public final class SpyglassTagging {
         if (targetId != updated.focusEntity()) {
             updated = updated.withFocus(targetId, now);
         } else if (target != null && now - updated.focusStart() >= FOCUS_TICKS && !updated.isTagged(targetId, now)) {
-            updated = tag(updated, targetId, now);
+            updated = tag(updated, targetId, now, maxTags(player));
             level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SPYGLASS_STOP_USING, SoundSource.PLAYERS, 0.6F, 1.8F);
         }
         if (updated != tags) {
@@ -90,13 +92,23 @@ public final class SpyglassTagging {
         }
     }
 
+    /** How many tags this player may hold: {@link #MAX_TAGS} plus the {@link StealthStat#TAG_COUNT} stat. */
+    public static int maxTags(net.minecraft.world.entity.player.Player player) {
+        return MAX_TAGS + Math.max(0, Math.round(StealthStats.get(player, StealthStat.TAG_COUNT)));
+    }
+
     /** Adds a tag, dropping the oldest beyond {@link #MAX_TAGS}. */
     public static SpyglassTags tag(SpyglassTags tags, int entityId, long now) {
+        return tag(tags, entityId, now, MAX_TAGS);
+    }
+
+    /** Adds a tag, dropping the oldest beyond {@code max}. */
+    public static SpyglassTags tag(SpyglassTags tags, int entityId, long now, int max) {
         List<SpyglassTags.Tag> list = new ArrayList<>(tags.active(now));
         list.removeIf(tag -> tag.entityId() == entityId);
         list.add(new SpyglassTags.Tag(entityId, now + TAG_TICKS));
         list.sort(Comparator.comparingLong(SpyglassTags.Tag::expiresAt));
-        while (list.size() > MAX_TAGS) {
+        while (list.size() > max) {
             list.removeFirst();
         }
         return tags.withTags(list);
