@@ -240,7 +240,7 @@
   "ui.emergentstealth.dialogue.preview.wait": "Good. Don't move. I'll only be a moment.",
   "commands.emergentstealth.dev.dialogue.unsupported": "That client doesn't have Emergent Stealth, so it can't show the preview.",
   "ui.emergentstealth.skills.tab.shinobi": "Shinobi",
-  "ui.emergentstealth.skills.tab.shogunate": "Shogunate"
+  "ui.emergentstealth.skills.tab.shogunate": "Shogunate",
   "item.emergentstealth.pebble": "Pebble",
   "item.emergentstealth.smoke_bomb": "Smoke Bomb",
   "item.emergentstealth.firecracker": "Firecracker",

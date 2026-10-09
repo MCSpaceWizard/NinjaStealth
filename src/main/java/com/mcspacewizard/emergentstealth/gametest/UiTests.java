@@ -279,4 +279,21 @@ final class UiTests {
         }
         helper.succeed();
     }
+
+    /**
+     * The mod's language file parses strictly. Several branches append to it; one missing comma in a merge
+     * makes the game skip the whole file, so every mod text shows as a raw key.
+     */
+    static void langFileValid(GameTestHelper helper) {
+        try (var stream = UiTests.class.getResourceAsStream("/assets/emergentstealth/lang/en_us.json")) {
+            helper.assertTrue(stream != null, "en_us.json is packaged");
+            var reader = new com.google.gson.stream.JsonReader(new java.io.InputStreamReader(stream, java.nio.charset.StandardCharsets.UTF_8));
+            com.google.gson.JsonObject lang = new com.google.gson.GsonBuilder().setStrictness(com.google.gson.Strictness.STRICT).create()
+                    .fromJson(reader, com.google.gson.JsonObject.class);
+            helper.assertTrue(lang.has("ui.emergentstealth.config.title") && lang.has("key.emergentstealth.skills"), "Sumi keys present");
+        } catch (java.io.IOException | RuntimeException e) {
+            helper.fail("en_us.json doesn't parse: " + e.getMessage());
+        }
+        helper.succeed();
+    }
 }
