@@ -60,4 +60,10 @@ public final class ESItems {
     /** Mark zones: click two corners for a box, shift-click the second to add it to the selected zone, use in the air to edit. */
     public static final DeferredItem<com.mcspacewizard.emergentstealth.item.SurveyorsRopeItem> SURVEYORS_ROPE = ITEMS.registerItem("surveyors_rope",
             com.mcspacewizard.emergentstealth.item.SurveyorsRopeItem::new, p -> p.stacksTo(1));
+    /** Start a compound from a placed structure; add zones and routes, take markers out, save. */
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.item.CompoundLedgerItem> COMPOUND_LEDGER = ITEMS.registerItem("compound_ledger",
+            com.mcspacewizard.emergentstealth.item.CompoundLedgerItem::new, p -> p.stacksTo(1));
+    /** Spawn NPCs with an archetype, behaviour and schedule; with a compound open they join it. */
+    public static final DeferredItem<com.mcspacewizard.emergentstealth.item.MusterRollItem> MUSTER_ROLL = ITEMS.registerItem("muster_roll",
+            com.mcspacewizard.emergentstealth.item.MusterRollItem::new, p -> p.stacksTo(1));
 }

@@ -92,6 +92,24 @@ public record Compound(List<Module> structures, List<Zone> zones, List<PatrolRou
         return new Compound(structures, zones, routes, append(spawns, spawn));
     }
 
+    public Compound withoutZone(String name) {
+        return new Compound(structures, zones.stream().filter(z -> !z.name().equals(name)).toList(), routes, spawns);
+    }
+
+    public Compound withoutRoute(String name) {
+        return new Compound(structures, zones, routes.stream().filter(r -> !r.name().equals(name)).toList(), spawns);
+    }
+
+    /** Without the spawn at {@code index} (unchanged if there's none). */
+    public Compound withoutSpawn(int index) {
+        if (index < 0 || index >= spawns.size()) {
+            return this;
+        }
+        List<Spawn> list = new ArrayList<>(spawns);
+        list.remove(index);
+        return new Compound(structures, zones, routes, List.copyOf(list));
+    }
+
     private static <T> List<T> append(List<T> list, T item) {
         List<T> copy = new ArrayList<>(list);
         copy.add(item);

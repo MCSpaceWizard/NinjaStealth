@@ -183,16 +183,15 @@ final class CompoundCommands {
     private static int addNpcs(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
         CompoundDrafts.Draft draft = draftHere(source);
-        int count = 0;
+        int before = draft.compound().spawns().size();
         for (Entity entity : EntityArgument.getEntities(ctx, "targets")) {
             if (entity instanceof StealthNpc npc && npc.level().dimension().equals(draft.dimension())) {
                 draft = CompoundDrafts.addNpc(author(source), draft, npc);
-                count++;
             }
         }
-        int added = count;
+        int added = draft.compound().spawns().size() - before;
         source.sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.added_npcs", added), false);
-        return count;
+        return added;
     }
 
     private static int addZone(CommandContext<CommandSourceStack> ctx, Optional<Zone.Hours> hours) throws CommandSyntaxException {
@@ -233,7 +232,7 @@ final class CompoundCommands {
 
     private static int save(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
-        CompoundDrafts.Draft draft = draft(source);
+        CompoundDrafts.Draft draft = CompoundDrafts.refreshLinks(source.getServer(), author(source), draft(source));
         try {
             Path file = Compounds.saveToWorld(source.getServer(), draft.id(), draft.compound());
             source.sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.saved", draft.id().toString(), file.toString()), true);

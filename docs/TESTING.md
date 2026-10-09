@@ -48,6 +48,27 @@ Design: [doc 31](design/31-ui-framework.md) §0. Geometric shapes drawn in code,
 | U.12 | Theming | Resource pack with `assets/emergentstealth/ui/theme.json` overriding e.g. `"colors": {"paper": "#f4efe2"}`, or `textures/gui/sumi/paper.png` | Only that token changes; everything else keeps the defaults. A paper PNG replaces the generated grain |
 | U.13 | Dedicated server | `./gradlew runServer` | Starts normally (no client classes on the server) |
 
+## Muster Roll and Compound Ledger: spawn guards, author compounds by item 🧪
+
+Design doc [32](design/32-authoring-tools.md) §3 and §4. The **Muster Roll** spawns NPCs with an archetype, behaviour and schedule; the **Compound Ledger** starts a compound from a placed structure and adds rope zones and baton routes to it. With a compound open, mustered guards join it as spawns. Creative with cheats. Screenshots: [muster_roll.png](screenshots/authoring/muster_roll.png), [compound_ledger.png](screenshots/authoring/compound_ledger.png).
+
+**Automated checks:** `authoring/muster_spawns` (archetype, behaviour, day route and night post, home; unknown archetype, tree or route, too many, and a far post are refused), `authoring/muster_joins_draft` (the spawn is stored in compound space, its route comes along, `add npcs` doesn't record it twice, and placing the compound turned gives the same guard on the copy's route), `authoring/ledger_flow` (starts from the placed shrine, adds a zone, picks up later edits on save, takes the spawn and zone out, discards).
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| M.1 | Open | `/give @s emergentstealth:muster_roll`, right-click the ground | The Muster Roll panel: where they'll stand ("Spawns now (no compound open)"), Archetype, Behaviour ("Archetype's own"), Facing (where you look, to 45°), Count, and a schedule with one window "0:00 0:00 Post here" |
+| M.2 | Muster | Pick `ashigaru`, Count 2, press **Muster** | "Mustered 2 ashigaru"; two guards on that block, facing the chosen way |
+| M.3 | Schedule | Make a route with the Patrol Baton. Muster again with **Add window**: first window 6 to 18 "Route <name>", second 18 to 6 "Post here". `/time set noon`, then `/time set midnight` | By day they walk the route, at night they stand on the spot. `/es routine show @e[type=emergentstealth:stealth_npc,limit=1,sort=nearest]` lists both windows |
+| M.4 | Wander, behaviour | One window "Wander 8"; Behaviour `civilian` | It strolls around the spot and flees instead of fighting when alarmed |
+| M.5 | Refused | Muster with Count at max, then walk 40 blocks away with the panel open and press Muster | Max works (16). From far away: "Too far away" and nothing spawns |
+| L.1 | Start from a structure | Place a structure (Surveyor's Plan), `/give @s emergentstealth:compound_ledger`, right-click the structure | The Ledger panel: "A new one starts from <structure>", a name filled from it. **Start**: "Authoring compound …" and the panel lists Zones, Routes, Spawns |
+| L.2 | Start anywhere | Discard, then use the ledger on open ground, name it `camp`, Start | The draft starts at that block, with no structures |
+| L.3 | Zones and routes | Make a zone with the rope and a route with the baton nearby; open the ledger (use it in the air) | Both listed with **Add**. Add them: they turn bold with **Take out**. Change the zone with the rope, then **Save**: the saved file has the new box |
+| L.4 | Guards join | With the draft open, muster a guard with the Muster Roll | "…and added them to <compound> (1 spawns)"; the ledger lists the spawn (`ashigaru  x y z  (1)`). `/es compound add npcs @e[...]` doesn't add it again |
+| L.5 | Take out, save, place | Take out a spawn; **Save** (chat shows the file path); `/es compound place <name> ~30 ~ ~ clockwise_90` | The copy has the remaining guards on their turned spots and routes (`<name>#1/<route>`) |
+| L.6 | Discard | **Discard**, then **Sure? Click** | "Stopped authoring … (not saved)"; the panel returns to Start. Nothing in the world changes |
+| L.7 | Permission | In survival, use either item | "Authoring tools need creative mode and operator permission" |
+
 ## Zones: Surveyor's Rope and the trespass rule 🧪
 
 Design doc [32](design/32-authoring-tools.md) §2. Mark zones with the Surveyor's Rope (or `/es zone`), and guards react to intruders there: **restricted** zones make them suspicious twice as fast and they warn you off; on **hostile** ground, a guard who notices you has detected you. Creative with cheats for the tool; test the guards in survival.
@@ -94,7 +115,7 @@ Three ready-made compounds ship in the mod (`data/emergentstealth/emergentstealt
 
 ## Compounds: author, save, place turned or mirrored 🧪
 
-Design doc [32](design/32-authoring-tools.md) §3. A compound is structures plus guards, patrol routes and zones, saved as one file and placed anywhere, turned or mirrored. Authoring is by command for now (the Compound Ledger item comes later). Creative with cheats. Screenshot: [compound_copy.png](screenshots/structures/compound_copy.png).
+Design doc [32](design/32-authoring-tools.md) §3. A compound is structures plus guards, patrol routes and zones, saved as one file and placed anywhere, turned or mirrored. Authoring works by command or with the Compound Ledger (above). Creative with cheats. Screenshot: [compound_copy.png](screenshots/structures/compound_copy.png).
 
 **Automated checks (already passing):** `compounds/transform_algebra`, `compounds/file_format` (JSON both ways; doc 32's example parses), `compounds/round_trip` (at all 4 rotations, mirrored or not: the chest, the route's first waypoint, the guard, its night post and the zone all line up, and undo takes everything back).
 

@@ -2,7 +2,7 @@
 
 > **2026-10-09.** The user's top priority: browse the builder's structures and turn them into playable compounds. This pulls the zone tool forward from S9 and the NPC spawner GUI forward from S19. Zone *gameplay* (alert levels, propagation, bells) stays in S9 (doc 18); this doc adds the tools, the data and a minimal trespass rule.
 
-**Progress:** §5 steps 1 (structure viewer), 2 (compound format, save, place) and 3 (zone tool and trespass rule) are done; next is step 4, the spawner GUI (Muster Roll).
+**Progress:** §5 steps 1 (structure viewer), 2 (compound format, save, place), 3 (zone tool and trespass rule) and 4 (the Muster Roll spawner and the Compound Ledger) are done; step 5, the first real compound, is in progress.
 
 **Goal:** place any structure, mark it up (zones, posts, patrol routes, NPC spawns, lights), **save it as one compound file**, and re-place it anywhere, rotated or mirrored, fully working.
 
@@ -78,6 +78,12 @@ A **compound** is one or more structure templates plus markers, all relative to 
 - `/es compound info`, `save`, `cancel`. Then `place <name> [pos] [rotation] [mirror]`, `list`, `copies`, `export <name>`, `remove <copy>`. Undo (`/es structure undo`) takes back a whole placed copy.
 - Not yet: re-saving edited templates on save, `reset`, automatic ground lines, and the browser listing compounds.
 
+> **Compound Ledger (implemented 2026-10-09):** right-click with the ledger.
+> - **No draft open:** a panel names and starts one. Used on the structure you last placed, the draft starts from it (its origin, and it becomes the first module); anywhere else, at that block. A bare name means `emergentstealth:<name>`.
+> - **Draft open:** the panel lists the draft's zones and routes beside rope zones and baton routes within 96 blocks, each with **Add** or **Take out**, and the draft's spawns with **Take out** (their NPCs stay). **Save** writes the file (the ledger stays open); **Discard** (click twice) drops the draft.
+> - **Linked markers:** zones and routes copied from the world (by the ledger, `add zone <zone>`, `add route`, or a muster's schedule) are copied again on every save, so later edits with the rope or baton are kept. A box zone typed with `add zone <name> <access> …` isn't linked.
+> - **No double records:** NPCs a draft has recorded (mustered, or `add npcs`) are remembered, so adding them again does nothing.
+> - Code: `authoring/Ledger`, `LedgerPayloads`, `item/CompoundLedgerItem`, `client/authoring/LedgerScreen`. Test: `authoring/ledger_flow`.
 > **Examples (2026-10-09):** three compounds ship in the mod as `emergentstealth:examples/{samurai_fort, shrine_watch, cherry_grove_estate}` (a garrisoned fort with a lamplighter, a shrine watched at night, and two Cherry Grove modules on one ground line). `tools/compounds/make_examples.py` writes them and checks every waypoint, post and spawn against the templates (a floor to stand on, a walkable leg between waypoints); the `compounds/examples` GameTest places each at every rotation. Ground lines are set by hand there: a module's offset y is `-1 - ground`, so the ground layer replaces the block under the placer's feet.
 
 The planned flow:
@@ -102,6 +108,13 @@ Right-click a block with the **Muster Roll** item to open a panel where you pick
 - **Count:** for a group at one spawn
 
 Saving adds a spawn marker to the compound under the cursor, or spawns the NPC right away if there's no compound there. Proper spawner blocks and triggers stay in S19.
+
+> **Implemented (2026-10-09):** right-click a block with the Muster Roll; the NPCs stand on the block above the clicked face.
+> - **Panel:** Archetype (cycle; the tooltip shows its role and faction), Behaviour (the archetype's own or any tree), Facing (eight directions, starting from where you look), Count (1-16), and a schedule of up to 8 windows. Each window has From and To hours (equal hours mean all day) and an activity: **Post here**, **Wander 4/8/16/32**, or **Route <name>** (the draft's routes first, then the 64 nearest world routes). The first window that holds the hour wins.
+> - **Muster** always spawns the NPCs, so you see them working. With a compound draft open in that dimension, they also become one spawn marker (positions in compound space). Routes the schedule walks are copied into the draft and linked. Without a draft they're just NPCs (no "compound under the cursor": placed copies aren't edited).
+> - **Server checks:** creative + operator, within 32 blocks, the archetype and tree exist, the count, at most 8 windows, posts within 32 blocks, and routes that exist.
+> - Not done: the archetype colour swatch (archetypes have no colour yet; the tooltip shows the role instead).
+> - Code: `authoring/MusterRoll`, `MusterPayloads`, `item/MusterRollItem`, `client/authoring/MusterRollScreen`. Tests: `authoring/muster_spawns`, `authoring/muster_joins_draft`.
 
 ## 5. Order of work
 

@@ -70,6 +70,8 @@ Priorities follow the Beta 1 plan: what testers see most comes first.
 | 42 | `item/stealth_npc_spawn_egg.png` | 16×16 | P | Spawn egg (ink and paper) |
 | 42a | `item/surveyors_plan.png` | 16×16 | P | Map-maker tool: a framed plan on paper (opens the structure browser) |
 | 42b | `item/surveyors_rope.png` | 16×16 | P | Map-maker tool: a coil of hemp rope with a red-tagged stake (marks zones) |
+| 42c | `item/compound_ledger.png` | 16×16 | P | Map-maker tool: an indigo bound ledger with a red seal (authors compounds) |
+| 42d | `item/muster_roll.png` | 16×16 | P | Map-maker tool: an open paper roll of names between wooden rods, red cord (spawns NPCs) |
 
 ## Priority 4: Sumi UI (with the UI framework, next phase)
 

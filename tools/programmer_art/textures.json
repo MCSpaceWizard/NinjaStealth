@@ -622,6 +622,65 @@
         "........h.......",
         "................"
       ]
+    },
+    {
+      "path": "item/compound_ledger",
+      "shape": "pixelmap",
+      "key": {
+        "k": "ink",
+        "i": "indigo",
+        "j": "indigo_light",
+        "p": "paper",
+        "l": "lacquer",
+        "g": "gold"
+      },
+      "rows": [
+        "................",
+        "...kkkkkkkkkk...",
+        "...kiiiiiiiijpk.",
+        "...kijjjjjjijpk.",
+        "...kij....jijpk.",
+        "...kij.ll.jijpk.",
+        "...kij.ll.jijpk.",
+        "...kijjjjjjijpk.",
+        "...kiiiiiiiijpk.",
+        "...kiggggggijpk.",
+        "...kiiiiiiiijpk.",
+        "...kiiiiiiiijpk.",
+        "...kiiiiiiiijpk.",
+        "...kkkkkkkkkkpk.",
+        "....kppppppppk..",
+        "....kkkkkkkkkk.."
+      ]
+    },
+    {
+      "path": "item/muster_roll",
+      "shape": "pixelmap",
+      "key": {
+        "k": "ink",
+        "p": "paper",
+        "w": "wood",
+        "l": "lacquer",
+        "d": "lacquer_dark"
+      },
+      "rows": [
+        "................",
+        "..ww........ww..",
+        "..wwkkkkkkkkww..",
+        "...kppppppppk...",
+        "...kpkkpkkppk...",
+        "...kppppppppk...",
+        "...kpkkkpkkpk...",
+        "...kppppppppk...",
+        "...kpkkpkkkpk...",
+        "..llppppppppk...",
+        "..dlpkkkpkppk...",
+        "...kppppppppk...",
+        "..wwkkkkkkkkww..",
+        "..ww........ww..",
+        "................",
+        "................"
+      ]
     }
   ]
 }

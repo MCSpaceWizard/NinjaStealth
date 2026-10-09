@@ -3,6 +3,8 @@ package com.mcspacewizard.emergentstealth.client.authoring;
 import org.lwjgl.glfw.GLFW;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
+import com.mcspacewizard.emergentstealth.authoring.LedgerPayloads;
+import com.mcspacewizard.emergentstealth.authoring.MusterPayloads;
 import com.mcspacewizard.emergentstealth.authoring.StructurePayloads;
 import com.mcspacewizard.emergentstealth.authoring.ZonePayloads;
 import com.mcspacewizard.emergentstealth.registry.ESItems;
@@ -47,6 +49,8 @@ public final class AuthoringClientEvents {
         event.register(StructurePayloads.PreviewPart.TYPE, ClientStructures::handlePart);
         event.register(ZonePayloads.Sync.TYPE, ZoneRenderer::handle);
         event.register(ZonePayloads.OpenEditor.TYPE, ZoneRenderer::handleOpen);
+        event.register(MusterPayloads.Open.TYPE, MusterRollScreen::handleOpen);
+        event.register(LedgerPayloads.State.TYPE, LedgerScreen::handleState);
     }
 
     @SubscribeEvent
