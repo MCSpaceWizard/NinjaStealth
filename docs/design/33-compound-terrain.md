@@ -1,6 +1,6 @@
 # 33 — Compound terrain: ground to stand on, and fitting real worlds ⏳ approved, in progress
 
-> **2026-10-09.** The user: large compounds need natural terrain to rest on, and we need to know how they'll meet the real terrain of a world once they're in worldgen. This note sets out what exists, the options, and a recommendation. Built so far: the **site** in §2 and the nature pass and first site pieces in §6 (all in the Takamori castle example). The user answered §5 the same day.
+> **2026-10-09.** The user: large compounds need natural terrain to rest on, and we need to know how they'll meet the real terrain of a world once they're in worldgen. This note sets out what exists, the options, and a recommendation. Built so far: the **site** in §2, the nature pass and first site pieces in §6 (all in the Takamori castle example), and the **terrain pass** (§3B, §4.2: `fit`, `replace`, `exact`). The user answered §5 the same day.
 
 ## 1. The problem
 
@@ -43,7 +43,7 @@ Configured per compound, defaulting to on for new compounds:
 ### C. Vanilla terrain adaptation in worldgen
 Worldgen structures can ask the noise generator to shape terrain round their pieces before any block is placed (`terrain_adaptation`: `beard_thin`, `beard_box`, `bury`, `encapsulate`). Vanilla blends a slope under and around each piece's box, using the piece's ground level (for jigsaw templates, the same idea as our `ground`).
 - **For:** the most natural result, free at generation time.
-- **Against:** worldgen only (no help for command placement or the authoring tools), and it shapes boxes, not terraces. To be checked in the 26.1 source: whether our own structure type's pieces get the same treatment as jigsaw pieces, and how a per-module ground line passes through.
+- **Against:** worldgen only (no help for command placement or the authoring tools), and it shapes boxes, not terraces. Checked in the 26.1 source: `Beardifier` collects every piece of a structure whose `terrain_adaptation` isn't `none`. A piece that implements NeoForge's `PieceBeardifierModifier` supplies its own box, adaptation and **ground level delta** (jigsaw pieces pass the template's ground level this way); any other piece gets its box with delta 0. So our own structure type's pieces can carry each module's `ground` as the delta and get the same beard as jigsaw pieces. The beard shapes under and round each piece's box only: terraces inside a site still need the site's own foundation, and the outer ring is a smooth vanilla blend rather than §3B's 1:1 slope.
 
 ### D. Terrain-aware layout (S15)
 The compound generator picks *where* and *how*: sample the surface across the footprint and reject spots that are too steep or wet; set the ground line to the median height; for terraced compounds, choose each terrace's level from the hill's contours, so a hill castle (yamajiro) climbs a real hill instead of bringing its own.
@@ -53,14 +53,17 @@ The compound generator picks *where* and *how*: sample the surface across the fo
 ## 4. Recommendation
 
 1. **Now:** sites (A) for authored large compounds, as in the castle. Done on this branch.
-2. **Next, small:** the terrain pass (B) in `CompoundPlacer`, with the `terrain` block in the compound JSON and a mode on `/es compound place`:
-   - `fit` (default): place **alongside** the terrain. Fill down under the footprint, cut back what pokes in, and blend a slope in the ring round it; the world outside the ring is untouched.
-   - `replace`: **replace** the terrain. Clear and flatten the footprint plus the ring to the compound's ground line and lay the site's own ground there (the castle's grass and foundation), so the compound brings its landscape with it.
-   - `exact`: the templates only, as now.
-   This also cleans up the odd placement on uneven ground, and the same code serves worldgen.
+2. **Done:** the terrain pass (B) in `CompoundPlacer` (`authoring/TerrainFit`), with a `terrain` block in the compound JSON and a mode on `/es compound place <id> [pos] [rotation] [mirror] [fit|replace|exact]`:
+   - `fit` (default): place **alongside** the terrain. Before the templates: the footprint (every module's box) is cleared above the ground line (hills, trees, water) and filled below it, at most `depth` blocks down. After: each ring column within `blend` blocks is sloped from the ground line towards its natural height, at most one block up or down per block out (an embankment or a cutting); columns already that close are left alone. Where the ground is further off than the ring is wide, a step remains at the ring's outer edge.
+   - `replace`: **replace** the terrain. The footprint and the ring are flattened to the ground line, so the compound brings a level stretch of its own ground with it.
+   - `exact`: the templates only, as before.
+   - New surface keeps the world's own top block (grass, sand, snow block, gravel, stone); fill is dirt for 3 blocks, then stone. Blocks are set without neighbour updates, like templates.
+   - JSON: `"terrain": {"mode": "fit", "blend": 16, "depth": 24}`, all optional (defaults shown; `blend` 0 to 32, `depth` 0 to 64). The command's mode overrides the file's.
+   - The undo snapshot covers the footprint, the ring and every height touched, so `/es structure undo` restores the hills (the undo limit rose to 8 million blocks for this). GameTest `compounds/terrain` places on a built hillside in each mode.
+   - Seen in the real client: the castle on a snowy hillside cuts in with stepped 1:1 slopes ([screenshot](../screenshots/structures/takamori_fit_hills.png)). Known: snow layers on reshaped columns are removed, and the site's own green grass shows in snowy biomes.
 3. **Worldgen (S15):** our own structure type, `emergentstealth:compound`, that places a compound like the command does:
    - choose the spot by sampling the heightmap over the footprint (reject steep or underwater spots);
-   - use the terrain adaptation in C where it works for our pieces, and pass B for the rest;
+   - use the terrain adaptation in C (pieces carry each module's ground as their delta) where it looks right, and the same `TerrainFit` pass for the rest;
    - register routes and zones and spawn the garrison when the chunk first loads near a player (structure generation can't touch saved data or spawn our NPCs safely).
 4. **Later:** terrain-aware terraces (D) with the compound generator.
 

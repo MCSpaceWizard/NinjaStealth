@@ -93,7 +93,9 @@ Design doc [32](design/32-authoring-tools.md) §2. Mark zones with the Surveyor'
 
 Four ready-made compounds ship in the mod (`data/emergentstealth/emergentstealth/compound/examples/`), so you can try guards, routes, schedules and zones without authoring anything. They're written by `tools/compounds/make_examples.py`, which checks that every waypoint, post and spawn is a place an NPC can stand and that every route leg is walkable through the structure; edit the script rather than the JSON. Creative with cheats for placing; test the guards in survival. A flat area helps (a superflat world is easiest): each compound extends east (+x) and south (+z) from where you stand, and its ground layer sinks into the block under your feet.
 
-**Automated check:** `compounds/examples` (each example loads, and at all 4 rotations every waypoint, post and NPC lands on a floor with room to stand; every NPC, route and zone is placed).
+**Automated checks:** `compounds/examples` (each example loads, and at all 4 rotations every waypoint, post and NPC lands on a floor with room to stand; every NPC, route and zone is placed); `compounds/terrain` (a shrine placed on a built hillside in each terrain mode: `exact` leaves the hill alone; `fit` gives solid ground under the footprint, a ring that climbs to the hill at most one block per block and a banked valley; `replace` flattens the ring; ground past the ring is never touched, and undo restores the hillside each time).
+
+**Terrain** ([doc 33](design/33-compound-terrain.md) §4): `/es compound place <id> [pos] [rotation] [mirror] [fit|replace|exact]`. `fit` (the default) shapes the world round the compound; `replace` flattens a ring round it to its ground line; `exact` places only the templates. A compound's JSON can set its own default with `"terrain": {"mode": "fit", "blend": 16, "depth": 24}` (`blend`: ring width, 0 to 32; `depth`: how far down fill reaches, 0 to 64).
 
 | Compound | Size | What's in it |
 |---|---|---|
@@ -117,6 +119,10 @@ Four ready-made compounds ship in the mod (`data/emergentstealth/emergentstealth
 | X.11 | Castle walls | `/time set noon`, fly along the wall walk | One ashigaru paces the north and east walls through the towers to the gate house; a samurai stands in the gate house; at night (`/time set 18000`) a second walks the south and west walls. Every tower and the gate house can be walked through from the walk |
 | X.12 | Castle levels | Walk from the gate up the main stair, across the ninomaru and up to the keep | Gate road, ninomaru and honmaru patrols each keep to their level; the samurai on the keep steps and the taisho inside; the daimyo in the residence. `/es zone at` reads `honmaru` (hostile) at the keep and `ninomaru` only at night |
 | X.13 | Castle lanterns | Snuff the gate road and stair-head lanterns, `/time set 11000` | The labourer walks the gate road, the storehouses, up both stairs to the honmaru, relighting as it goes |
+| X.14 | Fit to hills (screenshot: [fit](screenshots/structures/takamori_fit_hills.png)) | In a normal world with hills, stand on the ground and `/es compound place emergentstealth:examples/takamori_castle` (fit is the default) | "… terrain fit". Hills inside the walls are cut away and hollows filled, so the bailey is level and nothing floats; trees inside are gone. Round the outside, the ground slopes one block per block from the castle's ground line back to the hills (a stepped cutting into a hillside, an embankment over a dip); beyond 16 blocks out the world is untouched. Grass, sand or snow on the new slopes matches the ground it replaced |
+| X.15 | Replace | `/es structure undo`, then the same with `~ ~ ~ none none replace` | "… terrain replace". The castle plus a 16-block ring round it are flattened to its ground line; the hills stop at the ring's edge as a straight cut |
+| X.16 | Exact | The same with `exact` | "… terrain exact": only the templates, as before the terrain pass (on a slope, hills poke through and the foundation shows) |
+| X.17 | Undo the fit | `/es structure undo` after X.14 | The castle, its guards and every cut, fill and slope are gone; the hills are back as they were |
 
 ## Compounds: author, save, place turned or mirrored 🧪
 

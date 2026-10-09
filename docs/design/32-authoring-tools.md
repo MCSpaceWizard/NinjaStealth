@@ -94,7 +94,8 @@ The planned flow:
 3. Add markers with the tools: the zone rope, the patrol baton (its routes now belong to the compound), and the spawner tool (§4). Lights are found automatically.
 4. `/es compound save <name>` writes the JSON. If you edited the blocks, it re-saves the template from the world too. Both go into the world's generated datapack, and `/es compound export <name>` copies them to `run/compounds/` for adding to the mod.
 
-**Placing:** `/es compound place <name> [rotation] [mirror]` (or the browser, which lists compounds beside structures).
+**Placing:** `/es compound place <name> [pos] [rotation] [mirror] [fit|replace|exact]` (or the browser, which lists compounds beside structures).
+- Terrain first: `fit` (the default) shapes the world round the compound, `replace` flattens a ring round it, `exact` places only the templates (doc 33 §4).
 - It places the templates, then registers the zones and routes with their positions rotated and mirrored. Route names are scoped to that copy (`<compound>#<n>/wall_walk`).
 - It spawns the NPCs with their schedules.
 - Each placed copy is recorded (id, origin, rotation), ready for S9's per-compound alert levels and Q6's command posts.

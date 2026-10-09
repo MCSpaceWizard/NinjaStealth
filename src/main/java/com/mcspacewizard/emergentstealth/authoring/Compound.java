@@ -22,15 +22,39 @@ import net.minecraft.world.level.block.Rotation;
  * <p>Routes use the patrol route format (doc 15 §2) with relative waypoints. A spawn's schedule refers to the
  * compound's routes by their names here; placing renames them per copy.
  */
-public record Compound(List<Module> structures, List<Zone> zones, List<PatrolRoute> routes, List<Spawn> spawns) {
+public record Compound(List<Module> structures, List<Zone> zones, List<PatrolRoute> routes, List<Spawn> spawns, Terrain terrain) {
     public static final Codec<Compound> CODEC = RecordCodecBuilder.create(i -> i.group(
             Module.CODEC.listOf().optionalFieldOf("structures", List.of()).forGetter(Compound::structures),
             Zone.CODEC.listOf().optionalFieldOf("zones", List.of()).forGetter(Compound::zones),
             PatrolRoute.CODEC.listOf().optionalFieldOf("routes", List.of()).forGetter(Compound::routes),
-            Spawn.CODEC.listOf().optionalFieldOf("spawns", List.of()).forGetter(Compound::spawns)
+            Spawn.CODEC.listOf().optionalFieldOf("spawns", List.of()).forGetter(Compound::spawns),
+            Terrain.CODEC.optionalFieldOf("terrain", Terrain.DEFAULT).forGetter(Compound::terrain)
     ).apply(i, Compound::new));
 
     public static final Compound EMPTY = new Compound(List.of(), List.of(), List.of(), List.of());
+
+    public Compound(List<Module> structures, List<Zone> zones, List<PatrolRoute> routes, List<Spawn> spawns) {
+        this(structures, zones, routes, spawns, Terrain.DEFAULT);
+    }
+
+    /**
+     * How placing meets the world's terrain (design doc 33 §4): {@code fit} fills under the footprint, cuts what
+     * pokes into it and slopes the ground round it (up to {@code blend} blocks out) to the natural ground; {@code replace}
+     * flattens the footprint and ring to the ground line; {@code exact} places the templates only. Filling goes at
+     * most {@code depth} blocks down.
+     */
+    public record Terrain(TerrainFit.Mode mode, int blend, int depth) {
+        public static final Terrain DEFAULT = new Terrain(TerrainFit.Mode.FIT, 16, 24);
+        public static final Codec<Terrain> CODEC = RecordCodecBuilder.create(i -> i.group(
+                TerrainFit.Mode.CODEC.optionalFieldOf("mode", DEFAULT.mode()).forGetter(Terrain::mode),
+                Codec.intRange(0, 32).optionalFieldOf("blend", DEFAULT.blend()).forGetter(Terrain::blend),
+                Codec.intRange(0, 64).optionalFieldOf("depth", DEFAULT.depth()).forGetter(Terrain::depth)
+        ).apply(i, Terrain::new));
+
+        public Terrain withMode(TerrainFit.Mode mode) {
+            return new Terrain(mode, blend, depth);
+        }
+    }
 
     /**
      * One structure template in the compound.
@@ -71,33 +95,33 @@ public record Compound(List<Module> structures, List<Zone> zones, List<PatrolRou
     }
 
     public Compound withModule(Module module) {
-        return new Compound(append(structures, module), zones, routes, spawns);
+        return new Compound(append(structures, module), zones, routes, spawns, terrain);
     }
 
     public Compound withZone(Zone zone) {
         List<Zone> list = new ArrayList<>(zones);
         list.removeIf(z -> z.name().equals(zone.name()));
         list.add(zone);
-        return new Compound(structures, List.copyOf(list), routes, spawns);
+        return new Compound(structures, List.copyOf(list), routes, spawns, terrain);
     }
 
     public Compound withRoute(PatrolRoute route) {
         List<PatrolRoute> list = new ArrayList<>(routes);
         list.removeIf(r -> r.name().equals(route.name()));
         list.add(route);
-        return new Compound(structures, zones, List.copyOf(list), spawns);
+        return new Compound(structures, zones, List.copyOf(list), spawns, terrain);
     }
 
     public Compound withSpawn(Spawn spawn) {
-        return new Compound(structures, zones, routes, append(spawns, spawn));
+        return new Compound(structures, zones, routes, append(spawns, spawn), terrain);
     }
 
     public Compound withoutZone(String name) {
-        return new Compound(structures, zones.stream().filter(z -> !z.name().equals(name)).toList(), routes, spawns);
+        return new Compound(structures, zones.stream().filter(z -> !z.name().equals(name)).toList(), routes, spawns, terrain);
     }
 
     public Compound withoutRoute(String name) {
-        return new Compound(structures, zones, routes.stream().filter(r -> !r.name().equals(name)).toList(), spawns);
+        return new Compound(structures, zones, routes.stream().filter(r -> !r.name().equals(name)).toList(), spawns, terrain);
     }
 
     /** Without the spawn at {@code index} (unchanged if there's none). */
@@ -107,7 +131,7 @@ public record Compound(List<Module> structures, List<Zone> zones, List<PatrolRou
         }
         List<Spawn> list = new ArrayList<>(spawns);
         list.remove(index);
-        return new Compound(structures, zones, routes, List.copyOf(list));
+        return new Compound(structures, zones, routes, List.copyOf(list), terrain);
     }
 
     private static <T> List<T> append(List<T> list, T item) {

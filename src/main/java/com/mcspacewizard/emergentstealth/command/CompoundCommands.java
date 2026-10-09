@@ -13,6 +13,7 @@ import com.mcspacewizard.emergentstealth.authoring.CompoundPlacer;
 import com.mcspacewizard.emergentstealth.authoring.Compounds;
 import com.mcspacewizard.emergentstealth.authoring.PlacedCompounds;
 import com.mcspacewizard.emergentstealth.authoring.StructurePlacement;
+import com.mcspacewizard.emergentstealth.authoring.TerrainFit;
 import com.mcspacewizard.emergentstealth.authoring.Transform;
 import com.mcspacewizard.emergentstealth.authoring.Zone;
 import com.mcspacewizard.emergentstealth.EmergentStealth;
@@ -102,16 +103,22 @@ final class CompoundCommands {
                 .then(Commands.literal("save").executes(CompoundCommands::save))
                 .then(Commands.literal("cancel").executes(CompoundCommands::cancel))
                 .then(Commands.literal("place").then(Commands.argument("id", IdentifierArgument.id()).suggests(IDS)
-                        .executes(ctx -> place(ctx, BlockPos.containing(ctx.getSource().getPosition()), Rotation.NONE, Mirror.NONE))
-                        .then(Commands.argument("pos", BlockPosArgument.blockPos())
-                                .executes(ctx -> place(ctx, BlockPosArgument.getLoadedBlockPos(ctx, "pos"), Rotation.NONE, Mirror.NONE))
-                                .then(Commands.argument("rotation", TemplateRotationArgument.templateRotation())
+                        .executes(ctx -> place(ctx, BlockPos.containing(ctx.getSource().getPosition()), Rotation.NONE, Mirror.NONE, null))
+                        .then(terrainModes(Commands.argument("pos", BlockPosArgument.blockPos())
+                                .executes(ctx -> place(ctx, BlockPosArgument.getLoadedBlockPos(ctx, "pos"), Rotation.NONE, Mirror.NONE, null)),
+                                (ctx, mode) -> place(ctx, BlockPosArgument.getLoadedBlockPos(ctx, "pos"), Rotation.NONE, Mirror.NONE, mode))
+                                .then(terrainModes(Commands.argument("rotation", TemplateRotationArgument.templateRotation())
                                         .executes(ctx -> place(ctx, BlockPosArgument.getLoadedBlockPos(ctx, "pos"),
-                                                TemplateRotationArgument.getRotation(ctx, "rotation"), Mirror.NONE))
-                                        .then(Commands.argument("mirror", TemplateMirrorArgument.templateMirror())
+                                                TemplateRotationArgument.getRotation(ctx, "rotation"), Mirror.NONE, null)),
+                                        (ctx, mode) -> place(ctx, BlockPosArgument.getLoadedBlockPos(ctx, "pos"),
+                                                TemplateRotationArgument.getRotation(ctx, "rotation"), Mirror.NONE, mode))
+                                        .then(terrainModes(Commands.argument("mirror", TemplateMirrorArgument.templateMirror())
                                                 .executes(ctx -> place(ctx, BlockPosArgument.getLoadedBlockPos(ctx, "pos"),
                                                         TemplateRotationArgument.getRotation(ctx, "rotation"),
-                                                        TemplateMirrorArgument.getMirror(ctx, "mirror"))))))))
+                                                        TemplateMirrorArgument.getMirror(ctx, "mirror"), null)),
+                                                (ctx, mode) -> place(ctx, BlockPosArgument.getLoadedBlockPos(ctx, "pos"),
+                                                        TemplateRotationArgument.getRotation(ctx, "rotation"),
+                                                        TemplateMirrorArgument.getMirror(ctx, "mirror"), mode)))))))
                 .then(Commands.literal("list").executes(CompoundCommands::list))
                 .then(Commands.literal("copies").executes(CompoundCommands::copies))
                 .then(Commands.literal("export").then(Commands.argument("id", IdentifierArgument.id()).suggests(IDS)
@@ -251,21 +258,36 @@ final class CompoundCommands {
         return 1;
     }
 
-    private static int place(CommandContext<CommandSourceStack> ctx, BlockPos origin, Rotation rotation, Mirror mirror) throws CommandSyntaxException {
+    private interface ModePlace {
+        int run(CommandContext<CommandSourceStack> ctx, TerrainFit.Mode mode) throws CommandSyntaxException;
+    }
+
+    /** Adds {@code fit | replace | exact} after a place argument (doc 33 §4); without one, the compound's own setting. */
+    private static <T extends ArgumentBuilder<CommandSourceStack, T>> T terrainModes(T node, ModePlace place) {
+        for (TerrainFit.Mode mode : TerrainFit.Mode.values()) {
+            node.then(Commands.literal(mode.getSerializedName()).executes(ctx -> place.run(ctx, mode)));
+        }
+        return node;
+    }
+
+    private static int place(CommandContext<CommandSourceStack> ctx, BlockPos origin, Rotation rotation, Mirror mirror,
+                             TerrainFit.@org.jspecify.annotations.Nullable Mode mode) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
         Identifier id = compoundId(ctx, "id");
         Compound compound = Compounds.get(id);
         if (compound == null) {
             throw UNKNOWN.create(id);
         }
-        CompoundPlacer.Result result = CompoundPlacer.place(source.getLevel(), author(source), id, compound, origin, new Transform(mirror, rotation));
+        Compound.Terrain terrain = mode == null ? compound.terrain() : compound.terrain().withMode(mode);
+        CompoundPlacer.Result result = CompoundPlacer.place(source.getLevel(), author(source), id, compound, origin, new Transform(mirror, rotation), terrain);
         if (result.copy() == null) {
             throw new SimpleCommandExceptionType(Component.translatable("commands.emergentstealth.compound.missing_templates",
                     result.missing().toString())).create();
         }
         PlacedCompounds.Copy copy = result.copy();
         source.sendSuccess(() -> Component.translatable("commands.emergentstealth.compound.placed", id.toString(), copy.id(),
-                origin.getX(), origin.getY(), origin.getZ(), copy.npcs().size(), copy.routes().size(), copy.zones().size()), true);
+                origin.getX(), origin.getY(), origin.getZ(), copy.npcs().size(), copy.routes().size(), copy.zones().size(),
+                terrain.mode().getSerializedName()), true);
         return copy.id();
     }
 

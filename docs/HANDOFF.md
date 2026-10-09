@@ -18,6 +18,7 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 - **Muster Roll and Compound Ledger** (PR #6, merged): the NPC spawner panel (doc 32 §4) and compound authoring by item (§3). Zones and routes copied into a draft stay linked and are re-copied on save; NPCs a draft recorded aren't recorded twice. TESTING.md rows M.1–M.5, L.1–L.7.
 - **Q5 answered (2026-10-09):** the player belongs to neither faction; most Shinobi and Shogunate are enemies, some of each may help (doc 01 §8).
 - **Takamori castle** (PR #7, merged into #5's branch after #5 landed, so it reaches `main` with the terrain branch): the 150 × 150 castle example on a generated site (`tools/compounds/sites.py`) with a nature pass and site pieces, and [doc 33](design/33-compound-terrain.md) (approved).
+- **Compound terrain pass** (branch `claude/project-thread-87a3dn`): `/es compound place ... [fit|replace|exact]` and a `terrain` block in compound JSON (`authoring/TerrainFit`, doc 33 §4). `fit` (default) levels the footprint and slopes a 16-block ring 1:1 back to the world. GameTest `compounds/terrain`; checked in the real client on a hilly world (TESTING X.14–X.17). Next for doc 33: scatter rules for site pieces (§6.3), moats as a site piece, then worldgen (S15).
 - **Docs:** [docs/sumi-guide.md](sumi-guide.md) (extending Sumi), [doc 32](design/32-authoring-tools.md) (authoring tools; progress at the top). PROGRESS.md is out of date (2026-10-08).
 - **Feature branches still to finish** (stopped by usage limits; the last commit is **WIP** and may not compile):
 

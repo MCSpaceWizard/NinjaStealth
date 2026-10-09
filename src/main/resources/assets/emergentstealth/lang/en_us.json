@@ -307,7 +307,7 @@
   "commands.emergentstealth.compound.saved": "Saved compound %s to %s",
   "commands.emergentstealth.compound.cancelled": "Stopped authoring %s (not saved)",
   "commands.emergentstealth.compound.missing_templates": "Nothing placed: these structures don't exist: %s",
-  "commands.emergentstealth.compound.placed": "Placed %s as copy #%s at %s %s %s: %s NPCs, %s routes, %s zones",
+  "commands.emergentstealth.compound.placed": "Placed %s as copy #%s at %s %s %s: %s NPCs, %s routes, %s zones, terrain %s",
   "commands.emergentstealth.compound.list": "%s compounds:",
   "commands.emergentstealth.compound.copies": "%s placed compounds:",
   "commands.emergentstealth.compound.exported": "Exported %s to %s",
