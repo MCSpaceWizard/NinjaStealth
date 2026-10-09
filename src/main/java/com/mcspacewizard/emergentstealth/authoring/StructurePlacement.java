@@ -45,9 +45,15 @@ public final class StructurePlacement {
     private static final Map<UUID, Snapshot> UNDO = new HashMap<>();
     public static final UUID CONSOLE = new UUID(0L, 0L);
 
-    /** What a box (the placement plus {@link #FLOW_MARGIN}) held before a placement. */
+    /** Each author's last structure placement, which {@code /es compound start} builds on. */
+    private static final Map<UUID, Placed> LAST = new HashMap<>();
+
+    /** What a box (the placement plus {@link #FLOW_MARGIN}) held before a placement, and what else to undo. */
     private record Snapshot(ServerLevel level, BoundingBox placed, BoundingBox box, BlockState[] states, Map<Integer, CompoundTag> blockEntities,
-                            Set<UUID> addedEntities) {}
+                            Set<UUID> addedEntities, @Nullable Runnable onUndo) {}
+
+    /** A structure placed through the viewer or {@code /es structure place}. */
+    public record Placed(Identifier template, BlockPos origin, Rotation rotation, Mirror mirror) {}
 
     public static StructurePlaceSettings settings(Rotation rotation, Mirror mirror) {
         return new StructurePlaceSettings().setRotation(rotation).setMirror(mirror);
@@ -68,12 +74,27 @@ public final class StructurePlacement {
             return null;
         }
         BoundingBox box = box(template, origin, rotation, mirror);
+        tracked(level, author, box, () -> placeTemplate(level, template, origin, rotation, mirror), null);
+        LAST.put(author, new Placed(id, origin, rotation, mirror));
+        return box;
+    }
+
+    /** Places a template with the pivot at its origin, without tracking. */
+    public static void placeTemplate(ServerLevel level, StructureTemplate template, BlockPos origin, Rotation rotation, Mirror mirror) {
+        template.placeInWorld(level, origin, origin, settings(rotation, mirror), level.getRandom(), Block.UPDATE_CLIENTS);
+    }
+
+    /**
+     * Runs {@code place}, with {@code box} (plus {@link #FLOW_MARGIN}) snapshotted first so the author can undo it:
+     * undo restores the blocks, removes the entities that appeared in the box, then runs {@code onUndo}.
+     */
+    public static void tracked(ServerLevel level, UUID author, BoundingBox box, Runnable place, @Nullable Runnable onUndo) {
         BoundingBox around = new BoundingBox(box.minX() - FLOW_MARGIN, Math.max(level.getMinY(), box.minY() - FLOW_MARGIN),
                 box.minZ() - FLOW_MARGIN, box.maxX() + FLOW_MARGIN, box.maxY(), box.maxZ() + FLOW_MARGIN);
         long volume = (long) around.getXSpan() * around.getYSpan() * around.getZSpan();
-        Snapshot snapshot = volume <= MAX_UNDO_VOLUME ? snapshot(level, box, around) : null;
+        Snapshot snapshot = volume <= MAX_UNDO_VOLUME ? snapshot(level, box, around, onUndo) : null;
         Set<UUID> before = entitiesIn(level, around);
-        template.placeInWorld(level, origin, origin, settings(rotation, mirror), level.getRandom(), Block.UPDATE_CLIENTS);
+        place.run();
         if (snapshot != null) {
             snapshot.addedEntities().addAll(entitiesIn(level, around));
             snapshot.addedEntities().removeAll(before);
@@ -81,7 +102,11 @@ public final class StructurePlacement {
         } else {
             UNDO.remove(author);
         }
-        return box;
+    }
+
+    /** The author's last structure placement, if any. */
+    public static @Nullable Placed last(UUID author) {
+        return LAST.get(author);
     }
 
     /**
@@ -121,6 +146,9 @@ public final class StructurePlacement {
                 }
             }
         }
+        if (snapshot.onUndo() != null) {
+            snapshot.onUndo().run();
+        }
         return snapshot.placed();
     }
 
@@ -128,7 +156,7 @@ public final class StructurePlacement {
         return UNDO.containsKey(author);
     }
 
-    private static Snapshot snapshot(ServerLevel level, BoundingBox placed, BoundingBox box) {
+    private static Snapshot snapshot(ServerLevel level, BoundingBox placed, BoundingBox box, @Nullable Runnable onUndo) {
         BlockState[] states = new BlockState[box.getXSpan() * box.getYSpan() * box.getZSpan()];
         Map<Integer, CompoundTag> blockEntities = new HashMap<>();
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
@@ -146,7 +174,7 @@ public final class StructurePlacement {
                 }
             }
         }
-        return new Snapshot(level, placed, box, states, blockEntities, new HashSet<>());
+        return new Snapshot(level, placed, box, states, blockEntities, new HashSet<>(), onUndo);
     }
 
     /** Non-player entities inside a box (a structure's armour stands, fish, …). */

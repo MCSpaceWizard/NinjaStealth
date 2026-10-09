@@ -10,6 +10,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.mcspacewizard.emergentstealth.authoring.CompoundDrafts;
 import com.mcspacewizard.emergentstealth.authoring.StructureCatalog;
 import com.mcspacewizard.emergentstealth.authoring.StructurePlacement;
 import com.mcspacewizard.emergentstealth.authoring.StructureViewer;
@@ -92,6 +93,12 @@ final class StructureCommands {
         }
         ctx.getSource().sendSuccess(() -> Component.translatable("message.emergentstealth.structure.placed", id.toString(),
                 box.minX(), box.minY(), box.minZ()), true);
+        StructurePlacement.Placed placed = StructurePlacement.last(author(ctx.getSource()));
+        CompoundDrafts.Draft draft = placed == null ? null : CompoundDrafts.onPlaced(author(ctx.getSource()), placed);
+        if (draft != null) {
+            ctx.getSource().sendSuccess(() -> Component.translatable("message.emergentstealth.compound.module_added", draft.id().toString(),
+                    draft.compound().structures().size()), false);
+        }
         return 1;
     }
 

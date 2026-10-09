@@ -89,6 +89,12 @@ public final class StructureViewer {
         }
         player.sendSystemMessage(Component.translatable("message.emergentstealth.structure.placed", payload.id().toString(),
                 box.minX(), box.minY(), box.minZ()));
+        StructurePlacement.Placed placed = StructurePlacement.last(player.getUUID());
+        CompoundDrafts.Draft draft = placed == null ? null : CompoundDrafts.onPlaced(player.getUUID(), placed);
+        if (draft != null) {
+            player.sendSystemMessage(Component.translatable("message.emergentstealth.compound.module_added", draft.id().toString(),
+                    draft.compound().structures().size()));
+        }
     }
 
     static void handleUndo(StructurePayloads.Undo payload, IPayloadContext context) {
