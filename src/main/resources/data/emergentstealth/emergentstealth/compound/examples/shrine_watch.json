@@ -1,0 +1,204 @@
+{
+  "structures": [
+    {
+      "template": "emergentstealth:edo/large_shrine",
+      "offset": [0, -2, 0],
+      "ground": 1
+    }
+  ],
+  "zones": [
+    {
+      "name": "precinct",
+      "access": "restricted",
+      "boxes": [
+        [
+          [2, -2, 1],
+          [32, 12, 41]
+        ]
+      ],
+      "hours": {
+        "from": 20,
+        "to": 6
+      }
+    },
+    {
+      "name": "honden",
+      "access": "restricted",
+      "boxes": [
+        [
+          [9, 0, 8],
+          [25, 12, 18]
+        ]
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "name": "night_round",
+      "mode": "loop",
+      "waypoints": [
+        {
+          "pos": [17, -1, 40],
+          "wait_ticks": 60,
+          "look_yaw": 0
+        },
+        {
+          "pos": [7, 0, 22]
+        },
+        {
+          "pos": [7, 0, 6],
+          "wait_ticks": 40,
+          "look_yaw": 180
+        },
+        {
+          "pos": [27, 0, 6],
+          "wait_ticks": 40,
+          "look_yaw": 180
+        },
+        {
+          "pos": [28, 0, 22]
+        }
+      ]
+    },
+    {
+      "name": "lanterns",
+      "mode": "loop",
+      "waypoints": [
+        {
+          "pos": [7, 0, 5],
+          "wait_ticks": 20,
+          "relight": true
+        },
+        {
+          "pos": [17, 0, 5],
+          "wait_ticks": 20,
+          "relight": true
+        },
+        {
+          "pos": [28, 0, 5],
+          "wait_ticks": 20,
+          "relight": true
+        },
+        {
+          "pos": [28, 0, 14],
+          "wait_ticks": 20,
+          "relight": true
+        },
+        {
+          "pos": [28, 0, 22],
+          "wait_ticks": 20,
+          "relight": true
+        },
+        {
+          "pos": [6, 0, 22],
+          "wait_ticks": 20,
+          "relight": true
+        },
+        {
+          "pos": [6, 0, 13],
+          "wait_ticks": 20,
+          "relight": true
+        }
+      ]
+    }
+  ],
+  "spawns": [
+    {
+      "archetype": "emergentstealth:ashigaru",
+      "pos": [17, -1, 40],
+      "facing": 0,
+      "schedule": [
+        {
+          "from": 6,
+          "to": 20,
+          "activity": {
+            "type": "post",
+            "pos": [17, -1, 40],
+            "yaw": 0
+          }
+        },
+        {
+          "from": 20,
+          "to": 6,
+          "activity": {
+            "type": "route",
+            "route": "night_round"
+          }
+        }
+      ]
+    },
+    {
+      "archetype": "emergentstealth:samurai",
+      "pos": [17, 0, 20],
+      "facing": 0,
+      "schedule": [
+        {
+          "from": 0,
+          "to": 0,
+          "activity": {
+            "type": "post",
+            "pos": [17, 0, 20],
+            "yaw": 0
+          }
+        }
+      ]
+    },
+    {
+      "archetype": "emergentstealth:townsfolk",
+      "pos": [12, 0, 21],
+      "facing": 0,
+      "schedule": [
+        {
+          "from": 6,
+          "to": 20,
+          "activity": {
+            "type": "wander",
+            "radius": 6
+          }
+        },
+        {
+          "from": 20,
+          "to": 6,
+          "activity": {
+            "type": "post",
+            "pos": [12, 0, 21],
+            "yaw": 180
+          }
+        }
+      ],
+      "count": 2
+    },
+    {
+      "archetype": "emergentstealth:labourer",
+      "pos": [17, 0, 5],
+      "facing": 0,
+      "schedule": [
+        {
+          "from": 6,
+          "to": 18,
+          "activity": {
+            "type": "wander",
+            "radius": 6
+          }
+        },
+        {
+          "from": 18,
+          "to": 22,
+          "activity": {
+            "type": "route",
+            "route": "lanterns"
+          }
+        },
+        {
+          "from": 22,
+          "to": 6,
+          "activity": {
+            "type": "post",
+            "pos": [17, 0, 5],
+            "yaw": 0
+          }
+        }
+      ]
+    }
+  ]
+}

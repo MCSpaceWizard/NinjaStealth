@@ -10,12 +10,15 @@ import com.mcspacewizard.emergentstealth.ai.group.AttackTokens;
 import com.mcspacewizard.emergentstealth.ai.group.SearchGroups;
 import com.mcspacewizard.emergentstealth.ai.perception.NpcPerception;
 import com.mcspacewizard.emergentstealth.ai.perception.TargetAwareness;
+import com.mcspacewizard.emergentstealth.authoring.Trespass;
+import com.mcspacewizard.emergentstealth.authoring.Zone;
 import com.mcspacewizard.emergentstealth.config.ESConfig;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 import com.mcspacewizard.emergentstealth.stealth.sound.HeardNoise;
 import com.mcspacewizard.emergentstealth.stealth.sound.NoiseEvent;
 import com.mcspacewizard.emergentstealth.stealth.sound.NoiseKind;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -301,6 +304,10 @@ public final class StealthBrain {
         npc.getNavigation().stop();
         behaviour.reset();
 
+        if ((next == AlertState.CURIOUS || next == AlertState.SUSPICIOUS) && npc.isCombatant() && seenTrespassing(level)) {
+            // Restricted ground (design doc 32 §2): warn the intruder off before hunting them.
+            Barks.say(level, npc, "trespass");
+        }
         if (previous == AlertState.SEARCHING) {
             if (next == AlertState.COMBAT || next == AlertState.HUNTING) {
                 SearchGroups.get(level).markFound(npc);
@@ -324,6 +331,13 @@ public final class StealthBrain {
             }
             cause = PoiCause.NONE;
         }
+    }
+
+    /** Whoever the NPC is looking at is in view and standing in a restricted zone. */
+    private boolean seenTrespassing(ServerLevel level) {
+        TargetAwareness target = concern();
+        return target != null && target.seenNow() && target.lastKnownPos() != null
+                && Trespass.accessAt(level, BlockPos.containing(target.lastKnownPos())) == Zone.Access.RESTRICTED;
     }
 
     private void tickBehaviour(ServerLevel level, long now) {

@@ -48,9 +48,74 @@ Design: [doc 31](design/31-ui-framework.md) §0. Geometric shapes drawn in code,
 | U.12 | Theming | Resource pack with `assets/emergentstealth/ui/theme.json` overriding e.g. `"colors": {"paper": "#f4efe2"}`, or `textures/gui/sumi/paper.png` | Only that token changes; everything else keeps the defaults. A paper PNG replaces the generated grain |
 | U.13 | Dedicated server | `./gradlew runServer` | Starts normally (no client classes on the server) |
 
+## Muster Roll and Compound Ledger: spawn guards, author compounds by item 🧪
+
+Design doc [32](design/32-authoring-tools.md) §3 and §4. The **Muster Roll** spawns NPCs with an archetype, behaviour and schedule; the **Compound Ledger** starts a compound from a placed structure and adds rope zones and baton routes to it. With a compound open, mustered guards join it as spawns. Creative with cheats. Screenshots: [muster_roll.png](screenshots/authoring/muster_roll.png), [compound_ledger.png](screenshots/authoring/compound_ledger.png).
+
+**Automated checks:** `authoring/muster_spawns` (archetype, behaviour, day route and night post, home; unknown archetype, tree or route, too many, and a far post are refused), `authoring/muster_joins_draft` (the spawn is stored in compound space, its route comes along, `add npcs` doesn't record it twice, and placing the compound turned gives the same guard on the copy's route), `authoring/ledger_flow` (starts from the placed shrine, adds a zone, picks up later edits on save, takes the spawn and zone out, discards).
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| M.1 | Open | `/give @s emergentstealth:muster_roll`, right-click the ground | The Muster Roll panel: where they'll stand ("Spawns now (no compound open)"), Archetype, Behaviour ("Archetype's own"), Facing (where you look, to 45°), Count, and a schedule with one window "0:00 0:00 Post here" |
+| M.2 | Muster | Pick `ashigaru`, Count 2, press **Muster** | "Mustered 2 ashigaru"; two guards on that block, facing the chosen way |
+| M.3 | Schedule | Make a route with the Patrol Baton. Muster again with **Add window**: first window 6 to 18 "Route <name>", second 18 to 6 "Post here". `/time set noon`, then `/time set midnight` | By day they walk the route, at night they stand on the spot. `/es routine show @e[type=emergentstealth:stealth_npc,limit=1,sort=nearest]` lists both windows |
+| M.4 | Wander, behaviour | One window "Wander 8"; Behaviour `civilian` | It strolls around the spot and flees instead of fighting when alarmed |
+| M.5 | Refused | Muster with Count at max, then walk 40 blocks away with the panel open and press Muster | Max works (16). From far away: "Too far away" and nothing spawns |
+| L.1 | Start from a structure | Place a structure (Surveyor's Plan), `/give @s emergentstealth:compound_ledger`, right-click the structure | The Ledger panel: "A new one starts from <structure>", a name filled from it. **Start**: "Authoring compound …" and the panel lists Zones, Routes, Spawns |
+| L.2 | Start anywhere | Discard, then use the ledger on open ground, name it `camp`, Start | The draft starts at that block, with no structures |
+| L.3 | Zones and routes | Make a zone with the rope and a route with the baton nearby; open the ledger (use it in the air) | Both listed with **Add**. Add them: they turn bold with **Take out**. Change the zone with the rope, then **Save**: the saved file has the new box |
+| L.4 | Guards join | With the draft open, muster a guard with the Muster Roll | "…and added them to <compound> (1 spawns)"; the ledger lists the spawn (`ashigaru  x y z  (1)`). `/es compound add npcs @e[...]` doesn't add it again |
+| L.5 | Take out, save, place | Take out a spawn; **Save** (chat shows the file path); `/es compound place <name> ~30 ~ ~ clockwise_90` | The copy has the remaining guards on their turned spots and routes (`<name>#1/<route>`) |
+| L.6 | Discard | **Discard**, then **Sure? Click** | "Stopped authoring … (not saved)"; the panel returns to Start. Nothing in the world changes |
+| L.7 | Permission | In survival, use either item | "Authoring tools need creative mode and operator permission" |
+
+## Zones: Surveyor's Rope and the trespass rule 🧪
+
+Design doc [32](design/32-authoring-tools.md) §2. Mark zones with the Surveyor's Rope (or `/es zone`), and guards react to intruders there: **restricted** zones make them suspicious twice as fast and they warn you off; on **hostile** ground, a guard who notices you has detected you. Creative with cheats for the tool; test the guards in survival.
+
+**Automated checks:** `zones/restricted_doubles_gain`, `zones/hostile_is_detection`, `zones/time_window` (hours wrap past midnight, the strictest zone wins), `zones/rope_and_panel` (rope clicks make and extend a zone; the panel's rename, rule, hours, undo box and delete, and a bad name is refused).
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| Z.1 | Make a zone | `/give @s emergentstealth:surveyors_rope`. Right-click a block, then the opposite corner of a room | After the first click a white box follows your crosshair from the corner. After the second: "New restricted zone zone_1 …" and an amber tinted volume with its name above it |
+| Z.2 | Add a box | Right-click a corner, then **sneak** and right-click the opposite corner | "Added a box to zone_1 (2 boxes)"; both boxes tint |
+| Z.3 | Zone panel | Use the rope in the air | The Zone panel: name, access (‹ Public / Restricted / Hostile ›, with a tooltip), "Only at hours" switch with From/To sliders when on, Delete, Undo box, Save |
+| Z.4 | Edit | Rename to `yard`, set Hostile, switch hours on (18 to 6), Save | "Saved zone yard (hostile)"; the volume turns red and its label shows `yard  hostile  18-6h`. A bad name (`Yard!`) is refused with a message |
+| Z.5 | Inside view | Walk into a zone while holding the rope | The tint still shows around you (not just the outline) |
+| Z.6 | Restricted | Set the zone to Restricted. `/es npc spawn emergentstealth:ashigaru` inside it, switch to survival, walk into view | The guard's meter fills about twice as fast as outside, and it barks a warning ("You there! You're not allowed here.") before investigating |
+| Z.7 | Hostile | Set it to Hostile and repeat | As soon as the guard notices you ("huh?"), it's full detection: it attacks |
+| Z.8 | Hours | Hostile with hours 18 to 6; `/time set noon`, then `/time set midnight` | At noon the zone is public (guards react as usual); at midnight hostile. `/es zone at` shows the rule and hour where you stand |
+| Z.9 | Commands | `/es zone list`, `/es zone add gate restricted ~ ~ ~ ~5 ~3 ~5`, `/es zone set gate public`, `/es zone remove gate`, `/es zone select yard` (holding the rope) | Each reports what it did; select makes the rope edit `yard` |
+| Z.10 | Into a compound | With a draft open (`/es compound start …`), `/es compound add zone yard` | "Added zone yard (…)"; after saving, the compound JSON has the zone's boxes relative to its origin |
+| Z.11 | Permission | In survival, use the rope | "Authoring tools need creative mode and operator permission", nothing changes |
+
+## Example compounds: a garrisoned fort, a shrine watch, a Cherry Grove estate 🧪
+
+Three ready-made compounds ship in the mod (`data/emergentstealth/emergentstealth/compound/examples/`), so you can try guards, routes, schedules and zones without authoring anything. They're written by `tools/compounds/make_examples.py`, which checks that every waypoint, post and spawn is a place an NPC can stand and that every route leg is walkable through the structure; edit the script rather than the JSON. Creative with cheats for placing; test the guards in survival. A flat area helps (a superflat world is easiest): each compound extends east (+x) and south (+z) from where you stand, and its ground layer sinks into the block under your feet.
+
+**Automated check:** `compounds/examples` (each example loads, and at all 4 rotations every waypoint, post and NPC lands on a floor with room to stand; every NPC, route and zone is placed).
+
+| Compound | Size | What's in it |
+|---|---|---|
+| `emergentstealth:examples/samurai_fort` | 46 × 46 | The samurai mini fort. Zones: `grounds` restricted, `residence` hostile, `storehouse` hostile at night (18-6). Routes: `yard` (loop round the courtyard, pausing at the gate), `rampart` (ping-pong along the north earthwork), `lanterns` (relights the courtyard lanterns). 8 NPCs: two gate guards (by night one walks the yard and one the rampart), two day patrols that swap to posts at dusk, a samurai on the gate tower, a samurai at the residence door, the daimyo (by the hearth by day, to bed at 20:00) and a labourer lamplighter (lantern round 17-23) |
+| `emergentstealth:examples/shrine_watch` | 34 × 42 | The large shrine. Zones: `precinct` restricted only at night (20-6), `honden` (the main hall) restricted always. Routes: `night_round`, `lanterns`. 5 NPCs: an ashigaru at the gate by day who walks the precinct at night, a samurai before the hall, two townsfolk visitors who wander by day, and a lamplighter (18-22) |
+| `emergentstealth:examples/cherry_grove_estate` | 45 × 72 | Two Cherry Grove modules (the gatehouse, with the teahouse behind it), each with its ground line. Zones: `teahouse` restricted, `gatehouse` restricted at night. Routes: `front` (ping-pong outside the gate, all day), `garden` (a loop through both modules). 6 NPCs: a gate patrol, two garden guards on opposite shifts, a taisho inside the teahouse, two townsfolk |
+
+| # | Test | Steps | Expected |
+|---|---|---|---|
+| X.1 | Listed | `/es compound list` | The three `emergentstealth:examples/...` ids are listed |
+| X.2 | Place the fort | Stand on flat ground, `/es compound place emergentstealth:examples/samurai_fort` | The fort appears with its grass floor level with the ground; "Placed … 8 NPCs, 3 routes, 3 zones". Guards stand at the gate, on the gate tower, at the residence door; nobody is stuck in a wall |
+| X.3 | Routes | `/es patrol list`, `/esdebug on`, `/time set noon` | Routes `examples/samurai_fort#<n>/yard`, `…/rampart`, `…/lanterns`. One guard loops the courtyard and stops at the gate looking out; another walks up the earthwork and paces the north rampart |
+| X.4 | Night shift | `/time set 13000` (19:00), then `/time set 18000` (midnight) | At dusk the day patrols go to their posts and the gate guards take over the yard and rampart; the daimyo goes to the bedroom at 20:00. `/es routine show @e[type=emergentstealth:stealth_npc,limit=1,sort=nearest]` shows each schedule |
+| X.5 | Lamplighter | Snuff a few courtyard lanterns, `/time set 11000` (17:00) | The labourer walks the lantern round and relights unlit lanterns within 4 blocks of each stop |
+| X.6 | Zones | Hold the Surveyor's Rope, or `/es zone at` in each part | `grounds` amber over the whole fort, `residence` red round the main house, `storehouse` red with `18-6h`. In survival, guards notice you faster in the grounds, and seeing you in the residence is detection |
+| X.7 | Turned | `/es compound place emergentstealth:examples/shrine_watch ~60 ~ ~ clockwise_90` | The shrine, turned; the gate guard stands at the (turned) gate, and the night round follows the turned precinct at night |
+| X.8 | Multi-module | `/es compound place emergentstealth:examples/cherry_grove_estate ~ ~ ~80` | Gatehouse and teahouse side by side on one ground line (no step between them); the gate patrol paces outside the gate; at noon a guard walks the garden loop through both gardens |
+| X.9 | Undo | `/es structure undo` after any of them | The whole copy, blocks and NPCs, is gone |
+
 ## Compounds: author, save, place turned or mirrored 🧪
 
-Design doc [32](design/32-authoring-tools.md) §3. A compound is structures plus guards, patrol routes and zones, saved as one file and placed anywhere, turned or mirrored. Authoring is by command for now (the Compound Ledger item comes later). Creative with cheats. Screenshot: [compound_copy.png](screenshots/structures/compound_copy.png).
+Design doc [32](design/32-authoring-tools.md) §3. A compound is structures plus guards, patrol routes and zones, saved as one file and placed anywhere, turned or mirrored. Authoring works by command or with the Compound Ledger (above). Creative with cheats. Screenshot: [compound_copy.png](screenshots/structures/compound_copy.png).
 
 **Automated checks (already passing):** `compounds/transform_algebra`, `compounds/file_format` (JSON both ways; doc 32's example parses), `compounds/round_trip` (at all 4 rotations, mirrored or not: the chest, the route's first waypoint, the guard, its night post and the zone all line up, and undo takes everything back).
 

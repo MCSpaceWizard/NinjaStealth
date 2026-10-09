@@ -53,7 +53,8 @@ public final class ESCommands {
                 .then(PatrolCommands.routine())
                 .then(DevCommands.dev())
                 .then(StructureCommands.structure())
-                .then(CompoundCommands.compound()));
+                .then(CompoundCommands.compound())
+                .then(ZoneCommands.zone()));
         dispatcher.register(Commands.literal("es").redirect(root));
     }
 

@@ -11,6 +11,8 @@ import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 
+import com.mcspacewizard.emergentstealth.authoring.Trespass;
+import com.mcspacewizard.emergentstealth.authoring.Zone;
 import com.mcspacewizard.emergentstealth.config.ESConfig;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 import com.mcspacewizard.emergentstealth.stealth.BodySample;
@@ -148,10 +150,16 @@ public final class NpcPerception {
             if (awareness == null) {
                 awareness = getOrCreate(id);
             }
-            float gain = profile.gainPerSecond() * visibility * movementFactor(player) * stateFactor * globalGain * dt;
-            // Grace period (D-05): never go from 0 to fully detected faster than minDetectionSeconds.
-            gain = Math.min(gain, dt / profile.minDetectionSeconds());
+            // Trespass (design doc 32 §2): restricted zones fill awareness faster, hostile ones turn notice into detection.
+            Zone.Access access = Trespass.accessAt(level, player.blockPosition());
+            float zoneFactor = Trespass.gainFactor(access);
+            float gain = profile.gainPerSecond() * visibility * movementFactor(player) * stateFactor * globalGain * zoneFactor * dt;
+            // Grace period (D-05): never go from 0 to fully detected faster than minDetectionSeconds (shorter when restricted).
+            gain = Math.min(gain, zoneFactor * dt / profile.minDetectionSeconds());
             awareness.awareness = Math.min(1.0F, awareness.awareness + gain);
+            if (access == Zone.Access.HOSTILE && awareness.awareness >= ESConfig.NOTICED_THRESHOLD.get()) {
+                awareness.awareness = 1.0F;
+            }
             awareness.seenNow = true;
             awareness.lastVisibility = visibility;
             awareness.lastKnownPos = player.position();
