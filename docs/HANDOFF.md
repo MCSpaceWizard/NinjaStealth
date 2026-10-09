@@ -14,7 +14,8 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 ## State at handoff (2026-10-09)
 
 - **`main`:** v0.1.0 (Alpha 1) plus PR #1 (toolkit part A, S7 animation framework) and PR #2 (Sumi UI). Two merge breakages on `main` (invalid `en_us.json`, the `[animation]` config nested in `[ui]`) are fixed on `claude/fervent-babbage-jyh6r0`, which also carries the `claude/ui-framework` post-merge fixes.
-- **`claude/fervent-babbage-jyh6r0` (PR open):** S7 animation finished and checked in the real client (crawl, bodies, drag, carry, takedowns, first-person camera), bodies no longer float, flaky verbs tests fixed, test helpers (`/es npc knockout`, `/esphoto`). **82 GameTests pass.**
+- **PR #3 merged** (S7 animation finished and checked in the real client).
+- **`claude/fervent-babbage-jyh6r0` (PR #4, draft):** the builder's 21 structures and 17 Cherry Grove modules imported (`tools/structures/`), design doc 32 (authoring tools, approved), and the **structure viewer**: Surveyor's Plan → Sumi browser → ghost preview → place / undo, `/es structure list|browse|place|undo`. Checked in the real client. **85 GameTests pass.**
 - **Feature branches still to finish** (stopped by usage limits; the last commit is **WIP** and may not compile):
 
 | Branch | What's done | What's left |
@@ -25,8 +26,8 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 ## Next up (the user's priorities, 2026-10-09)
 
 1. **Structures, structure viewer and zone authoring.**
-   - The builder's structures arrived as an upload (21 `.nbt` plus worldgen JSON). Check them (NBT validity, data version, palette, size, worldgen JSON) and move them into `data/emergentstealth/structure/` and `worldgen/`.
-   - **Structure placement tool:** preview and place any structure (rotation, mirror, ghost preview) to browse the builder's work.
+   - ✅ Structures imported; ✅ structure viewer (doc 32 §1).
+   - **Next, in doc 32 §5 order:** the compound file format (save and place a multi-module compound with rotation and mirror, per-module ground lines), the zone tool plus the minimal trespass rule, the spawner GUI (Muster Roll), Surveyor's Rope and Compound Ledger, then the first compound: **samurai mini fort**.
    - **Zone tool and compound authoring** (S9 zone design, pulled forward): mark zones (public / restricted / hostile), guard posts and patrol routes (the S5 baton does routes), NPC spawn points with archetypes and schedules, lights, and **save and load a compound as one config file** (datapack JSON + structure).
    - **NPC spawner tool with a GUI** (pick archetype, behaviour, route/post, schedule), built on Sumi.
 2. **Toolkit B:** finish and merge (see the table).
@@ -43,6 +44,7 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 - **Or** go fully stylised: a **modern geometric** GUI generated programmatically, with good animation (easing, smooth scrolling, swiping).
 - The user is open to either. **Recommendation:** geometric shapes drawn in code, with procedural paper grain, ink accents and an animation system (tweens, inertial scrolling, swipe between tabs). It's easy to generate and theme, and still matches ink-and-paper. Confirm with the user in the UI design pass.
 - **Done (Sumi):** went with the recommendation; see [doc 31](design/31-ui-framework.md) §0 and the screenshots in [screenshots/ui](screenshots/ui/). New screens build on `client/ui/` (`UiScreen` + `UiNode` widgets, `Paint` for shapes); side-neutral maths lives in `ui/`.
+- **Ghost previews in the world:** filled gizmos (`Gizmos.rect`, the `debug_filled_box` pipeline) cull back faces, so from inside a ghost nothing shows. `GhostPreview` puts the structure in front of you and draws both windings when the camera is inside.
 - **Sumi gotchas:** GUI pipelines cull back faces, so `Mesh` normalises quad winding (shapes vanished before). Inside one GUI layer, elements are drawn sorted by pipeline and texture, not in submission order; only overlapping elements are stacked. Keep `en_us.json` valid after merges (the `ui/lang_file_valid` GameTest checks it).
 
 ## Working conventions (learned the hard way)

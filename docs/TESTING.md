@@ -48,6 +48,24 @@ Design: [doc 31](design/31-ui-framework.md) §0. Geometric shapes drawn in code,
 | U.12 | Theming | Resource pack with `assets/emergentstealth/ui/theme.json` overriding e.g. `"colors": {"paper": "#f4efe2"}`, or `textures/gui/sumi/paper.png` | Only that token changes; everything else keeps the defaults. A paper PNG replaces the generated grain |
 | U.13 | Dedicated server | `./gradlew runServer` | Starts normally (no client classes on the server) |
 
+## Structure viewer: browse, preview, place, undo 🧪
+
+Design doc [32](design/32-authoring-tools.md) §1. Browse every structure (ours first, then vanilla), see a translucent ghost of it in the world, and place it. Needs **creative mode with cheats** (the structure block rule). Screenshots: [docs/screenshots/structures](screenshots/structures) (`viewer_*.png`).
+
+**Automated checks (already passing):** `structures/place_and_undo` (a rotated placement covers the right box, undo restores every block and block entity, takes back water that flowed out and drops no items, one level only), `structures/preview_data` (the preview has no air and splits into parts that join back exactly).
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| V.1 | Open the browser | `/give @s emergentstealth:surveyors_plan`, then use it (or `/es structure browse`) | The Structures panel: a count, a search box (already focused), structures grouped by folder |
+| V.2 | Search and details | Type `teahouse`, press Enter | The row is selected; the right shows its name, folder, size, solid block count and its 5 main blocks |
+| V.3 | Ghost | Press Preview (or double-click the row) and look at the ground | A translucent copy coloured by block, with an outline box, starting at the block you look at and running away from you. The hint above the hotbar shows the name, rotation, mirror, height and origin |
+| V.4 | Adjust | Scroll the mouse wheel, press M, press Page Up / Page Down (Shift for 5) | It turns 90° per notch, mirrors, rises and sinks; the hint follows |
+| V.5 | Place | Use (right-click) | The structure appears exactly where the ghost was; chat says where |
+| V.6 | Undo | `/es structure undo` or "Undo last" in the browser | Everything is back as it was, including water that flowed out of the structure. No items left lying around. A second undo says there's nothing to undo |
+| V.7 | Cancel | Start a preview, then attack (left-click) | The ghost goes away and nothing is placed |
+| V.8 | Commands | `/es structure list cherry`, `/es structure place emergentstealth:edo/kofun ~ ~ ~ clockwise_90` | Lists matching ids; places rotated (undo works for it too) |
+| V.9 | Permission | In survival, use the plan | "Authoring tools need creative mode and operator permission", nothing opens |
+
 ## Builder structures and Cherry Grove modules (imported) 🧪
 
 The builder's 21 structures, imported with vanilla stand-ins for their modded blocks, and 17 Cherry Grove modules (vanilla, from schematics) (see [tools/structures](../tools/structures/README.md)). Placement only: they don't generate in new worlds yet. Screenshots: [docs/screenshots/structures](screenshots/structures).

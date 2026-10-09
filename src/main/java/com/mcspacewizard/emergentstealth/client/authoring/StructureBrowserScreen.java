@@ -75,9 +75,15 @@ public final class StructureBrowserScreen extends UiScreen {
             lastFilter = text;
             fillList();
         });
+        // Enter selects the first match; Enter again previews it.
         search.onSubmit(text -> {
             List<Identifier> shown = filtered();
-            if (!shown.isEmpty()) {
+            if (shown.isEmpty()) {
+                return;
+            }
+            if (shown.getFirst().equals(selected)) {
+                startPreview();
+            } else {
                 select(shown.getFirst());
             }
         });

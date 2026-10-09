@@ -48,6 +48,12 @@ so `/place structure emergentstealth:edo/<name>` works. They are **placement-onl
 `has_structure/edo_*` are empty and the builder's structure sets stay in `_incoming/worldgen/structure_set/` until the
 worldgen stage (S15). `/place template emergentstealth:edo/<name>` places the raw template.
 
+## Viewing and placing
+
+In game, the **Surveyor's Plan** (or `/es structure browse`) lists every structure with a ghost preview, and
+`/es structure place|undo` place one with rotation and mirror (doc 32 §1, `authoring/` and `client/authoring/`). The
+ghost and the server use the same template transform, so what you see is what's placed.
+
 ## Adding more structures
 
 1. Put the new `.nbt` files in `_incoming/structures/` (and any worldgen JSON in `_incoming/worldgen/`).
