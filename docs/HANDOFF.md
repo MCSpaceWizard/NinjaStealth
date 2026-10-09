@@ -22,7 +22,7 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 | `claude/toolkit-b` | Water/fire arrows, blowgun + sleep darts, locks/keys/Locksmith's Kit, lockpicking minigame, spyglass tagging | WIP: GameTests, final tagging fix. Then merge. Also call `Skills.awardInsight(..., INSIGHT_LOCKPICK)` on a successful pick, and read `StealthStats` (`LOCKPICK_WINDOW`, `TAG_COUNT`) |
 | `claude/s7-animation` | Started: PAL dependency, pose framework, `NpcModel` | Most of doc 17 §8 / research-animation: body poses, crawl cycle, drag/carry poses, takedown clips, camera turning. Clip time must scale to `ActionPlayback.length` (takedown speed skills shorten it) |
 | `claude/visual-lighting` | Light nuance in progress: sky openness (`SkyCells`), penumbra, smoother falloff | WIP: finish, tests, light gem tiers, docs |
-| *(not started)* `claude/ui-framework` | Brief in doc 31 | Whole Sumi framework + config screen + skill tree (K) + dialogue preview. See "UI direction" below |
+| `claude/ui-framework` | **Merged into `main` (PR #2)**, then post-merge fixes on the branch: Sumi core (theme tokens, procedural paper/ink, mesh shapes, widgets, tweens, inertial scroll, swipe pages), config screen, skill tree (K), dialogue preview (`/es dev dialogue`, `/esui`), 11 `ui/*` GameTests, screenshots in `docs/screenshots/ui/` | Merge the post-merge fixes (broken `en_us.json`, `[ui]`/`[animation]` config nesting). User review of doc 31 §0. Later: text field, dropdown, list widgets; gamepad mapping; tool wheel and NPC spawner GUI on Sumi |
 
 ## Next up (the user's latest requests, in priority order)
 
@@ -46,6 +46,8 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 - **No flat colours** in programmer-art GUI: use texturing (paper grain, brush noise).
 - **Or** go fully stylised: a **modern geometric** GUI generated programmatically, with good animation (easing, smooth scrolling, swiping).
 - The user is open to either. **Recommendation:** geometric shapes drawn in code, with procedural paper grain, ink accents and an animation system (tweens, inertial scrolling, swipe between tabs). It's easy to generate and theme, and still matches ink-and-paper. Confirm with the user in the UI design pass.
+- **Done (Sumi):** went with the recommendation; see [doc 31](design/31-ui-framework.md) §0 and the screenshots in [screenshots/ui](screenshots/ui/). New screens build on `client/ui/` (`UiScreen` + `UiNode` widgets, `Paint` for shapes); side-neutral maths lives in `ui/`.
+- **Sumi gotchas:** GUI pipelines cull back faces, so `Mesh` normalises quad winding (shapes vanished before). Inside one GUI layer, elements are drawn sorted by pipeline and texture, not in submission order; only overlapping elements are stacked. Keep `en_us.json` valid after merges (the `ui/lang_file_valid` GameTest checks it).
 
 ## Working conventions (learned the hard way)
 
@@ -87,6 +89,7 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 | Search groups, attack tokens | `ai/group/` |
 | Navigation, patrols, routines | `ai/nav/`, `ai/routine/` |
 | Light model (server), visual lighting (client) | `stealth/light/`, `client/light/` |
+| Sumi UI: maths and theme (side-neutral), drawing, widgets, screens | `ui/`, `client/ui/`, `client/ui/widget/`, `client/ui/screen/`; theme `assets/emergentstealth/ui/theme.json` |
 | Sound propagation, footsteps, masking, throwing | `stealth/sound/`, `entity/ThrownItem` |
 | Player verbs: crawl, takedowns, carrying | `action/` |
 | Skills, techniques, stealth stats, gear | `progression/` |
