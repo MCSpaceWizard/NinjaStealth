@@ -29,16 +29,16 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 | # | Feature | How to test | Expected |
 |---|---|---|---|
-| B.1 | Water arrow | Shoot one at a wall torch or lantern near a guard | The light goes out (the light gem darkens there). A soft splash; the guard may glance at the impact, not at you |
-| B.2 | Fire arrow | Shoot one at a snuffed torch, then at a wooden wall | The torch relights; the wood catches fire |
-| B.3 | Blowgun and sleep darts | Hold the blowgun with darts in your inventory, draw briefly and shoot a calm guard | Silent. The guard staggers for 3 s, then drops unconscious. A guard already fighting you only staggers |
-| B.4 | Locksmith's Kit | In creative, right-click a door with the kit | "Locked with Key: …" and a key in your inventory named after the lock. Sneak + right-click unlocks. A key in your off hand reuses its name, so one key opens several doors |
-| B.5 | Keys | Drop the key, try the door, pick the key up again | Locked without it ("Locked" message), opens with it anywhere in your inventory |
-| B.6 | Guards and keys | `/es key npc @e[type=emergentstealth:stealth_npc,limit=1,sort=nearest] <key>` and give the guard a patrol through the door | He opens it, walks through and closes it. Without a key he treats the door as a wall |
-| B.7 | Lockpicking | Survival, lockpicks in hand, right-click a locked door | The timing ring opens. Click or Space when the needle is in the gold window: three pins open it once. A miss loses a pin, clicks loudly (nearby guards hear it) and may wear the pick (8 uses). Esc stops. `/es lock <pos> <key> 5` makes a hard lock |
-| B.8 | Nimble Fingers | `/es skills unlock @s emergentstealth:nimble_fingers`, then pick again | The gold window is wider |
-| B.9 | Spyglass tagging | Look at a guard through a spyglass for a second | A ring fills under the crosshair, then "Tagged". The guard is outlined in gold through walls for 60 s, for you only. A fourth tag replaces the oldest; Keen Eye allows one more |
-| B.10 | Recipes | Check the recipe book | Water arrow ×4: 4 arrows + water bottle. Fire arrow ×4: 4 arrows + flint + coal. Blowgun: 3 bamboo + string. Sleep darts ×4: 2 feathers + flint + spider eye. Lockpicks: 2 iron nuggets + stick |
+| T.1 | Water arrow | Shoot one at a wall torch or lantern near a guard | The light goes out (the light gem darkens there). A soft splash; the guard may glance at the impact, not at you |
+| T.2 | Fire arrow | Shoot one at a snuffed torch, then at a wooden wall | The torch relights; the wood catches fire |
+| T.3 | Blowgun and sleep darts | Hold the blowgun with darts in your inventory, draw briefly and shoot a calm guard | Silent. The guard staggers for 3 s, then drops unconscious. A guard already fighting you only staggers |
+| T.4 | Locksmith's Kit | In creative, right-click a door with the kit | "Locked with Key: …" and a key in your inventory named after the lock. Sneak + right-click unlocks. A key in your off hand reuses its name, so one key opens several doors |
+| T.5 | Keys | Drop the key, try the door, pick the key up again | Locked without it ("Locked" message), opens with it anywhere in your inventory |
+| T.6 | Guards and keys | `/es key npc @e[type=emergentstealth:stealth_npc,limit=1,sort=nearest] <key>` and give the guard a patrol through the door | He opens it, walks through and closes it. Without a key he treats the door as a wall |
+| T.7 | Lockpicking | Survival, lockpicks in hand, right-click a locked door | The timing ring opens. Click or Space when the needle is in the gold window: three pins open it once. A miss loses a pin, clicks loudly (nearby guards hear it) and may wear the pick (8 uses). Esc stops. `/es lock <pos> <key> 5` makes a hard lock |
+| T.8 | Nimble Fingers | `/es skills unlock @s emergentstealth:nimble_fingers`, then pick again | The gold window is wider |
+| T.9 | Spyglass tagging | Look at a guard through a spyglass for a second | A ring fills under the crosshair, then "Tagged". The guard is outlined in gold through walls for 60 s, for you only. A fourth tag replaces the oldest; Keen Eye allows one more |
+| T.10 | Recipes | Check the recipe book | Water arrow ×4: 4 arrows + water bottle. Fire arrow ×4: 4 arrows + flint + coal. Blowgun: 3 bamboo + string. Sleep darts ×4: 2 feathers + flint + spider eye. Lockpicks: 2 iron nuggets + stick |
 
 ## Sumi UI framework: config screen, skill tree (K), dialogue preview 🧪
 
