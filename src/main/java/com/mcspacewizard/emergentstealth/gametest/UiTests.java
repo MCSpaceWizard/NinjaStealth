@@ -12,6 +12,7 @@ import com.mcspacewizard.emergentstealth.ui.ConfigMapping;
 import com.mcspacewizard.emergentstealth.ui.Easing;
 import com.mcspacewizard.emergentstealth.ui.InertialScroll;
 import com.mcspacewizard.emergentstealth.ui.PaperNoise;
+import com.mcspacewizard.emergentstealth.ui.RadialMenu;
 import com.mcspacewizard.emergentstealth.ui.SkillTreeModel;
 import com.mcspacewizard.emergentstealth.ui.SumiTheme;
 import com.mcspacewizard.emergentstealth.ui.SwipePager;
@@ -297,6 +298,34 @@ final class UiTests {
         } catch (java.io.IOException | RuntimeException e) {
             helper.fail("en_us.json doesn't parse: " + e.getMessage());
         }
+        helper.succeed();
+    }
+
+    /** The tool wheel's wedge maths (design doc 34 §1): pointer angles, the wrap at the top, dead zone, stepping. */
+    static void radialMenu(GameTestHelper helper) {
+        helper.assertTrue(RadialMenu.indexAt(0, -50, 4, 10) == 0, "Straight up is the first wedge");
+        helper.assertTrue(RadialMenu.indexAt(50, 0, 4, 10) == 1, "Right is the second of four (clockwise)");
+        helper.assertTrue(RadialMenu.indexAt(0, 50, 4, 10) == 2, "Down is the third");
+        helper.assertTrue(RadialMenu.indexAt(-50, 0, 4, 10) == 3, "Left is the last");
+        helper.assertTrue(RadialMenu.indexAt(-5, -50, 4, 10) == 0 && RadialMenu.indexAt(5, -50, 4, 10) == 0,
+                "Just either side of the top is still the first wedge (no seam at the wrap)");
+        helper.assertTrue(RadialMenu.indexAt(-40, -50, 6, 10) == 5, "Up and a bit left of six is the last wedge");
+        helper.assertTrue(RadialMenu.indexAt(3, 4, 4, 10) == -1, "Inside the dead zone picks nothing");
+        helper.assertTrue(RadialMenu.indexAt(0, -50, 0, 10) == -1, "No wedges, nothing picked");
+        helper.assertTrue(RadialMenu.indexAt(0, -50, 1, 10) == 0 && RadialMenu.indexAt(0, 50, 1, 10) == 0, "One wedge is the whole ring");
+        for (int n = 1; n <= 12; n++) {
+            for (int i = 0; i < n; i++) {
+                double a = RadialMenu.angleOf(i, n);
+                helper.assertTrue(RadialMenu.indexAt(Math.cos(a) * 40, Math.sin(a) * 40, n, 10) == i,
+                        "The centre of wedge " + i + " of " + n + " maps back to it");
+            }
+        }
+        helper.assertTrue(RadialMenu.step(-1, 5, 1) == 0 && RadialMenu.step(-1, 5, -1) == 4, "Stepping from nothing");
+        helper.assertTrue(RadialMenu.step(4, 5, 1) == 0 && RadialMenu.step(0, 5, -1) == 4, "Stepping wraps");
+        helper.assertTrue(RadialMenu.step(0, 0, 1) == -1, "Stepping an empty ring");
+        helper.assertTrue(RadialMenu.numberKey(1, 3) == 0 && RadialMenu.numberKey(3, 3) == 2, "Number keys pick wedges");
+        helper.assertTrue(RadialMenu.numberKey(4, 3) == -1 && RadialMenu.numberKey(0, 9) == -1, "No wedge for 4 of 3, or for 0");
+        helper.assertTrue(near(RadialMenu.turn(Math.PI * 0.9, -Math.PI * 0.9), Math.PI * 0.2, 1e-9), "Turns take the short way round");
         helper.succeed();
     }
 }

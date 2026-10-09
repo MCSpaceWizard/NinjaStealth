@@ -16,6 +16,66 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Toolbelt, tool wheel on Sumi and tool effects 🧪
+
+Design: [doc 34](design/34-tool-wheel-and-effects.md). Screenshots: [screenshots/tools](screenshots/tools/).
+
+**Automated checks (already passing):** `ui/radial_menu` (which wedge the pointer picks, the wrap at the top, the dead zone, wheel and number-key stepping); `toolkit/toolbelt_menu` (the belt takes tools but not stone, arrows, darts or belts; shift-click saves into the item; the open belt's slot is locked and a number-key swap can't move it); `toolkit/toolbelt_hand_tools` (quick use draws the blowgun and lockpick into the hand, the held sword goes to the inventory, a held tool swaps into the belt, a held belt is put away with its contents); `toolkit/quick_use_keeps_held_item` now throws from the belt. 107 GameTests in total.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| K.1 | Toolbelt recipe | Recipe book, or craft leather ×5, iron nugget, string ×2 (`LIL / S S / LLL`) | A Toolbelt |
+| K.2 | Belt panel | Hold the belt, right-click | A paper panel: an ink belt band with 8 slots numbered 1–8 over your inventory; the belt's own slot is tinted red and can't be picked up. A line under the panel says what the belt is for |
+| K.3 | What fits | Shift-click or drag stealth tools, a stone, arrows and darts | Throwables, blowgun, lockpick and spyglass go in; stone, water/fire arrows, sleep darts and other belts don't |
+| K.4 | Contents stay | Close, drop the belt, pick it up, reopen; put it in a chest | The tools are still in it |
+| K.5 | Wheel from the belt | Hold **R** | Exactly the belt's 8 slots, in belt order: same tool, same wedge every time. Empty slots are faint wedges with a small ring; pointing at one says "Empty slot". 1–8 pick by slot |
+| K.6 | No belt | Put the belt in a chest, hold R | The disc says "No toolbelt", the strip says to carry one. V says you need a toolbelt |
+| K.7 | Quick use from the belt | Choose the smoke bomb, tap V with a sword in hand | It's thrown from the belt (its count in the belt drops); you still hold the sword. Caltrops outside the belt can't be chosen |
+| K.8 | Hand tools | Choose the blowgun, tap V with a sword in hand | The blowgun comes out of the belt into your hand and the sword goes to a free inventory slot. Holding a tool instead swaps it into the belt slot. Full inventory: "No room to put away what you're holding" |
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| W.1 | Wheel look | Fill a toolbelt, hold **R** | Paper wedges unfold clockwise round a paper disc; the world stays visible behind a soft vignette. Each wedge: icon, count, a small number 1–8. The active tool's wedge has a red seal |
+| W.2 | Pointing | Hold R and move the mouse | The pointed wedge slides out and turns to ink; an ink notch on the disc points at it; a soft tick. The disc shows its name and count, the strip below says how it's used |
+| W.3 | Choosing | Release R on a wedge; or press 1–8; or scroll the wheel and press Enter; or click | It becomes the active tool (stamp sound, seal moves). Releasing in the centre or Esc keeps the old one |
+| W.4 | Reduced motion | Turn on `ui.reducedMotion` (config screen) and reopen | No unfolding or easing; everything appears at once |
+| W.5 | Active tool icon | Pick a tool | Its icon sits on a small paper diamond right of the light gem with the belt's count; ink-dimmed when the belt runs out (not while a drawn hand tool is in your hand) |
+| W.6 | Lockpick ring | Pick a locked door (T.7) | A paper card: an ink ring with a gold window, a needle sweeping round, three diamond seals that turn red as pins set. A good click flashes green, a miss red; the window glides to its next spot |
+| W.7 | Spyglass ring | Scope a guard (T.9) | A smooth arc fills round under the crosshair, gold when tagged, and a gold ring pings round the guard |
+| E.1 | Water arrow | Shoot one at torches and a lantern | Droplets trail behind it; a splash with falling drips; a hiss and a puff of steam over each light it puts out |
+| E.2 | Fire arrow | Shoot one at snuffed torches at night | Smoke and embers trail behind it and it lights the ground as it flies; embers burst where it hits; each relit light flares |
+| E.3 | Sleep dart | Dart a guard | Gold stars circle his head while he staggers, "z" marks drift up, and a slow puff when he drops |
+| E.4 | Blinding powder | Puff a guard | Stars circle his head and glints flicker round his eyes until it wears off |
+| E.5 | Smoke bomb | Throw one in daylight | A billowing cloud with a darker heart and slowly curling edges, thinning out at the end |
+| E.6 | Firecracker | Throw one | Embers sputter from the fuse; each bang flashes with red, gold and pale crackle |
+| E.7 | Caltrops | Look at a patch at night | Now and then a spike glints |
+| E.8 | Lockpicking | Miss a pin, then open a lock | Sparks at the lock on a miss; a puff when it opens |
+| E.9 | Particles setting | Video settings → Particles: Minimal | The effects thin out like vanilla ones |
+
+## Beta toolkit, part B: water and fire arrows, blowgun, locks and keys, lockpicking, spyglass tagging 🧪
+
+**Automated checks (already passing):** 8 more GameTests (`toolkit/*`):
+- a water arrow puts out a torch with one quiet splash (noise 2) that doesn't point at the archer
+- a fire arrow relights an unlit torch
+- a sleep dart staggers an NPC for 3 s, then knocks it out without damage
+- a locked door won't open without its key, and opens with it (anywhere in the inventory)
+- a guard with the key walks through a locked door on his route and closes it behind him; one without stays on his side
+- three good clicks pick a lock once (it locks again when closed), a miss makes a click noise of 4, and a successful pick earns 5 Shinobi Insight
+- looking at an NPC through a spyglass for 1 s tags it; at most 3 tags, the oldest goes
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| T.1 | Water arrow | Shoot one at a wall torch or lantern near a guard | The light goes out (the light gem darkens there). A soft splash; the guard may glance at the impact, not at you |
+| T.2 | Fire arrow | Shoot one at a snuffed torch, then at a wooden wall | The torch relights; the wood catches fire |
+| T.3 | Blowgun and sleep darts | Hold the blowgun with darts in your inventory, draw briefly and shoot a calm guard | Silent. The guard staggers for 3 s, then drops unconscious. A guard already fighting you only staggers |
+| T.4 | Locksmith's Kit | In creative, right-click a door with the kit | "Locked with Key: …" and a key in your inventory named after the lock. Sneak + right-click unlocks. A key in your off hand reuses its name, so one key opens several doors |
+| T.5 | Keys | Drop the key, try the door, pick the key up again | Locked without it ("Locked" message), opens with it anywhere in your inventory |
+| T.6 | Guards and keys | `/es key npc @e[type=emergentstealth:stealth_npc,limit=1,sort=nearest] <key>` and give the guard a patrol through the door | He opens it, walks through and closes it. Without a key he treats the door as a wall |
+| T.7 | Lockpicking | Survival, lockpicks in hand, right-click a locked door | The timing ring opens. Click or Space when the needle is in the gold window: three pins open it once. A miss loses a pin, clicks loudly (nearby guards hear it) and may wear the pick (8 uses). Esc stops. `/es lock <pos> <key> 5` makes a hard lock |
+| T.8 | Nimble Fingers | `/es skills unlock @s emergentstealth:nimble_fingers`, then pick again | The gold window is wider |
+| T.9 | Spyglass tagging | Look at a guard through a spyglass for a second | A ring fills under the crosshair, then "Tagged". The guard is outlined in gold through walls for 60 s, for you only. A fourth tag replaces the oldest; Keen Eye allows one more |
+| T.10 | Recipes | Check the recipe book | Water arrow ×4: 4 arrows + water bottle. Fire arrow ×4: 4 arrows + flint + coal. Blowgun: 3 bamboo + string. Sleep darts ×4: 2 feathers + flint + spider eye. Lockpicks: 2 iron nuggets + stick |
+
 ## Sumi UI framework: config screen, skill tree (K), dialogue preview 🧪
 
 Design: [doc 31](design/31-ui-framework.md) §0. Geometric shapes drawn in code, procedural paper grain and brushed ink, eased animation, inertial scrolling and swipeable tabs. Screenshots: [docs/screenshots/ui/](screenshots/ui/).
@@ -179,7 +239,7 @@ All five are in the creative tab and the `#emergentstealth:tools` tag. The cheap
 | # | Feature | How to test | Expected |
 |---|---|---|---|
 | A.1 | Tool wheel | Hold **R** with some tools in your inventory, point at one, release | A radial wheel of the tools you carry, with counts. The chosen one shows as the active tool icon near the hotbar. With no tools: "No stealth tools in your inventory" |
-| A.2 | Quick use | With a sword in hand and an active tool, **tap V** (lob) or **hold V** and release (charged throw) | The tool is thrown/used; you still hold the sword. When you run out: "No *tool* left" |
+| A.2 | Quick use | With a filled toolbelt (K.7), a sword in hand and an active tool, **tap V** (lob) or **hold V** and release (charged throw) | The tool is thrown/used; you still hold the sword. When you run out: "No *tool* left" |
 | A.3 | Pebble | Throw one past a calm guard | A clack where it lands; the guard investigates **the landing spot**, not you. Nothing is left behind |
 | A.4 | Smoke bomb | Throw one between you and a guard who can see you | A pop, then a grey cloud (3-block radius) for 10 s. The guard loses sight of you completely. A guard standing in the cloud is blinded. `/esdebug` shows the smoke volume |
 | A.5 | Firecracker | Throw one far from you, behind a guard | 2 s of fizzing, then 3 s of bangs. Guards come to the firecracker, not to you |

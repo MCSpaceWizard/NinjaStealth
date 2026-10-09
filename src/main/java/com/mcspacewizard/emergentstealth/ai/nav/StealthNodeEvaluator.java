@@ -22,6 +22,10 @@ public class StealthNodeEvaluator extends WalkNodeEvaluator {
     @Override
     public PathType getPathType(PathfindingContext context, int x, int y, int z) {
         BlockState state = context.getBlockState(new BlockPos(x, y, z));
+        // Locked doors and gates are walls for mobs without the key (design doc 21 §3).
+        if (com.mcspacewizard.emergentstealth.world.lock.Locks.blocksMob(this.mob, new BlockPos(x, y, z), state)) {
+            return PathType.BLOCKED;
+        }
         if (this.canOpenDoors() && state.getBlock() instanceof FenceGateBlock && !state.getValue(FenceGateBlock.OPEN)) {
             return PathType.DOOR_WOOD_CLOSED;
         }

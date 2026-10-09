@@ -68,6 +68,15 @@ public class CaltropsBlock extends Block {
         }
     }
 
+    /** Now and then a spike catches the light, so a patch can be spotted at night (design doc 34 §2). */
+    @Override
+    public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
+        if (random.nextInt(14) == 0) {
+            level.addParticle(com.mcspacewizard.emergentstealth.registry.ESParticles.GLINT,
+                    pos.getX() + 0.15 + random.nextDouble() * 0.7, pos.getY() + 0.12, pos.getZ() + 0.15 + random.nextDouble() * 0.7, 0.0, 0.0, 0.0);
+        }
+    }
+
     /** Time's up: the caltrops are trodden into the ground. */
     @Override
     protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {

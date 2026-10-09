@@ -335,6 +335,38 @@ public final class Paint {
         texturedFan(g, SumiTextures.ink(), xy, color, 1.0F);
     }
 
+    /** A ring sector (see {@link #arc}) filled with paper grain tinted {@code tint}: radial-menu wedges. */
+    public static void paperArc(GuiGraphicsExtractor g, float cx, float cy, float r0, float r1, float start, float sweep, int tint) {
+        texturedArc(g, SumiTextures.paper(), cx, cy, r0, r1, start, sweep, tint, Sumi.theme().textureF(SumiTheme.GRAIN_SCALE));
+    }
+
+    /** A ring sector filled with brushed ink in {@code color}. */
+    public static void inkArc(GuiGraphicsExtractor g, float cx, float cy, float r0, float r1, float start, float sweep, int color) {
+        texturedArc(g, SumiTextures.ink(), cx, cy, r0, r1, start, sweep, color, 1.0F);
+    }
+
+    private static void texturedArc(GuiGraphicsExtractor g, SumiTextures.Tex tex, float cx, float cy, float r0, float r1,
+                                    float start, float sweep, int tint, float scale) {
+        Mesh.Builder mesh = Mesh.textured(tex.setup());
+        float su = scale / tex.width();
+        float sv = scale / tex.height();
+        int n = Math.max(2, Math.round(segments(r1) * Math.abs(sweep) / (float) (Math.PI * 2.0)));
+        for (int i = 0; i < n; i++) {
+            double a0 = start + sweep * i / n;
+            double a1 = start + sweep * (i + 1) / n;
+            float c0 = (float) Math.cos(a0);
+            float s0 = (float) Math.sin(a0);
+            float c1 = (float) Math.cos(a1);
+            float s1 = (float) Math.sin(a1);
+            float x0 = cx + c0 * r0, y0 = cy + s0 * r0;
+            float x1 = cx + c0 * r1, y1 = cy + s0 * r1;
+            float x2 = cx + c1 * r1, y2 = cy + s1 * r1;
+            float x3 = cx + c1 * r0, y3 = cy + s1 * r0;
+            mesh.texQuad(x0, y0, x0 * su, y0 * sv, x1, y1, x1 * su, y1 * sv, x2, y2, x2 * su, y2 * sv, x3, y3, x3 * su, y3 * sv, tint);
+        }
+        mesh.submit(g);
+    }
+
     private static void texturedFan(GuiGraphicsExtractor g, SumiTextures.Tex tex, float[] xy, int tint, float scale) {
         Mesh.Builder mesh = Mesh.textured(tex.setup());
         float su = scale / tex.width();

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "B": "minecraft:bamboo",
+    "S": "minecraft:string"
+  },
+  "pattern": [
+    "  B",
+    " B ",
+    "BS "
+  ],
+  "result": {
+    "id": "emergentstealth:blowgun"
+  }
+}

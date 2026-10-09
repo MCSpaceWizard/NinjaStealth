@@ -20,6 +20,8 @@ import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import com.mcspacewizard.emergentstealth.registry.ESMenus;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -72,6 +74,18 @@ public final class ToolClientEvents {
     static void onRegisterParticles(RegisterParticleProvidersEvent event) {
         event.registerSpriteSet(ESParticles.SMOKE_CLOUD, ToolParticles.SmokeCloudProvider::new);
         event.registerSpriteSet(ESParticles.BLINDING_PUFF, ToolParticles.BlindingPuffProvider::new);
+        event.registerSpriteSet(ESParticles.SMOKE_CORE, ToolEffectParticles::smokeCore);
+        event.registerSpriteSet(ESParticles.STEAM, ToolEffectParticles::steam);
+        event.registerSpriteSet(ESParticles.EMBER, ToolEffectParticles::ember);
+        event.registerSpriteSet(ESParticles.DROWSY, ToolEffectParticles::drowsy);
+        event.registerSpriteSet(ESParticles.DIZZY_STAR, ToolEffectParticles::dizzyStar);
+        event.registerSpriteSet(ESParticles.GLINT, ToolEffectParticles::glint);
+        event.registerSpriteSet(ESParticles.TAG_PING, ToolEffectParticles::tagPing);
+    }
+
+    @SubscribeEvent
+    static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
+        event.register(ESMenus.TOOLBELT.get(), ToolbeltScreen::new);
     }
 
     @SubscribeEvent
