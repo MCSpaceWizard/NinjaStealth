@@ -24,14 +24,14 @@ Design: [doc 34](design/34-tool-wheel-and-effects.md). Screenshots: [screenshots
 
 | # | Feature | How to test | Expected |
 |---|---|---|---|
-| B.1 | Toolbelt recipe | Recipe book, or craft leather ×5, iron nugget, string ×2 (`LIL / S S / LLL`) | A Toolbelt |
-| B.2 | Belt panel | Hold the belt, right-click | A paper panel: an ink belt band with 8 slots numbered 1–8 over your inventory; the belt's own slot is tinted red and can't be picked up. A line under the panel says what the belt is for |
-| B.3 | What fits | Shift-click or drag stealth tools, a stone, arrows and darts | Throwables, blowgun, lockpick and spyglass go in; stone, water/fire arrows, sleep darts and other belts don't |
-| B.4 | Contents stay | Close, drop the belt, pick it up, reopen; put it in a chest | The tools are still in it |
-| B.5 | Wheel from the belt | Hold **R** | Exactly the belt's 8 slots, in belt order: same tool, same wedge every time. Empty slots are faint wedges with a small ring; pointing at one says "Empty slot". 1–8 pick by slot |
-| B.6 | No belt | Put the belt in a chest, hold R | The disc says "No toolbelt", the strip says to carry one. V says you need a toolbelt |
-| B.7 | Quick use from the belt | Choose the smoke bomb, tap V with a sword in hand | It's thrown from the belt (its count in the belt drops); you still hold the sword. Caltrops outside the belt can't be chosen |
-| B.8 | Hand tools | Choose the blowgun, tap V with a sword in hand | The blowgun comes out of the belt into your hand and the sword goes to a free inventory slot. Holding a tool instead swaps it into the belt slot. Full inventory: "No room to put away what you're holding" |
+| K.1 | Toolbelt recipe | Recipe book, or craft leather ×5, iron nugget, string ×2 (`LIL / S S / LLL`) | A Toolbelt |
+| K.2 | Belt panel | Hold the belt, right-click | A paper panel: an ink belt band with 8 slots numbered 1–8 over your inventory; the belt's own slot is tinted red and can't be picked up. A line under the panel says what the belt is for |
+| K.3 | What fits | Shift-click or drag stealth tools, a stone, arrows and darts | Throwables, blowgun, lockpick and spyglass go in; stone, water/fire arrows, sleep darts and other belts don't |
+| K.4 | Contents stay | Close, drop the belt, pick it up, reopen; put it in a chest | The tools are still in it |
+| K.5 | Wheel from the belt | Hold **R** | Exactly the belt's 8 slots, in belt order: same tool, same wedge every time. Empty slots are faint wedges with a small ring; pointing at one says "Empty slot". 1–8 pick by slot |
+| K.6 | No belt | Put the belt in a chest, hold R | The disc says "No toolbelt", the strip says to carry one. V says you need a toolbelt |
+| K.7 | Quick use from the belt | Choose the smoke bomb, tap V with a sword in hand | It's thrown from the belt (its count in the belt drops); you still hold the sword. Caltrops outside the belt can't be chosen |
+| K.8 | Hand tools | Choose the blowgun, tap V with a sword in hand | The blowgun comes out of the belt into your hand and the sword goes to a free inventory slot. Holding a tool instead swaps it into the belt slot. Full inventory: "No room to put away what you're holding" |
 
 | # | Feature | How to test | Expected |
 |---|---|---|---|
@@ -239,7 +239,7 @@ All five are in the creative tab and the `#emergentstealth:tools` tag. The cheap
 | # | Feature | How to test | Expected |
 |---|---|---|---|
 | A.1 | Tool wheel | Hold **R** with some tools in your inventory, point at one, release | A radial wheel of the tools you carry, with counts. The chosen one shows as the active tool icon near the hotbar. With no tools: "No stealth tools in your inventory" |
-| A.2 | Quick use | With a filled toolbelt (B.7), a sword in hand and an active tool, **tap V** (lob) or **hold V** and release (charged throw) | The tool is thrown/used; you still hold the sword. When you run out: "No *tool* left" |
+| A.2 | Quick use | With a filled toolbelt (K.7), a sword in hand and an active tool, **tap V** (lob) or **hold V** and release (charged throw) | The tool is thrown/used; you still hold the sword. When you run out: "No *tool* left" |
 | A.3 | Pebble | Throw one past a calm guard | A clack where it lands; the guard investigates **the landing spot**, not you. Nothing is left behind |
 | A.4 | Smoke bomb | Throw one between you and a guard who can see you | A pop, then a grey cloud (3-block radius) for 10 s. The guard loses sight of you completely. A guard standing in the cloud is blinded. `/esdebug` shows the smoke volume |
 | A.5 | Firecracker | Throw one far from you, behind a guard | 2 s of fizzing, then 3 s of bangs. Guards come to the firecracker, not to you |
