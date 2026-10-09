@@ -84,6 +84,7 @@ A **compound** is one or more structure templates plus markers, all relative to 
 > - **Linked markers:** zones and routes copied from the world (by the ledger, `add zone <zone>`, `add route`, or a muster's schedule) are copied again on every save, so later edits with the rope or baton are kept. A box zone typed with `add zone <name> <access> …` isn't linked.
 > - **No double records:** NPCs a draft has recorded (mustered, or `add npcs`) are remembered, so adding them again does nothing.
 > - Code: `authoring/Ledger`, `LedgerPayloads`, `item/CompoundLedgerItem`, `client/authoring/LedgerScreen`. Test: `authoring/ledger_flow`.
+> **Examples (2026-10-09):** three compounds ship in the mod as `emergentstealth:examples/{samurai_fort, shrine_watch, cherry_grove_estate}` (a garrisoned fort with a lamplighter, a shrine watched at night, and two Cherry Grove modules on one ground line). `tools/compounds/make_examples.py` writes them and checks every waypoint, post and spawn against the templates (a floor to stand on, a walkable leg between waypoints); the `compounds/examples` GameTest places each at every rotation. Ground lines are set by hand there: a module's offset y is `-1 - ground`, so the ground layer replaces the block under the placer's feet.
 
 The planned flow:
 1. Place a structure with the viewer.
