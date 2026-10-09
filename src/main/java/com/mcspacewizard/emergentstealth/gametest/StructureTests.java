@@ -47,7 +47,7 @@ public final class StructureTests {
     private static final Identifier ARENA = EmergentStealth.id("arena");
     private static final Identifier TEST = EmergentStealth.id("structures/imports_load");
     /** Imported folders and how many structures each should hold (2026-10-09). */
-    private static final Map<String, Integer> EXPECTED = Map.of("structure/edo", 21, "structure/cherrygrove", 17);
+    private static final Map<String, Integer> EXPECTED = Map.of("structure/edo", 21, "structure/cherrygrove", 17, "structure/sites", 1);
     private static final Set<String> AIR = Set.of("minecraft:air", "minecraft:cave_air", "minecraft:void_air");
 
     private static final Map<Identifier, java.util.function.Consumer<GameTestHelper>> TESTS = Map.of(

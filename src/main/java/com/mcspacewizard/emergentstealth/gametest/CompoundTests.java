@@ -12,6 +12,7 @@ import com.mcspacewizard.emergentstealth.ai.routine.PatrolRoute;
 import com.mcspacewizard.emergentstealth.ai.routine.PatrolRoutes;
 import com.mcspacewizard.emergentstealth.ai.routine.Schedule;
 import com.mcspacewizard.emergentstealth.authoring.Compound;
+import com.mcspacewizard.emergentstealth.authoring.TerrainFit;
 import com.mcspacewizard.emergentstealth.authoring.CompoundPlacer;
 import com.mcspacewizard.emergentstealth.authoring.Compounds;
 import com.mcspacewizard.emergentstealth.authoring.PlacedCompounds;
@@ -56,12 +57,15 @@ public final class CompoundTests {
     private static final Identifier ARENA = EmergentStealth.id("arena");
     static final Identifier SHRINE = EmergentStealth.id("edo/small_shrine_v1");
     private static final Identifier GUARD = EmergentStealth.id("ashigaru");
+    /** Templates only: these tests are about markers, and place in the air or inside the test arena. */
+    static final Compound.Terrain EXACT = Compound.Terrain.DEFAULT.withMode(TerrainFit.Mode.EXACT);
 
     private static final Map<Identifier, Consumer<GameTestHelper>> TESTS = Map.of(
             EmergentStealth.id("compounds/transform_algebra"), CompoundTests::transformAlgebra,
             EmergentStealth.id("compounds/file_format"), CompoundTests::fileFormat,
             EmergentStealth.id("compounds/round_trip"), CompoundTests::roundTrip,
-            EmergentStealth.id("compounds/examples"), CompoundTests::examples);
+            EmergentStealth.id("compounds/examples"), CompoundTests::examples,
+            EmergentStealth.id("compounds/terrain"), CompoundTests::terrain);
 
     @SubscribeEvent
     static void onRegister(RegisterEvent event) {
@@ -182,7 +186,7 @@ public final class CompoundTests {
         int lastCopy = 0;
 
         for (Transform t : all()) {
-            CompoundPlacer.Result result = CompoundPlacer.place(level, author, id, compound, origin, t);
+            CompoundPlacer.Result result = CompoundPlacer.place(level, author, id, compound, origin, t, EXACT);
             PlacedCompounds.Copy copy = result.copy();
             helper.assertTrue(copy != null, "Placed " + t + ", missing " + result.missing());
             helper.assertTrue(copy.id() > lastCopy, t + ": copy numbers are never reused (got #" + copy.id() + " after #" + lastCopy + ")");
@@ -220,7 +224,7 @@ public final class CompoundTests {
     }
 
     /** The example compounds shipped in the mod (made by {@code tools/compounds/make_examples.py}). */
-    private static final List<String> EXAMPLES = List.of("samurai_fort", "shrine_watch", "cherry_grove_estate");
+    private static final List<String> EXAMPLES = List.of("samurai_fort", "shrine_watch", "cherry_grove_estate", "takamori_castle");
 
     /**
      * Each example compound loads, and placed at every rotation, every route waypoint, post and NPC stands on
@@ -246,7 +250,7 @@ public final class CompoundTests {
             BlockPos origin = new BlockPos(20_000 + 300 * i, 120, 20_000);
             for (Rotation rotation : Rotation.values()) {
                 Transform t = new Transform(Mirror.NONE, rotation);
-                CompoundPlacer.Result result = CompoundPlacer.place(level, author, id, compound, origin, t);
+                CompoundPlacer.Result result = CompoundPlacer.place(level, author, id, compound, origin, t, EXACT);
                 PlacedCompounds.Copy copy = result.copy();
                 helper.assertTrue(copy != null, id + " " + t + ": missing templates " + result.missing());
                 String where = id + " " + rotation.getSerializedName();
@@ -269,6 +273,90 @@ public final class CompoundTests {
                 helper.assertTrue(copy.routes().size() == compound.routes().size() && copy.zones().size() == compound.zones().size(),
                         where + ": every route and zone is registered");
                 helper.assertTrue(StructurePlacement.undo(author) != null, where + ": undo");
+            }
+        }
+        helper.succeed();
+    }
+
+    /**
+     * Placing on a slope (doc 33 §4). A small shrine goes on a hillside rising east, once per terrain mode, and is
+     * undone each time: {@code exact} leaves the slope alone; {@code fit} gives the footprint solid ground at the
+     * ground line, eases the ring from the ground line to the slope and leaves the slope past the ring alone;
+     * {@code replace} flattens the ring to the ground line. Undo restores the hillside every time.
+     */
+    static void terrain(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        UUID author = UUID.randomUUID();
+        BlockPos origin = new BlockPos(40_000, 100, 40_000);
+        int ground = origin.getY() - 1;
+        int blend = 6;
+        // The hillside: x from -12 to 24 round the origin, rising 3 in 4 eastwards through the ground line at x = 4.
+        java.util.function.IntUnaryOperator slope = x -> ground + Math.round((x - 4) * 0.75F);
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+        for (int x = -12; x <= 24; x++) {
+            for (int z = -10; z <= 20; z++) {
+                int h = slope.applyAsInt(x);
+                for (int y = ground - 14; y <= ground + 24; y++) {
+                    level.setBlock(pos.set(origin.getX() + x, y, origin.getZ() + z), y > h ? Blocks.AIR.defaultBlockState()
+                            : y == h ? Blocks.GRASS_BLOCK.defaultBlockState() : y > h - 3 ? Blocks.DIRT.defaultBlockState()
+                            : Blocks.STONE.defaultBlockState(), net.minecraft.world.level.block.Block.UPDATE_CLIENTS);
+                }
+            }
+        }
+        java.util.function.IntBinaryOperator surface = (x, z) -> {
+            for (int y = ground + 24; y > ground - 14; y--) {
+                if (!level.getBlockState(pos.set(origin.getX() + x, y, origin.getZ() + z)).isAir()) {
+                    return y;
+                }
+            }
+            return Integer.MIN_VALUE;
+        };
+        Compound compound = new Compound(List.of(new Compound.Module(SHRINE, new BlockPos(0, -1, 0), Rotation.NONE, Mirror.NONE, 0)),
+                List.of(), List.of(), List.of());
+        Identifier id = EmergentStealth.id("test/hillside");
+        int mid = 4;              // a z through the middle of the shrine
+        int east = 9, west = -1;  // the first ring columns either side (the shrine is 9 wide)
+
+        for (TerrainFit.Mode mode : TerrainFit.Mode.values()) {
+            CompoundPlacer.Result result = CompoundPlacer.place(level, author, id, compound, origin, Transform.IDENTITY,
+                    new Compound.Terrain(mode, blend, 24));
+            helper.assertTrue(result.copy() != null, mode + ": placed");
+            int beyond = east + blend + 1;
+            helper.assertTrue(surface.applyAsInt(beyond, mid) == slope.applyAsInt(beyond), mode + ": the slope past the ring is untouched");
+            switch (mode) {
+                case EXACT -> {
+                    helper.assertTrue(surface.applyAsInt(east, mid) == slope.applyAsInt(east), "exact: the ring is untouched");
+                    helper.assertTrue(surface.applyAsInt(west - 3, mid) == slope.applyAsInt(west - 3), "exact: the valley is untouched");
+                }
+                case FIT -> {
+                    for (int x = 0; x < 9; x++) {
+                        for (int z = 0; z < 9; z++) {
+                            BlockPos at = new BlockPos(origin.getX() + x, ground, origin.getZ() + z);
+                            helper.assertTrue(!level.getBlockState(at).isAir(), "fit: solid ground line under the footprint at " + at);
+                        }
+                    }
+                    for (int x : new int[] {east, west}) {
+                        int s = surface.applyAsInt(x, mid);
+                        helper.assertTrue(Math.abs(s - ground) <= 1, "fit: the ring starts at the ground line (x " + x + ": " + s + ")");
+                    }
+                    int prev = surface.applyAsInt(east, mid);
+                    for (int x = east + 1; x <= east + blend; x++) {
+                        int s = surface.applyAsInt(x, mid);
+                        helper.assertTrue(s >= prev && s <= slope.applyAsInt(x), "fit: the ring climbs to the hillside (x " + x + ": " + s + ")");
+                        prev = s;
+                    }
+                    int valley = surface.applyAsInt(west - 3, mid);
+                    helper.assertTrue(valley < ground && valley > slope.applyAsInt(west - 3), "fit: the valley side is banked up (" + valley + ")");
+                }
+                case REPLACE -> {
+                    for (int x : new int[] {west - blend + 1, west - 2, west, east, east + 2, east + blend - 1}) {
+                        helper.assertTrue(surface.applyAsInt(x, mid) == ground, "replace: the ring is flat at the ground line (x " + x + ")");
+                    }
+                }
+            }
+            helper.assertTrue(StructurePlacement.undo(author) != null, mode + ": undo");
+            for (int x = -10; x <= 22; x += 4) {
+                helper.assertTrue(surface.applyAsInt(x, mid) == slope.applyAsInt(x), mode + ": undo restores the hillside at x " + x);
             }
         }
         helper.succeed();

@@ -165,7 +165,8 @@ public final class AuthoringToolTests {
 
             BlockPos elsewhere = origin.offset(12, 0, 12);
             Transform turn = new Transform(Mirror.NONE, Rotation.CLOCKWISE_90);
-            CompoundPlacer.Result placed = CompoundPlacer.place(level, author, id, draft.compound(), elsewhere, turn);
+            CompoundPlacer.Result placed = CompoundPlacer.place(level, author, id, draft.compound(), elsewhere, turn,
+                    draft.compound().terrain().withMode(com.mcspacewizard.emergentstealth.authoring.TerrainFit.Mode.EXACT));
             helper.assertTrue(placed.copy() != null && placed.copy().npcs().size() == 1, "Placed with one guard: " + placed);
             copyId = placed.copy().id();
             StealthNpc npc = (StealthNpc) level.getEntity(placed.copy().npcs().getFirst());

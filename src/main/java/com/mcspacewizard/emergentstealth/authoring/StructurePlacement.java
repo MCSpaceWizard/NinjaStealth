@@ -35,7 +35,7 @@ public final class StructurePlacement {
     private StructurePlacement() {}
 
     /** Snapshots bigger than this many blocks aren't kept (undo is then unavailable for that placement). */
-    public static final int MAX_UNDO_VOLUME = 2_000_000;
+    public static final int MAX_UNDO_VOLUME = 8_000_000;  // a large compound with its terrain ring (about 32 MB)
     /**
      * How far around the structure the snapshot reaches: water and lava in a structure flow out of its box
      * (up to 7 blocks on the level, further down), and undo has to take that back too.

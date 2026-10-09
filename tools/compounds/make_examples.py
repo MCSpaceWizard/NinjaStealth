@@ -12,13 +12,14 @@ route, must be walkable through the templates. A failed check stops the script b
 Ground lines: a module's `ground` is the template layer that is the terrain surface. Its offset y is `-1 - ground`,
 so `/es compound place <id>` where you stand sinks that layer into the block under your feet.
 """
+import collections
 import json
 import os
 import re
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from walk import Template  # noqa: E402
+from walk import Template, is_floor, is_passable  # noqa: E402
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..'))
 STRUCTURES = os.path.join(ROOT, 'src/main/resources/data/emergentstealth/structure')
@@ -29,10 +30,11 @@ SOUTH, WEST, NORTH, EAST = 0, 90, 180, -90
 
 
 class Module:
-    def __init__(self, template, x, z, ground):
+    def __init__(self, template, x, z, ground, level=0):
+        """`level` raises the module's ground line above the compound's (onto a terrace, say)."""
         self.template_id = template
         self.ground = ground
-        self.offset = (x, -1 - ground, z)
+        self.offset = (x, level - 1 - ground, z)
         self.template = Template(os.path.join(STRUCTURES, template.split(':')[1] + '.nbt'))
 
     def at(self, x, y, z):
@@ -47,39 +49,48 @@ class Module:
 
 
 class World:
-    """The compound's modules as one block lookup (unrotated modules only)."""
+    """
+    The compound's modules as one block lookup (unrotated modules only). Modules are placed in order, so where
+    they overlap a later module's blocks win; a block a template doesn't store (structure void) leaves what was
+    there, so a building on a site keeps the site's ground around it.
+    """
 
     def __init__(self, modules):
         self.modules = modules
+        self.blocks = {}
+        for m in modules:
+            for local, state in m.template.g.items():
+                self.blocks[m.at(*local)] = (m.template.names[state], m.template.props[state])
+        self._stands = None
 
-    def _find(self, p):
-        for m in self.modules:
-            local = (p[0] - m.offset[0], p[1] - m.offset[1], p[2] - m.offset[2])
-            sx, sy, sz = m.template.size
-            if 0 <= local[0] < sx and 0 <= local[2] < sz and 0 <= local[1] < sy:
-                return m, local
-        return None, None
+    def block(self, p):
+        return self.blocks.get(tuple(p), ('air', {}))
+
+    def passable(self, p):
+        return is_passable(*self.block(p))
 
     def can_stand(self, p):
-        m, local = self._find(p)
-        return m is not None and m.template.can_stand(local)
+        x, y, z = p
+        return is_floor(*self.block((x, y - 1, z))) and self.passable(p) and self.passable((x, y + 1, z))
 
     def describe(self, p):
-        m, local = self._find(p)
-        if m is None:
-            return 'outside every module'
-        t = m.template
-        return '%s %s: below %s, feet %s, head %s' % (m.template_id, local, t.name((local[0], local[1] - 1, local[2])),
-                                                       t.name(local), t.name((local[0], local[1] + 1, local[2])))
+        x, y, z = p
+        owners = [m.template_id for m in self.modules
+                  if all(0 <= p[i] - m.offset[i] < m.template.size[i] for i in range(3))]
+        return '%s: below %s, feet %s, head %s' % (owners[-1] if owners else 'outside every module',
+                                                    self.block((x, y - 1, z))[0], self.block(p)[0],
+                                                    self.block((x, y + 1, z))[0])
+
+    def stands(self):
+        if self._stands is None:
+            self._stands = {(x, y + 1, z) for (x, y, z), b in self.blocks.items()
+                            if is_floor(*b) and self.can_stand((x, y + 1, z))}
+        return self._stands
 
     def path(self, a, b):
-        """Walking distance between two stand positions, or None. Routes may cross modules: search all of them."""
-        import collections
-        if not hasattr(self, '_stands'):
-            self._stands = set()
-            for m in self.modules:
-                self._stands |= {m.at(*s) for s in m.template.stands()}
-        stands = self._stands
+        """Walking distance between two stand positions, or None. Routes may cross modules."""
+        stands = self.stands()
+        a, b = tuple(a), tuple(b)
         prev = {a: None}
         queue = collections.deque([a])
         while queue:
@@ -95,6 +106,11 @@ class World:
                 for dy in (1, 0, -1, -2, -3):
                     q = (x + dx, y + dy, z + dz)
                     if q in stands:
+                        # Climbing needs headroom above where you are; dropping needs the way down clear.
+                        if dy == 1 and not self.passable((x, y + 2, z)):
+                            break
+                        if dy < 0 and any(not self.passable((x + dx, y + k, z + dz)) for k in range(dy + 1, 1)):
+                            break
                         if q not in prev:
                             prev[q] = p
                             queue.append(q)
@@ -245,10 +261,111 @@ def cherry_grove_estate():
     }
 
 
+def takamori_castle():
+    """
+    A large castle pieced together on a generated site (tools/compounds/sites.py): a walled outer bailey with
+    four corner towers, a gate tower and a postern; a middle terrace (ninomaru, 5 up) with the lord's residence
+    and a shrine; an inner terrace (honmaru, 10 up) with the keep. Barracks and storehouses in the bailey.
+    Stand heights: bailey 0, wall walk 4, ninomaru 5, honmaru 10.
+    """
+    site = Module('emergentstealth:sites/takamori_castle', 0, 0, ground=6)
+    keep = Module('emergentstealth:edo/mini_castle', 97, 17, ground=0, level=10)
+    residence = Module('emergentstealth:cherrygrove/sakuraresidence', 22, 14, ground=8, level=5)
+    shrine = Module('emergentstealth:edo/medium_shrine', 30, 58, ground=0, level=5)
+    barracks = Module('emergentstealth:cherrygrove/longhouse', 5, 98, ground=4)
+    w = 4   # wall walk
+    n = 5   # ninomaru
+    h = 10  # honmaru
+    return [site, keep, residence, shrine, barracks], {
+        'zones': [
+            zone('grounds', 'restricted', [[0, -8, 0], [149, 45, 149]]),
+            zone('ninomaru', 'hostile', [[12, 3, 7], [137, 45, 87]], hours=(20, 6)),
+            zone('honmaru', 'hostile', [[90, 8, 13], [134, 45, 58]]),
+            zone('residence', 'hostile', [[22, 3, 14], [58, 30, 53]], hours=(18, 7)),
+            zone('storehouses', 'hostile', [[125, -1, 94], [135, 8, 134]]),
+        ],
+        'routes': [
+            # The walls in two halves, each walked back and forth: north and east from the north-west tower to
+            # the gate house, and south and west back round.
+            route('rampart_east', 'pingpong',
+                  waypoint((4, w, 4), 40, NORTH), waypoint((22, w, 2)), waypoint((42, w, 2)), waypoint((62, w, 2)),
+                  waypoint((82, w, 2), 40, NORTH), waypoint((102, w, 2)), waypoint((122, w, 2)),
+                  waypoint((145, w, 4), 40, NORTH), waypoint((147, w, 22)), waypoint((147, w, 42)),
+                  waypoint((147, w, 62), 40, EAST), waypoint((147, w, 82)), waypoint((147, w, 102)),
+                  waypoint((147, w, 112), 60, EAST), waypoint((147, w, 132)), waypoint((145, w, 145), 40, SOUTH),
+                  waypoint((127, w, 147)), waypoint((107, w, 147)), waypoint((87, w, 147)),
+                  waypoint((76, w, 147), 60, SOUTH)),
+            route('rampart_west', 'pingpong',
+                  waypoint((73, w, 147), 60, SOUTH), waypoint((56, w, 147)), waypoint((36, w, 147)),
+                  waypoint((16, w, 147)), waypoint((4, w, 145), 40, WEST), waypoint((2, w, 127)),
+                  waypoint((2, w, 107)), waypoint((2, w, 87), 40, WEST), waypoint((2, w, 67)),
+                  waypoint((2, w, 47)), waypoint((2, w, 27)), waypoint((4, w, 6), 40, WEST)),
+            route('gate_road', 'pingpong',
+                  waypoint((74, 0, 140), 40, SOUTH), waypoint((74, 0, 125)), waypoint((74, 0, 111), 20, EAST),
+                  waypoint((74, 0, 100)), waypoint((74, 0, 92), 40, NORTH)),
+            route('storehouses', 'loop',
+                  waypoint((90, 0, 111)), waypoint((106, 0, 111)), waypoint((123, 0, 111)),
+                  waypoint((123, 0, 98), 40, EAST), waypoint((123, 0, 111)), waypoint((123, 0, 120), 40, EAST),
+                  waypoint((123, 0, 130), 40, EAST), waypoint((123, 0, 113)), waypoint((140, 0, 112), 60, EAST),
+                  waypoint((123, 0, 112)), waypoint((106, 0, 112))),
+            route('ninomaru', 'loop',
+                  waypoint((74, n, 82), 40, SOUTH), waypoint((50, n, 83)), waypoint((25, n, 83)),
+                  waypoint((16, n, 70)), waypoint((16, n, 55)), waypoint((16, n, 41), 40, WEST),
+                  waypoint((16, n, 26)), waypoint((16, n, 11)), waypoint((28, n, 11)), waypoint((40, n, 11)),
+                  waypoint((62, n, 11), 40, NORTH), waypoint((68, n, 21)), waypoint((75, n, 30)),
+                  waypoint((78, n, 43)), waypoint((80, n, 55)), waypoint((88, n, 62), 40, EAST),
+                  waypoint((78, n, 70)), waypoint((76, n, 78))),
+            route('honmaru', 'loop',
+                  waypoint((112, h, 55), 40, SOUTH), waypoint((95, h, 52)), waypoint((95, h, 35)),
+                  waypoint((95, h, 18), 40, NORTH), waypoint((112, h, 16)), waypoint((129, h, 18), 40, NORTH),
+                  waypoint((129, h, 35)), waypoint((129, h, 52), 40, EAST)),
+            # Dusk: the gate road, the storehouses, the stair heads.
+            route('lanterns', 'pingpong',
+                  waypoint((74, 0, 130), 20, relight=True), waypoint((74, 0, 115), 20, relight=True),
+                  waypoint((90, 0, 111)), waypoint((106, 0, 111)), waypoint((123, 0, 105), 20, relight=True),
+                  waypoint((123, 0, 125), 20, relight=True), waypoint((106, 0, 112)), waypoint((90, 0, 111)),
+                  waypoint((74, 0, 100), 20, relight=True), waypoint((74, 0, 92)), waypoint((74, n, 82), 20, relight=True),
+                  waypoint((80, n, 70)), waypoint((95, n, 63)), waypoint((112, n, 63)),
+                  waypoint((112, h, 53), 20, relight=True)),
+        ],
+        'spawns': [
+            # The gate: two ashigaru in the passage, one walks the gate road at night; a samurai over the gate.
+            spawn('ashigaru', (73, 0, 142), SOUTH, (0, 0, post((73, 0, 142), SOUTH))),
+            spawn('ashigaru', (76, 0, 142), SOUTH, (6, 20, post((76, 0, 142), SOUTH)), (20, 6, on_route('gate_road'))),
+            spawn('samurai', (74, w, 146), SOUTH, (0, 0, post((74, w, 146), SOUTH))),
+            # The walls: one half walked all day, the other at night (by day that guard keeps the north-west tower).
+            spawn('ashigaru', (4, w, 4), NORTH, (0, 0, on_route('rampart_east'))),
+            spawn('ashigaru', (73, w, 147), SOUTH, (18, 6, on_route('rampart_west')), (6, 18, post((4, w, 4), NORTH))),
+            # The postern, watched from inside.
+            spawn('ashigaru', (144, 0, 112), EAST, (0, 0, post((144, 0, 112), EAST))),
+            # Storehouses: a guard by the doors by day, walking them at night.
+            spawn('ashigaru', (123, 0, 111), EAST, (6, 18, post((123, 0, 111), EAST)), (18, 6, on_route('storehouses'))),
+            # Off-duty ashigaru about the barracks, inside at night.
+            spawn('ashigaru', (40, 0, 93), SOUTH, (6, 21, wander(8)), (21, 6, post((36, 1, 113), SOUTH)), count=2),
+            # The ninomaru: one patrol by day, one by night; the other keeps a stair head.
+            spawn('ashigaru', (74, n, 82), SOUTH, (6, 18, on_route('ninomaru')), (18, 6, post((74, n, 84), SOUTH))),
+            spawn('ashigaru', (16, n, 41), WEST, (18, 6, on_route('ninomaru')), (6, 18, post((16, n, 41), WEST))),
+            # The honmaru: a samurai patrol round the keep, a samurai on the keep steps, the taisho inside.
+            spawn('samurai', (112, h, 55), SOUTH, (0, 0, on_route('honmaru'))),
+            spawn('samurai', (112, h, 50), SOUTH, (0, 0, post((112, h, 50), SOUTH))),
+            spawn('taisho', (109, 16, 40), SOUTH, (0, 0, post((109, 16, 40), SOUTH))),
+            spawn('samurai', (114, 23, 30), SOUTH, (20, 6, post((114, 23, 30), SOUTH)), (6, 20, post((106, 16, 36), SOUTH))),
+            # The residence: the daimyo and two servants; a priest at the shrine.
+            spawn('daimyo', (39, 7, 34), SOUTH, (7, 21, post((39, 7, 34), SOUTH)), (21, 7, post((41, 8, 25), SOUTH))),
+            spawn('townsfolk', (35, n, 22), SOUTH, (6, 20, wander(6)), (20, 6, post((35, n, 22), SOUTH)), count=2),
+            spawn('townsfolk', (47, n, 81), NORTH, (6, 19, wander(5)), (19, 6, post((47, n, 81), NORTH))),
+            # The lamplighter: errands in the bailey, the lantern round at dusk, the barracks at night.
+            spawn('labourer', (100, 0, 111), SOUTH, (6, 17, wander(10)), (17, 23, on_route('lanterns')),
+                  (23, 6, post((36, 1, 113), SOUTH))),
+        ],
+    }
+
+
 EXAMPLES = {
     'samurai_fort': samurai_fort,
     'shrine_watch': shrine_watch,
     'cherry_grove_estate': cherry_grove_estate,
+    'takamori_castle': takamori_castle,
 }
 
 

@@ -30,8 +30,9 @@ import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 /**
  * Places a compound (design doc 32 §3): its templates, each turned by its own transform and then the compound's,
  * then its routes and zones (renamed per copy, {@code <compound>#<n>/<name>}) and its NPCs with their schedules
- * moved to match. The whole copy is one undoable placement, and is recorded in {@link PlacedCompounds}.
- * {@link #reset} brings a copy's markers and garrison back to how they were placed.
+ * moved to match. The terrain round it is fitted first and last ({@link TerrainFit}). The whole copy, terrain
+ * included, is one undoable placement, and is recorded in {@link PlacedCompounds}. {@link #reset} brings a copy's
+ * markers and garrison back to how they were placed.
  */
 @EventBusSubscriber(modid = EmergentStealth.MODID)
 public final class CompoundPlacer {
@@ -42,7 +43,14 @@ public final class CompoundPlacer {
 
     private record Piece(StructureTemplate template, BlockPos origin, Transform transform) {}
 
+    /** Places with the compound's own terrain setting. */
     public static Result place(ServerLevel level, UUID author, Identifier id, Compound compound, BlockPos origin, Transform transform) {
+        return place(level, author, id, compound, origin, transform, compound.terrain());
+    }
+
+    /** Places, fitting the terrain round it as {@code terrain} says (doc 33 §4); the ground line is below {@code origin}. */
+    public static Result place(ServerLevel level, UUID author, Identifier id, Compound compound, BlockPos origin, Transform transform,
+                               Compound.Terrain terrain) {
         List<Piece> pieces = new ArrayList<>();
         List<Identifier> missing = new ArrayList<>();
         List<BoundingBox> boxes = new ArrayList<>();
@@ -57,6 +65,7 @@ public final class CompoundPlacer {
             pieces.add(new Piece(template, at, turned));
             boxes.add(StructurePlacement.box(template, at, turned.rotation(), turned.mirror()));
         }
+        List<BoundingBox> moduleBoxes = List.copyOf(boxes);
         for (Compound.Spawn spawn : compound.spawns()) {
             boxes.add(new BoundingBox(transform.apply(spawn.pos()).offset(origin)));
         }
@@ -64,6 +73,8 @@ public final class CompoundPlacer {
         if (!missing.isEmpty()) {
             return new Result(null, box, missing);
         }
+        TerrainFit.Plan terrainPlan = TerrainFit.plan(level, terrain, moduleBoxes, origin.getY() - 1);
+        BoundingBox touched = terrainPlan == null ? box : BoundingBox.encapsulating(box, terrainPlan.area());
 
         PlacedCompounds placed = PlacedCompounds.get(level);
         int copyId = placed.nextId();
@@ -73,9 +84,15 @@ public final class CompoundPlacer {
         List<UUID> npcs = new ArrayList<>();
         List<Integer> npcSpawns = new ArrayList<>();
 
-        StructurePlacement.tracked(level, author, box, () -> {
+        StructurePlacement.tracked(level, author, touched, () -> {
+            if (terrainPlan != null) {
+                TerrainFit.before(level, terrainPlan);
+            }
             for (Piece piece : pieces) {
                 StructurePlacement.placeTemplate(level, piece.template(), piece.origin(), piece.transform().rotation(), piece.transform().mirror());
+            }
+            if (terrainPlan != null) {
+                TerrainFit.after(level, terrainPlan);
             }
             PatrolRoutes routes = PatrolRoutes.get(level);
             for (PatrolRoute route : compound.routes()) {

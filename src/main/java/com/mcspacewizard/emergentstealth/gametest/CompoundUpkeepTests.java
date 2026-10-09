@@ -148,9 +148,11 @@ public final class CompoundUpkeepTests {
             helper.assertTrue(module.template().equals(own) && module.rotation() == Rotation.NONE && module.mirror() == Mirror.NONE,
                     "The module now uses its own template, unturned: " + module);
 
-            // Placing the saved compound elsewhere brings the gold block along, on the same spot.
+            // Placing the saved compound elsewhere brings the gold block along, on the same spot. Exact: right above the
+            // draft, fitting the terrain would fill down into the draft's own box.
             BlockPos elsewhere = origin.offset(0, 12, 0);
-            PlacedCompounds.Copy copy = CompoundPlacer.place(level, author, id, Compounds.get(id), elsewhere, Transform.IDENTITY).copy();
+            PlacedCompounds.Copy copy = CompoundPlacer.place(level, author, id, Compounds.get(id), elsewhere, Transform.IDENTITY,
+                    CompoundTests.EXACT).copy();
             helper.assertTrue(copy != null, "The saved compound places");
             BlockPos gold = chestAt.subtract(origin).offset(elsewhere);
             helper.assertTrue(level.getBlockState(gold).is(Blocks.GOLD_BLOCK), "The edit is in the new copy at " + gold + ": " + level.getBlockState(gold));
