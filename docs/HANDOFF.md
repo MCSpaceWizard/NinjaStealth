@@ -13,8 +13,8 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 
 ## State at handoff (2026-10-09)
 
-- **`main`:** v0.1.0 (Alpha 1) plus PR #1 (toolkit part A, S7 animation framework) and PR #2 (Sumi UI). Two merge breakages on `main` (invalid `en_us.json`, the `[animation]` config nested in `[ui]`) are fixed on `claude/fervent-babbage-jyh6r0`, which also carries the `claude/ui-framework` post-merge fixes.
-- **`claude/fervent-babbage-jyh6r0` (PR open):** S7 animation finished and checked in the real client (crawl, bodies, drag, carry, takedowns, first-person camera), bodies no longer float, flaky verbs tests fixed, test helpers (`/es npc knockout`, `/esphoto`). **82 GameTests pass.**
+- **`main`** (after PR #4): v0.1.0 (Alpha 1), toolkit part A, S7 animation (crawl, bodies, drag, carry, takedowns), the Sumi UI, the builder's structures and the Cherry Grove modules, the **structure viewer** and **compounds** (doc 32 §1 and §3, `/es structure ...`, `/es compound ...`). All checked in the real client. **88 GameTests pass**; the dedicated server starts clean.
+- **Docs:** [docs/sumi-guide.md](sumi-guide.md) (extending Sumi), [doc 32](design/32-authoring-tools.md) (authoring tools; progress at the top). PROGRESS.md is out of date (2026-10-08).
 - **Feature branches still to finish** (stopped by usage limits; the last commit is **WIP** and may not compile):
 
 | Branch | What's done | What's left |
@@ -25,14 +25,20 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 ## Next up (the user's priorities, 2026-10-09)
 
 1. **Structures, structure viewer and zone authoring.**
-   - The builder's structures arrived as an upload (21 `.nbt` plus worldgen JSON). Check them (NBT validity, data version, palette, size, worldgen JSON) and move them into `data/emergentstealth/structure/` and `worldgen/`.
-   - **Structure placement tool:** preview and place any structure (rotation, mirror, ghost preview) to browse the builder's work.
+   - ✅ Structures imported; ✅ structure viewer (doc 32 §1); ✅ compound format, save and place (§3, by command).
+   - **Next, in doc 32 §5 order:** the zone tool (Surveyor's Rope) plus the minimal trespass rule (zones are already stored in `authoring/Zones`, per dimension, and placed with compounds), the spawner GUI (Muster Roll), the Compound Ledger item, then the first compound: **samurai mini fort**. Compound leftovers: re-save edited templates on save, `reset`, automatic ground lines, compounds in the browser.
    - **Zone tool and compound authoring** (S9 zone design, pulled forward): mark zones (public / restricted / hostile), guard posts and patrol routes (the S5 baton does routes), NPC spawn points with archetypes and schedules, lights, and **save and load a compound as one config file** (datapack JSON + structure).
    - **NPC spawner tool with a GUI** (pick archetype, behaviour, route/post, schedule), built on Sumi.
 2. **Toolkit B:** finish and merge (see the table).
 3. **Light nuance:** finish and merge.
 4. Then **more weapons and armour** for the player, and **NPC work** (distinct placeholder silhouettes per archetype: hats, armour shapes, sashes, banners per [STYLE_GUIDE](art/STYLE_GUIDE.md) §4; extend `tools/programmer_art/generate.py` with part shapes).
-5. **Sumi must stay easy to extend and modify** (user, 2026-10-09): keep a short "how to add a screen / widget / theme token" guide current in doc 31, and build new GUIs (tool wheel, spawner) from its widgets rather than one-offs.
+5. **Sumi must stay easy to extend and modify** (user, 2026-10-09): keep [docs/sumi-guide.md](sumi-guide.md) (how to add a screen, widget or theme token) current, and build new GUIs (tool wheel, spawner) from its widgets rather than one-offs. Cleanups found while writing the guide, worth doing when touching Sumi:
+   - a panel-centring helper (every screen writes its own anonymous `UiNode`)
+   - builder chaining: `size`/`flex`/`tooltip` return an unchecked `T`, `UiFlex.gap/padding/center` return `UiFlex`
+   - consistency: `enabledWhen` on every input widget (toggle, slider and cycle take a fixed `editable`), theme tokens rather than raw ARGB (`UiProgressBar`, `UiTabBar` accents, `DialogueScreen.guardPortrait`), widget heights from theme metrics
+   - `SumiTextures.invalidate()` is never called, so F3+T probably keeps the cached paper and ink
+   - `UiTextField` has no caret movement, selection or paste
+   - `ToolWheelScreen` is still a vanilla `Screen`
 6. **Artist support:** keep [TEXTURE_LIST](art/TEXTURE_LIST.md) updated as textures are added.
 
 **Getting files to Claude:** upload a zip in the chat (it lands in the session's uploads) or commit it to `_incoming/`.
@@ -43,6 +49,8 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 - **Or** go fully stylised: a **modern geometric** GUI generated programmatically, with good animation (easing, smooth scrolling, swiping).
 - The user is open to either. **Recommendation:** geometric shapes drawn in code, with procedural paper grain, ink accents and an animation system (tweens, inertial scrolling, swipe between tabs). It's easy to generate and theme, and still matches ink-and-paper. Confirm with the user in the UI design pass.
 - **Done (Sumi):** went with the recommendation; see [doc 31](design/31-ui-framework.md) §0 and the screenshots in [screenshots/ui](screenshots/ui/). New screens build on `client/ui/` (`UiScreen` + `UiNode` widgets, `Paint` for shapes); side-neutral maths lives in `ui/`.
+- **Compounds:** `Transform` (mirror, then rotate, pivot at zero) is the one place turning happens: modules compose with `then`, and waypoints, posts, facings and zone boxes go through it too. Vanilla spells the half turn `180`, not `clockwise_180`.
+- **Ghost previews in the world:** filled gizmos (`Gizmos.rect`, the `debug_filled_box` pipeline) cull back faces, so from inside a ghost nothing shows. `GhostPreview` puts the structure in front of you and draws both windings when the camera is inside.
 - **Sumi gotchas:** GUI pipelines cull back faces, so `Mesh` normalises quad winding (shapes vanished before). Inside one GUI layer, elements are drawn sorted by pipeline and texture, not in submission order; only overlapping elements are stacked. Keep `en_us.json` valid after merges (the `ui/lang_file_valid` GameTest checks it).
 
 ## Working conventions (learned the hard way)

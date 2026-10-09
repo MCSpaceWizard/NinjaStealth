@@ -566,6 +566,34 @@
         ".........si.....",
         "................"
       ]
+    },
+    {
+      "path": "item/surveyors_plan",
+      "shape": "pixelmap",
+      "key": {
+        "w": "wood",
+        "p": "paper",
+        "k": "ink",
+        "l": "lacquer"
+      },
+      "rows": [
+        "................",
+        "................",
+        "..wwwwwwwwwwww..",
+        "..wppppppppppw..",
+        "..wpkkkkkkkppw..",
+        "..wpkpppppkppw..",
+        "..wpkpkkkpkppw..",
+        "..wpkpkppppppw..",
+        "..wpkkkkkkkppw..",
+        "..wppppppplllw..",
+        "..wppppppplllw..",
+        "..wwwwwwwwwwww..",
+        "................",
+        "................",
+        "................",
+        "................"
+      ]
     }
   ]
 }

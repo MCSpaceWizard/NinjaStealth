@@ -51,7 +51,9 @@ public final class ESCommands {
                 .then(SkillCommands.skills())
                 .then(PatrolCommands.patrol())
                 .then(PatrolCommands.routine())
-                .then(DevCommands.dev()));
+                .then(DevCommands.dev())
+                .then(StructureCommands.structure())
+                .then(CompoundCommands.compound()));
         dispatcher.register(Commands.literal("es").redirect(root));
     }
 

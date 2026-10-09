@@ -48,6 +48,55 @@ Design: [doc 31](design/31-ui-framework.md) §0. Geometric shapes drawn in code,
 | U.12 | Theming | Resource pack with `assets/emergentstealth/ui/theme.json` overriding e.g. `"colors": {"paper": "#f4efe2"}`, or `textures/gui/sumi/paper.png` | Only that token changes; everything else keeps the defaults. A paper PNG replaces the generated grain |
 | U.13 | Dedicated server | `./gradlew runServer` | Starts normally (no client classes on the server) |
 
+## Compounds: author, save, place turned or mirrored 🧪
+
+Design doc [32](design/32-authoring-tools.md) §3. A compound is structures plus guards, patrol routes and zones, saved as one file and placed anywhere, turned or mirrored. Authoring is by command for now (the Compound Ledger item comes later). Creative with cheats. Screenshot: [compound_copy.png](screenshots/structures/compound_copy.png).
+
+**Automated checks (already passing):** `compounds/transform_algebra`, `compounds/file_format` (JSON both ways; doc 32's example parses), `compounds/round_trip` (at all 4 rotations, mirrored or not: the chest, the route's first waypoint, the guard, its night post and the zone all line up, and undo takes everything back).
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| C.1 | Start | Place a structure (Surveyor's Plan or `/es structure place emergentstealth:edo/small_shrine_v1 ~ ~ ~`), then `/es compound start shrine_post` | "Authoring compound emergentstealth:shrine_post from …" |
+| C.2 | More modules | Place a second structure (any way) | "Added to compound … (2 structures)" |
+| C.3 | Markers | `/es npc spawn emergentstealth:ashigaru` beside it, `/es compound add npcs @e[type=emergentstealth:stealth_npc,distance=..30]`; make a route with the patrol baton and `/es compound add route <name>`; `/es compound add zone yard restricted <corner> <corner>` | Each reports what it added; `/es compound info` lists the structures and counts |
+| C.4 | Save | `/es compound save` | The path of `generated/emergentstealth/compounds/shrine_post.json` in the world; the file is readable JSON |
+| C.5 | Place turned | `/es compound place shrine_post ~20 ~ ~ 180 front_back` | The same layout, turned and mirrored; the guard stands at the matching spot, facing the matching way; `/es compound copies` lists copy #1 |
+| C.6 | Patrol in the copy | If you added a route: wait for the guard's route hours (`/time set noon`) | It walks the copy's version of the route (`/es patrol list` shows `shrine_post#1/<name>`) |
+| C.7 | Undo | `/es structure undo` | The copy's blocks and guard are gone; `/es compound copies` shows none |
+| C.8 | Export | `/es compound export shrine_post` | Written to `run/compounds/emergentstealth/shrine_post.json`, ready to go in `data/emergentstealth/emergentstealth/compound/` |
+
+## Structure viewer: browse, preview, place, undo 🧪
+
+Design doc [32](design/32-authoring-tools.md) §1. Browse every structure (ours first, then vanilla), see a translucent ghost of it in the world, and place it. Needs **creative mode with cheats** (the structure block rule). Screenshots: [docs/screenshots/structures](screenshots/structures) (`viewer_*.png`).
+
+**Automated checks (already passing):** `structures/place_and_undo` (a rotated placement covers the right box, undo restores every block and block entity, takes back water that flowed out and drops no items, one level only), `structures/preview_data` (the preview has no air and splits into parts that join back exactly).
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| V.1 | Open the browser | `/give @s emergentstealth:surveyors_plan`, then use it (or `/es structure browse`) | The Structures panel: a count, a search box (already focused), structures grouped by folder |
+| V.2 | Search and details | Type `teahouse`, press Enter | The row is selected; the right shows its name, folder, size, solid block count and its 5 main blocks |
+| V.3 | Ghost | Press Preview (or double-click the row) and look at the ground | A translucent copy coloured by block, with an outline box, starting at the block you look at and running away from you. The hint above the hotbar shows the name, rotation, mirror, height and origin |
+| V.4 | Adjust | Scroll the mouse wheel, press M, press Page Up / Page Down (Shift for 5) | It turns 90° per notch, mirrors, rises and sinks; the hint follows |
+| V.5 | Place | Use (right-click) | The structure appears exactly where the ghost was; chat says where |
+| V.6 | Undo | `/es structure undo` or "Undo last" in the browser | Everything is back as it was, including water that flowed out of the structure. No items left lying around. A second undo says there's nothing to undo |
+| V.7 | Cancel | Start a preview, then attack (left-click) | The ghost goes away and nothing is placed |
+| V.8 | Commands | `/es structure list cherry`, `/es structure place emergentstealth:edo/kofun ~ ~ ~ clockwise_90` | Lists matching ids; places rotated (undo works for it too) |
+| V.9 | Permission | In survival, use the plan | "Authoring tools need creative mode and operator permission", nothing opens |
+
+## Builder structures and Cherry Grove modules (imported) 🧪
+
+The builder's 21 structures, imported with vanilla stand-ins for their modded blocks, and 17 Cherry Grove modules (vanilla, from schematics) (see [tools/structures](../tools/structures/README.md)). Placement only: they don't generate in new worlds yet. Screenshots: [docs/screenshots/structures](screenshots/structures).
+
+**Automated check (already passing):** `structures/imports_load`: all 38 load, no block turned into air (it names any that do), no spawners, every chest's loot table exists.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| B.1 | Place one | `/place template emergentstealth:edo/mini_castle ~ ~ ~` (also `buddhist_temple`, `samurai_mini_fort`, `onsen`, `kofun`, `small_shrine_v1`…`v6`, the statues) | It appears complete: dark wood, deepslate-tile roofs, stone bases, white plaster, red shrine timbers, lanterns lit |
+| B.2 | Jigsaw version | `/place structure emergentstealth:edo/small_shrine_v3` | Placed on the surface with the terrain blended round it |
+| B.3 | Contents | Open chests in a shrine and a fort | Placeholder loot (paper, candles, food; rarely smoke bombs, caltrops or tabi). No illagers in the mini fort, no spawners in the kofun or cemetery |
+| B.4 | Look | Walk round a few | Report stand-ins that look wrong; `tools/structures/block_map.json` is the table to change |
+| B.5 | Cherry Grove | `/place template emergentstealth:cherrygrove/pagoda ~ ~ ~` (also `teahouse`, `gatehouse`, `grandestate`, `twinpavilion`, …) | Complete buildings with chains, lanterns and cherry trees. Each brings its own ground and water, which stands above flat land when placed at ground level |
+
 ## Beta toolkit, part A: pebble, smoke bomb, firecracker, blinding powder, caltrops 🧪
 
 **Automated checks (already passing):** 8 more GameTests (64 total):

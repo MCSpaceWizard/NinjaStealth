@@ -55,6 +55,10 @@ public abstract class UiScreen extends net.minecraft.client.gui.screens.Screen {
     protected void init() {
         boolean first = root == null;
         Sumi.reloadTheme();
+        // Cleared before building, so build() may pick the starting focus with setFocus().
+        focusedNode = null;
+        pressed = null;
+        dragOwner = null;
         root = build();
         root.layout(0, 0, width, height);
         long now = Sumi.now();
@@ -62,9 +66,6 @@ public abstract class UiScreen extends net.minecraft.client.gui.screens.Screen {
             open.restart(0.0F, 1.0F, now, Sumi.duration(SumiTheme.SLOW), Easing.QUART_OUT);
             lastFrame = now;
         }
-        focusedNode = null;
-        pressed = null;
-        dragOwner = null;
     }
 
     /** Re-runs layout (after content changes size). */
