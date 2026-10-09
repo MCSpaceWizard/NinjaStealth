@@ -173,7 +173,10 @@ final class UiTests {
     static void configMapping(GameTestHelper helper) {
         List<ConfigMapping.Section> client = ConfigMapping.sections(ESConfig.CLIENT_SPEC);
         List<String> names = client.stream().map(ConfigMapping.Section::name).toList();
-        helper.assertTrue(names.equals(List.of("hud", "visual_lighting", "ui")), "Client tabs in spec order, got " + names);
+        helper.assertTrue(names.size() >= 3 && names.subList(0, 3).equals(List.of("hud", "visual_lighting", "ui")),
+                "Client tabs in spec order, top level only, got " + names);
+        helper.assertTrue(client.stream().filter(sec -> sec.name().equals("ui")).findFirst().orElseThrow().entries().size() == 3,
+                "The ui tab holds only its own three options (sections must be popped), got " + client.get(2).entries().size());
         ConfigMapping.Entry lightGem = client.getFirst().entries().getFirst();
         helper.assertTrue(lightGem.name().equals("showLightGem") && lightGem.kind() == ConfigMapping.Kind.TOGGLE, "Booleans are toggles");
         helper.assertTrue(lightGem.langKey().equals("emergentstealth.configuration.showLightGem"), "Label lang key");
