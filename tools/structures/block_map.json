@@ -1,5 +1,5 @@
 {
-  "_comment": "Builder structures: modded block -> stand-in block. A value is a block id (properties dropped), or {name, copy, set, rename, cases}: copy = properties kept as they are, rename = {source property: target property}, set = fixed properties, cases = [{if: {property: value}, then: {...same fields...}}] tried in order. Blocks not listed must be vanilla (minecraft:). When our own feudal blocks exist, point these entries at them and rerun import_structures.py.",
+  "_comment": "Imported structures: modded or valuable block -> stand-in, and old vanilla names some exporters still write (chain is iron_chain since 1.21.9). A value is a block id (properties dropped), or {name, copy, set, rename, cases}: copy = properties kept as they are, rename = {source property: target property}, set = fixed properties, cases = [{if: {property: value}, then: {...same fields...}}] tried in order. Blocks not listed must be vanilla (minecraft:). When our own feudal blocks exist, point these entries at them and rerun import_structures.py.",
   "dawnoftimebuilder:charred_spruce_beam": {"name": "minecraft:stripped_dark_oak_log", "axis_from_flags": true},
   "dawnoftimebuilder:charred_spruce_boards": "minecraft:dark_oak_planks",
   "dawnoftimebuilder:charred_spruce_fancy_railing": {"name": "minecraft:dark_oak_fence", "copy": ["north", "east", "south", "west", "waterlogged"]},
@@ -103,5 +103,7 @@
   "minecraft:gold_block": "minecraft:yellow_terracotta",
   "minecraft:iron_block": "minecraft:smooth_stone",
   "minecraft:spawner": "minecraft:air",
-  "minecraft:infested_cobblestone": "minecraft:cobblestone"
+  "minecraft:infested_cobblestone": "minecraft:cobblestone",
+
+  "minecraft:chain": {"name": "minecraft:iron_chain", "copy": ["axis", "waterlogged"]}
 }

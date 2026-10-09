@@ -23,6 +23,24 @@ python3 tools/structures/import_structures.py
   (placeholder contents).
 - **Data version:** left at the builder's 1.20.1 (3465); the game upgrades vanilla blocks on load.
 
+## Cherry Grove modules (schematics)
+
+17 modular buildings delivered as Sponge `.schem` files (2026-10-09), all vanilla blocks, saved for 26.1.2. They're meant
+to be pieced together into large compounds.
+
+```bash
+python3 tools/structures/import_schematics.py   # _incoming/schematics/*.schem -> structure/cherrygrove/<name>.nbt
+```
+
+- The `cherrygrove_` prefix is dropped (`cherrygrove_pagoda.schem` becomes `emergentstealth:cherrygrove/pagoda`), and the
+  misnamed `cherrygrove_grandestate,schem` is read too.
+- Air is kept, like a structure block saves it, so a placed module clears its box.
+- **Each module includes its own ground and water** (moats, ponds, stone islands) over its whole footprint. Place it with
+  that base sunk to ground level; the compound tools (doc 32) need a per-module ground line.
+- The exporter wrote `minecraft:chain` with a 26.1 data version, so the game wouldn't rename it to `iron_chain`;
+  `block_map.json` does. The GameTest names any block that turns into air, which is how this was found.
+- No block entities or entities, so no loot yet. The script stops if a future schematic has any, until it's extended.
+
 ## Worldgen
 
 Each structure also has a jigsaw structure and template pool (`worldgen/structure/edo/`, `worldgen/template_pool/edo/`),
@@ -34,4 +52,4 @@ worldgen stage (S15). `/place template emergentstealth:edo/<name>` places the ra
 
 1. Put the new `.nbt` files in `_incoming/structures/` (and any worldgen JSON in `_incoming/worldgen/`).
 2. Run the import. It stops with "no stand-in for <block>" if a new modded block appears: add it to `block_map.json`.
-3. Raise `EXPECTED` in `StructureTests` and run the GameTests.
+3. Raise the folder's count in `StructureTests.EXPECTED` and run the GameTests.

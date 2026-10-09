@@ -33,7 +33,8 @@ import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 /**
- * The builder's structures (imported by {@code tools/structures/import_structures.py}). Every one loads, the game's
+ * Imported structures: the builder's ({@code tools/structures/import_structures.py}) and the Cherry Grove modules
+ * ({@code import_schematics.py}). Every one loads, the game's
  * data fixer turned no block into air (which would mean an unknown stand-in in {@code block_map.json}), the
  * spawners are gone, and every chest's loot table exists.
  */
@@ -42,14 +43,14 @@ public final class StructureTests {
     private StructureTests() {}
 
     private static final Identifier ARENA = EmergentStealth.id("arena");
-    private static final Identifier TEST = EmergentStealth.id("structures/edo_imports_load");
-    /** How many structures the builder delivered (2026-10-09). */
-    private static final int EXPECTED = 21;
+    private static final Identifier TEST = EmergentStealth.id("structures/imports_load");
+    /** Imported folders and how many structures each should hold (2026-10-09). */
+    private static final Map<String, Integer> EXPECTED = Map.of("structure/edo", 21, "structure/cherrygrove", 17);
     private static final Set<String> AIR = Set.of("minecraft:air", "minecraft:cave_air", "minecraft:void_air");
 
     @SubscribeEvent
     static void onRegister(RegisterEvent event) {
-        event.register(Registries.TEST_FUNCTION, TEST, () -> StructureTests::edoImportsLoad);
+        event.register(Registries.TEST_FUNCTION, TEST, () -> StructureTests::importsLoad);
     }
 
     @SubscribeEvent
@@ -59,11 +60,17 @@ public final class StructureTests {
                 new TestData<>(environment, ARENA, 20, 0, true)));
     }
 
-    static void edoImportsLoad(GameTestHelper helper) {
+    static void importsLoad(GameTestHelper helper) {
         MinecraftServer server = helper.getLevel().getServer();
-        Map<Identifier, Resource> files = server.getResourceManager().listResources("structure/edo", path -> path.getPath().endsWith(".nbt"));
-        helper.assertTrue(files.size() == EXPECTED, "Expected " + EXPECTED + " builder structures, found " + files.size());
         List<String> problems = new ArrayList<>();
+        Map<Identifier, Resource> files = new java.util.HashMap<>();
+        EXPECTED.forEach((folder, expected) -> {
+            Map<Identifier, Resource> found = server.getResourceManager().listResources(folder, path -> path.getPath().endsWith(".nbt"));
+            if (found.size() != expected) {
+                problems.add("expected " + expected + " structures in " + folder + ", found " + found.size());
+            }
+            files.putAll(found);
+        });
         for (Map.Entry<Identifier, Resource> file : files.entrySet()) {
             String path = file.getKey().getPath();
             Identifier id = file.getKey().withPath(path.substring("structure/".length(), path.length() - ".nbt".length()));
@@ -82,25 +89,31 @@ public final class StructureTests {
             // Air before and after the data fixer: any extra air is a block the game doesn't know.
             ListTag palette = raw.getListOrEmpty("palette");
             ListTag blocks = raw.getListOrEmpty("blocks");
-            int rawAir = 0;
+            Map<BlockPos, String> rawNames = new java.util.HashMap<>();
             for (int i = 0; i < blocks.size(); i++) {
                 CompoundTag block = blocks.getCompoundOrEmpty(i);
                 String name = palette.getCompoundOrEmpty(block.getIntOr("state", 0)).getStringOr("Name", "");
-                if (AIR.contains(name)) {
-                    rawAir++;
-                }
+                ListTag pos = block.getListOrEmpty("pos");
+                rawNames.put(new BlockPos(pos.getInt(0).orElse(0), pos.getInt(1).orElse(0), pos.getInt(2).orElse(0)), name);
                 String table = block.getCompoundOrEmpty("nbt").getStringOr("LootTable", "");
                 if (!table.isEmpty() && server.reloadableRegistries().getLootTable(
                         ResourceKey.create(Registries.LOOT_TABLE, Identifier.parse(table))) == LootTable.EMPTY) {
                     problems.add(id + ": missing loot table " + table);
                 }
             }
+            // Blocks that are air after loading but weren't in the file: names the game doesn't know.
             StructurePlaceSettings settings = new StructurePlaceSettings();
-            int loadedAir = template.filterBlocks(BlockPos.ZERO, settings, Blocks.AIR).size()
-                    + template.filterBlocks(BlockPos.ZERO, settings, Blocks.CAVE_AIR).size()
-                    + template.filterBlocks(BlockPos.ZERO, settings, Blocks.VOID_AIR).size();
-            if (loadedAir != rawAir) {
-                problems.add(id + ": " + (loadedAir - rawAir) + " blocks became air (unknown block names)");
+            java.util.TreeMap<String, Integer> lost = new java.util.TreeMap<>();
+            for (var air : List.of(Blocks.AIR, Blocks.CAVE_AIR, Blocks.VOID_AIR)) {
+                for (StructureTemplate.StructureBlockInfo info : template.filterBlocks(BlockPos.ZERO, settings, air)) {
+                    String name = rawNames.getOrDefault(info.pos(), "?");
+                    if (!AIR.contains(name)) {
+                        lost.merge(name, 1, Integer::sum);
+                    }
+                }
+            }
+            if (!lost.isEmpty()) {
+                problems.add(id + ": blocks became air " + lost);
             }
             if (!template.filterBlocks(BlockPos.ZERO, settings, Blocks.SPAWNER).isEmpty()) {
                 problems.add(id + ": still has spawners");

@@ -48,11 +48,11 @@ Design: [doc 31](design/31-ui-framework.md) §0. Geometric shapes drawn in code,
 | U.12 | Theming | Resource pack with `assets/emergentstealth/ui/theme.json` overriding e.g. `"colors": {"paper": "#f4efe2"}`, or `textures/gui/sumi/paper.png` | Only that token changes; everything else keeps the defaults. A paper PNG replaces the generated grain |
 | U.13 | Dedicated server | `./gradlew runServer` | Starts normally (no client classes on the server) |
 
-## Builder structures (imported) 🧪
+## Builder structures and Cherry Grove modules (imported) 🧪
 
-The builder's 21 structures, imported with vanilla stand-ins for their modded blocks (see [tools/structures](../tools/structures/README.md)). Placement only: they don't generate in new worlds yet. Screenshots: [docs/screenshots/structures](screenshots/structures).
+The builder's 21 structures, imported with vanilla stand-ins for their modded blocks, and 17 Cherry Grove modules (vanilla, from schematics) (see [tools/structures](../tools/structures/README.md)). Placement only: they don't generate in new worlds yet. Screenshots: [docs/screenshots/structures](screenshots/structures).
 
-**Automated check (already passing):** `structures/edo_imports_load`: all 21 load, no block turned into air, no spawners, every chest's loot table exists.
+**Automated check (already passing):** `structures/imports_load`: all 38 load, no block turned into air (it names any that do), no spawners, every chest's loot table exists.
 
 | # | Feature | How to test | Expected |
 |---|---|---|---|
@@ -60,6 +60,7 @@ The builder's 21 structures, imported with vanilla stand-ins for their modded bl
 | B.2 | Jigsaw version | `/place structure emergentstealth:edo/small_shrine_v3` | Placed on the surface with the terrain blended round it |
 | B.3 | Contents | Open chests in a shrine and a fort | Placeholder loot (paper, candles, food; rarely smoke bombs, caltrops or tabi). No illagers in the mini fort, no spawners in the kofun or cemetery |
 | B.4 | Look | Walk round a few | Report stand-ins that look wrong; `tools/structures/block_map.json` is the table to change |
+| B.5 | Cherry Grove | `/place template emergentstealth:cherrygrove/pagoda ~ ~ ~` (also `teahouse`, `gatehouse`, `grandestate`, `twinpavilion`, …) | Complete buildings with chains, lanterns and cherry trees. Each brings its own ground and water, which stands above flat land when placed at ground level |
 
 ## Beta toolkit, part A: pebble, smoke bomb, firecracker, blinding powder, caltrops 🧪
 

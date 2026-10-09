@@ -4,6 +4,8 @@
 
 **Goal:** place any structure, mark it up (zones, posts, patrol routes, NPC spawns, lights), **save it as one compound file**, and re-place it anywhere, rotated or mirrored, fully working.
 
+**Building material (2026-10-09):** the builder's 21 structures (`emergentstealth:edo/…`, vanilla stand-ins for their modded blocks) and 17 **Cherry Grove modules** (`emergentstealth:cherrygrove/…`, vanilla). The modules are designed to be pieced together into large compounds, so a compound can hold several templates, each with its own offset, rotation and **ground line** (each module brings its own ground and water, which must sit at terrain level). The same modules feed S15's compound generator. See [tools/structures](../../tools/structures/README.md).
+
 ## 1. Structure viewer
 
 - **Browser (Sumi screen):** opened by the **Surveyor's Plan** item or `/es structure browse`.
@@ -48,7 +50,8 @@ A **compound** is one or more structure templates plus markers, all relative to 
 
 ```json
 {
-  "structures": [{ "template": "emergentstealth:edo/samurai_mini_fort", "offset": [0, 0, 0] }],
+  "structures": [{ "template": "emergentstealth:edo/samurai_mini_fort", "offset": [0, 0, 0], "rotation": "none", "ground": 0 },
+                 { "template": "emergentstealth:cherrygrove/teahouse", "offset": [52, -3, 6], "rotation": "clockwise_90", "ground": 3 }],
   "zones": [{ "name": "courtyard", "access": "restricted", "boxes": [[[2, 0, 2], [43, 10, 43]]], "hours": null }],
   "routes": [{ "name": "wall_walk", "mode": "loop", "waypoints": [{ "pos": [4, 5, 4], "wait": 40, "look": 90 }] }],
   "spawns": [{ "archetype": "emergentstealth:ashigaru", "pos": [10, 1, 12], "facing": 180,
@@ -105,4 +108,5 @@ Saving adds a spawn marker to the compound under the cursor, or spawns the NPC r
 2. **Where saved compounds go:** the world's generated datapack plus an export command (proposed), or straight into a folder you then commit?
 3. **Trespass rule now:** OK to add the minimal restricted/hostile reaction now, or keep zones as data only until S9?
 4. **NPC persistence:** spawned guards are normal saved entities, and missing ones come back only on `/es compound reset` until the garrison rules arrive (Q6, S9). OK?
-5. **First compound:** samurai_mini_fort, or another of the builder's structures?
+5. **First compound:** samurai_mini_fort, or a Cherry Grove estate assembled from modules (gatehouse, courtyard manor, teahouse, pagoda)?
+6. **Module ground lines:** should the viewer find each module's ground line automatically (the highest layer that is mostly ground or water at the edges), with a manual override saved per module?
