@@ -13,9 +13,8 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 
 ## State at handoff (2026-10-09)
 
-- **`main`:** v0.1.0 (Alpha 1) plus PR #1 (toolkit part A, S7 animation framework) and PR #2 (Sumi UI). Two merge breakages on `main` (invalid `en_us.json`, the `[animation]` config nested in `[ui]`) are fixed on `claude/fervent-babbage-jyh6r0`, which also carries the `claude/ui-framework` post-merge fixes.
-- **PR #3 merged** (S7 animation finished and checked in the real client).
-- **`claude/fervent-babbage-jyh6r0` (PR #4, draft):** the builder's 21 structures and 17 Cherry Grove modules imported (`tools/structures/`), design doc 32 (authoring tools, approved), and the **structure viewer** (Surveyor's Plan → Sumi browser → ghost preview → place / undo, `/es structure ...`) and **compounds** (doc 32 §3: file format, command authoring, place turned or mirrored, undo; `/es compound ...`). Both checked in the real client. **88 GameTests pass.** [docs/sumi-guide.md](sumi-guide.md) is new.
+- **`main`** (after PR #4): v0.1.0 (Alpha 1), toolkit part A, S7 animation (crawl, bodies, drag, carry, takedowns), the Sumi UI, the builder's structures and the Cherry Grove modules, the **structure viewer** and **compounds** (doc 32 §1 and §3, `/es structure ...`, `/es compound ...`). All checked in the real client. **88 GameTests pass**; the dedicated server starts clean.
+- **Docs:** [docs/sumi-guide.md](sumi-guide.md) (extending Sumi), [doc 32](design/32-authoring-tools.md) (authoring tools; progress at the top). PROGRESS.md is out of date (2026-10-08).
 - **Feature branches still to finish** (stopped by usage limits; the last commit is **WIP** and may not compile):
 
 | Branch | What's done | What's left |

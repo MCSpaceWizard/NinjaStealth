@@ -91,13 +91,12 @@ public final class CompoundTests {
         return new BlockPos(Math.round(-Mth.sin(yaw * Mth.DEG_TO_RAD)), 0, Math.round(Mth.cos(yaw * Mth.DEG_TO_RAD)));
     }
 
-    /** Composition, inverse, and facings turning with the blocks, for every mirror and rotation. */
+    /** Composition, and facings turning with the blocks, for every mirror and rotation. */
     static void transformAlgebra(GameTestHelper helper) {
         BlockPos[] probes = {new BlockPos(3, 1, -2), new BlockPos(-5, 0, 7)};
         for (Mirror m1 : Mirror.values()) {
             for (Rotation r1 : Rotation.values()) {
                 Transform a = new Transform(m1, r1);
-                helper.assertTrue(a.then(a.inverse()).isIdentity(), a + " then its inverse");
                 for (float yaw = 0; yaw < 360; yaw += 90) {
                     helper.assertTrue(facing(a.yaw(yaw)).equals(a.apply(facing(yaw))), a + " turns facing " + yaw + " like a block: "
                             + a.yaw(yaw) + " vs " + a.apply(facing(yaw)));
@@ -123,6 +122,17 @@ public final class CompoundTests {
         Compound back = Compound.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(json)).getOrThrow();
         helper.assertTrue(back.equals(compound), "JSON round trip:\n" + json + "\nread back as " + back);
         helper.assertTrue(json.contains("\"pos\": [2, 2, 3]"), "Positions are written on one line:\n" + json);
+
+        // Ids may hold ".." segments: saving one must not write outside the world folder.
+        for (String path : List.of("../escape", "a/../../escape", "./escape")) {
+            Identifier unsafe = Identifier.fromNamespaceAndPath(EmergentStealth.MODID, path);
+            try {
+                Compounds.saveToWorld(helper.getLevel().getServer(), unsafe, compound);
+                helper.fail("Saving " + unsafe + " should be refused");
+            } catch (java.io.IOException expected) {
+                // refused, as it should be
+            }
+        }
 
         String example = """
                 { "structures": [{ "template": "emergentstealth:edo/samurai_mini_fort" },
@@ -168,11 +178,14 @@ public final class CompoundTests {
         Identifier id = EmergentStealth.id("test/shrine_guard");
         BlockPos origin = helper.absolutePos(new BlockPos(8, 20, 8));
         UUID author = UUID.randomUUID();
+        int lastCopy = 0;
 
         for (Transform t : all()) {
             CompoundPlacer.Result result = CompoundPlacer.place(level, author, id, compound, origin, t);
             PlacedCompounds.Copy copy = result.copy();
             helper.assertTrue(copy != null, "Placed " + t + ", missing " + result.missing());
+            helper.assertTrue(copy.id() > lastCopy, t + ": copy numbers are never reused (got #" + copy.id() + " after #" + lastCopy + ")");
+            lastCopy = copy.id();
             BlockPos chestAt = t.apply(chest).offset(origin);
             helper.assertTrue(level.getBlockState(chestAt).is(Blocks.CHEST), t + ": the chest should be at " + chestAt);
 

@@ -25,6 +25,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.FileUtil;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -76,7 +77,7 @@ public final class Compounds {
         if (compound == null) {
             return null;
         }
-        Path file = server.getServerDirectory().resolve("compounds").resolve(id.getNamespace()).resolve(id.getPath() + ".json");
+        Path file = resolve(server.getServerDirectory().resolve("compounds"), id, null);
         write(file, compound);
         return file;
     }
@@ -100,8 +101,21 @@ public final class Compounds {
         return server.getWorldPath(LevelResource.GENERATED_DIR).normalize();
     }
 
-    private static Path worldFile(MinecraftServer server, Identifier id) {
-        return worldRoot(server).resolve(id.getNamespace()).resolve("compounds").resolve(id.getPath() + ".json");
+    private static Path worldFile(MinecraftServer server, Identifier id) throws IOException {
+        return resolve(worldRoot(server), id, "compounds");
+    }
+
+    /**
+     * {@code root/<namespace>[/dir]/<path>.json}, refusing ids that would leave {@code root} ({@code ..} segments are
+     * valid in an id), the way the game guards structure template files.
+     */
+    private static Path resolve(Path root, Identifier id, @Nullable String dir) throws IOException {
+        if (!FileUtil.isValidPathSegment(id.getNamespace())) {
+            throw new IOException("Invalid compound name " + id);
+        }
+        List<String> segments = FileUtil.decomposePath(id.getPath() + ".json").getOrThrow(IOException::new);
+        Path folder = dir == null ? root.resolve(id.getNamespace()) : root.resolve(id.getNamespace()).resolve(dir);
+        return FileUtil.resolvePath(folder, segments);
     }
 
     /** Reads the world's saved compounds: {@code generated/<namespace>/compounds/<path>.json}. */
@@ -150,6 +164,8 @@ public final class Compounds {
     @SubscribeEvent
     static void onServerStopped(ServerStoppedEvent event) {
         WORLD.clear();
+        StructurePlacement.clear();
+        CompoundDrafts.clear();
     }
 
     @SubscribeEvent

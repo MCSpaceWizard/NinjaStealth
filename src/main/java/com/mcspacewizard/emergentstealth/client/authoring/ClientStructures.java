@@ -52,7 +52,11 @@ public final class ClientStructures {
             return size() > KEEP;
         }
     };
+    /** Parts received so far, per structure. */
     private static final Map<Identifier, byte[][]> PENDING = new HashMap<>();
+    /** When each preview was last asked for: the server may refuse (no permission, unknown id), so ask again later. */
+    private static final Map<Identifier, Long> ASKED = new HashMap<>();
+    private static final long RETRY_MS = 3000L;
 
     public static List<Identifier> ids() {
         return ids;
@@ -62,16 +66,15 @@ public final class ClientStructures {
         return PREVIEWS.get(id);
     }
 
-    public static boolean loading(Identifier id) {
-        return PENDING.containsKey(id);
-    }
-
-    /** Asks the server for a preview unless it's here or on its way. */
+    /** Asks the server for a preview unless it's here, arriving, or was asked for in the last few seconds. */
     public static void request(Identifier id) {
-        if (!PREVIEWS.containsKey(id) && !PENDING.containsKey(id)) {
-            PENDING.put(id, new byte[0][]);
-            ClientPacketDistributor.sendToServer(new StructurePayloads.RequestPreview(id));
+        long now = net.minecraft.util.Util.getMillis();
+        Long asked = ASKED.get(id);
+        if (PREVIEWS.containsKey(id) || PENDING.containsKey(id) || (asked != null && now - asked < RETRY_MS)) {
+            return;
         }
+        ASKED.put(id, now);
+        ClientPacketDistributor.sendToServer(new StructurePayloads.RequestPreview(id));
     }
 
     public static void handleList(StructurePayloads.StructureList payload, IPayloadContext context) {
@@ -93,6 +96,7 @@ public final class ClientStructures {
             return;
         }
         PENDING.remove(payload.id());
+        ASKED.remove(payload.id());
         try {
             PREVIEWS.put(payload.id(), parse(payload.id(), whole));
         } catch (Exception e) {
@@ -130,5 +134,6 @@ public final class ClientStructures {
         ids = List.of();
         PREVIEWS.clear();
         PENDING.clear();
+        ASKED.clear();
     }
 }

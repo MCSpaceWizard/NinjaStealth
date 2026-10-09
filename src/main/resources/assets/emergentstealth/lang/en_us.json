@@ -312,5 +312,6 @@
   "commands.emergentstealth.compound.copies": "%s placed compounds:",
   "commands.emergentstealth.compound.exported": "Exported %s to %s",
   "commands.emergentstealth.compound.removed": "Forgot compound #%s's routes and zones (its blocks and NPCs stay)",
-  "message.emergentstealth.compound.module_added": "Added to compound %s (%s structures)"
+  "message.emergentstealth.compound.module_added": "Added to compound %s (%s structures)",
+  "message.emergentstealth.compound.other_dimension": "Compound %s is being authored in another dimension; this wasn't added"
 }

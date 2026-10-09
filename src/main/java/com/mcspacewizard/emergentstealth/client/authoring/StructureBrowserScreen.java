@@ -129,6 +129,9 @@ public final class StructureBrowserScreen extends UiScreen {
     public void tick() {
         super.tick();
         boolean loaded = selected != null && ClientStructures.preview(selected) != null;
+        if (selected != null && !loaded) {
+            ClientStructures.request(selected); // again, if the server didn't answer (it may have refused)
+        }
         if (loaded != laidOutLoaded) {
             laidOutLoaded = loaded;
             relayout();

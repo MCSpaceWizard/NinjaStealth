@@ -11,9 +11,11 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
@@ -53,7 +55,7 @@ public final class StructurePlacement {
                             Set<UUID> addedEntities, @Nullable Runnable onUndo) {}
 
     /** A structure placed through the viewer or {@code /es structure place}. */
-    public record Placed(Identifier template, BlockPos origin, Rotation rotation, Mirror mirror) {}
+    public record Placed(Identifier template, BlockPos origin, Rotation rotation, Mirror mirror, ResourceKey<Level> dimension) {}
 
     public static StructurePlaceSettings settings(Rotation rotation, Mirror mirror) {
         return new StructurePlaceSettings().setRotation(rotation).setMirror(mirror);
@@ -75,7 +77,7 @@ public final class StructurePlacement {
         }
         BoundingBox box = box(template, origin, rotation, mirror);
         tracked(level, author, box, () -> placeTemplate(level, template, origin, rotation, mirror), null);
-        LAST.put(author, new Placed(id, origin, rotation, mirror));
+        LAST.put(author, new Placed(id, origin, rotation, mirror, level.dimension()));
         return box;
     }
 
@@ -93,7 +95,7 @@ public final class StructurePlacement {
                 box.minZ() - FLOW_MARGIN, box.maxX() + FLOW_MARGIN, box.maxY(), box.maxZ() + FLOW_MARGIN);
         long volume = (long) around.getXSpan() * around.getYSpan() * around.getZSpan();
         Snapshot snapshot = volume <= MAX_UNDO_VOLUME ? snapshot(level, box, around, onUndo) : null;
-        Set<UUID> before = entitiesIn(level, around);
+        Set<UUID> before = snapshot != null ? entitiesIn(level, around) : Set.of();
         place.run();
         if (snapshot != null) {
             snapshot.addedEntities().addAll(entitiesIn(level, around));
@@ -102,6 +104,12 @@ public final class StructurePlacement {
         } else {
             UNDO.remove(author);
         }
+    }
+
+    /** Snapshots hold their level: forget everything when the server stops (singleplayer can open another world). */
+    public static void clear() {
+        UNDO.clear();
+        LAST.clear();
     }
 
     /** The author's last structure placement, if any. */
@@ -150,10 +158,6 @@ public final class StructurePlacement {
             snapshot.onUndo().run();
         }
         return snapshot.placed();
-    }
-
-    public static boolean canUndo(UUID author) {
-        return UNDO.containsKey(author);
     }
 
     private static Snapshot snapshot(ServerLevel level, BoundingBox placed, BoundingBox box, @Nullable Runnable onUndo) {

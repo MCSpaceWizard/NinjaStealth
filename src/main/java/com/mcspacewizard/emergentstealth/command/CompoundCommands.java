@@ -63,6 +63,8 @@ final class CompoundCommands {
             name -> Component.translatable("commands.emergentstealth.compound.unknown_route", String.valueOf(name)));
     private static final DynamicCommandExceptionType UNKNOWN_COPY = new DynamicCommandExceptionType(
             id -> Component.translatable("commands.emergentstealth.compound.unknown_copy", String.valueOf(id)));
+    private static final DynamicCommandExceptionType OTHER_DIMENSION = new DynamicCommandExceptionType(
+            id -> Component.translatable("message.emergentstealth.compound.other_dimension", String.valueOf(id)));
     private static final DynamicCommandExceptionType SAVE_FAILED = new DynamicCommandExceptionType(
             error -> Component.translatable("commands.emergentstealth.compound.save_failed", String.valueOf(error)));
 
@@ -136,6 +138,15 @@ final class CompoundCommands {
         return draft;
     }
 
+    /** The author's draft, which must be in the dimension they're adding markers from. */
+    private static CompoundDrafts.Draft draftHere(CommandSourceStack source) throws CommandSyntaxException {
+        CompoundDrafts.Draft draft = draft(source);
+        if (!draft.dimension().equals(source.getLevel().dimension())) {
+            throw OTHER_DIMENSION.create(draft.id());
+        }
+        return draft;
+    }
+
     /** Starts a draft at {@code origin}, or at the author's last placed structure (which becomes its first module). */
     private static int start(CommandContext<CommandSourceStack> ctx, @org.jspecify.annotations.Nullable BlockPos origin) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
@@ -143,13 +154,13 @@ final class CompoundCommands {
         UUID author = author(source);
         CompoundDrafts.Draft draft;
         if (origin != null) {
-            draft = CompoundDrafts.start(author, id, origin, Compound.EMPTY);
+            draft = CompoundDrafts.start(author, id, source.getLevel().dimension(), origin, Compound.EMPTY);
         } else {
             StructurePlacement.Placed last = StructurePlacement.last(author);
             if (last == null) {
                 throw NOTHING_PLACED.create();
             }
-            draft = CompoundDrafts.start(author, id, last.origin(), Compound.EMPTY);
+            draft = CompoundDrafts.start(author, id, last.dimension(), last.origin(), Compound.EMPTY);
             draft = CompoundDrafts.onPlaced(author, last);
         }
         BlockPos at = draft.origin();
@@ -160,7 +171,7 @@ final class CompoundCommands {
 
     private static int addRoute(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
-        CompoundDrafts.Draft draft = draft(source);
+        CompoundDrafts.Draft draft = draftHere(source);
         String name = StringArgumentType.getString(ctx, "route");
         PatrolRoute route = PatrolRoutes.get(source.getLevel()).get(name).orElseThrow(() -> UNKNOWN_ROUTE.create(name));
         CompoundDrafts.addRoute(author(source), draft, route);
@@ -170,10 +181,10 @@ final class CompoundCommands {
 
     private static int addNpcs(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
-        CompoundDrafts.Draft draft = draft(source);
+        CompoundDrafts.Draft draft = draftHere(source);
         int count = 0;
         for (Entity entity : EntityArgument.getEntities(ctx, "targets")) {
-            if (entity instanceof StealthNpc npc) {
+            if (entity instanceof StealthNpc npc && npc.level().dimension().equals(draft.dimension())) {
                 draft = CompoundDrafts.addNpc(author(source), draft, npc);
                 count++;
             }
@@ -185,7 +196,7 @@ final class CompoundCommands {
 
     private static int addZone(CommandContext<CommandSourceStack> ctx, Optional<Zone.Hours> hours) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
-        CompoundDrafts.Draft draft = draft(source);
+        CompoundDrafts.Draft draft = draftHere(source);
         String name = StringArgumentType.getString(ctx, "zone");
         String accessName = StringArgumentType.getString(ctx, "access");
         Zone.Access access = java.util.Arrays.stream(Zone.Access.values()).filter(a -> a.getSerializedName().equals(accessName)).findFirst()

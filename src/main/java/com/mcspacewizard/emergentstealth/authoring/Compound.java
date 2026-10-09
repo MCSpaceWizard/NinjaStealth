@@ -36,7 +36,8 @@ public record Compound(List<Module> structures, List<Zone> zones, List<PatrolRou
      * One structure template in the compound.
      *
      * @param offset where the template's origin goes, relative to the compound's
-     * @param ground the template layer (from its bottom) that sits at ground level, for lining modules up
+     * @param ground the template layer (from its bottom) that sits at ground level. Recorded for lining modules up
+     *               (doc 32 decision 6); placing doesn't use it yet: the offset already says where the module goes
      */
     public record Module(Identifier template, BlockPos offset, Rotation rotation, Mirror mirror, int ground) {
         public static final Codec<Module> CODEC = RecordCodecBuilder.create(i -> i.group(

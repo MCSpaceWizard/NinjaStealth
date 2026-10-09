@@ -43,17 +43,23 @@ public final class PlacedCompounds extends SavedData {
         }
     }
 
-    public static final Codec<PlacedCompounds> CODEC = Copy.CODEC.listOf().xmap(PlacedCompounds::new, placed -> placed.copies);
+    public static final Codec<PlacedCompounds> CODEC = RecordCodecBuilder.create(i -> i.group(
+            Codec.INT.optionalFieldOf("last_id", 0).forGetter(placed -> placed.lastId),
+            Copy.CODEC.listOf().fieldOf("copies").forGetter(placed -> placed.copies)
+    ).apply(i, PlacedCompounds::new));
 
     public static final SavedDataType<PlacedCompounds> TYPE =
             new SavedDataType<>(EmergentStealth.id("placed_compounds"), PlacedCompounds::new, CODEC);
 
     private final List<Copy> copies = new ArrayList<>();
+    /** The highest copy number ever given out here: numbers aren't reused, so a removed copy's names stay its own. */
+    private int lastId;
 
     public PlacedCompounds() {}
 
-    private PlacedCompounds(List<Copy> loaded) {
+    private PlacedCompounds(int lastId, List<Copy> loaded) {
         copies.addAll(loaded);
+        this.lastId = Math.max(lastId, loaded.stream().mapToInt(Copy::id).max().orElse(0));
     }
 
     public static PlacedCompounds get(ServerLevel level) {
@@ -68,9 +74,11 @@ public final class PlacedCompounds extends SavedData {
         return copies.stream().filter(c -> c.id() == id).findFirst();
     }
 
-    /** The next unused copy number (copies are numbered per dimension, from 1). */
+    /** Takes the next copy number (copies are numbered per dimension, from 1, never reused). */
     public int nextId() {
-        return copies.stream().mapToInt(Copy::id).max().orElse(0) + 1;
+        lastId++;
+        setDirty();
+        return lastId;
     }
 
     public void add(Copy copy) {

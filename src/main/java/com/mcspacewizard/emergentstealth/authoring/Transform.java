@@ -52,19 +52,6 @@ public record Transform(Mirror mirror, Rotation rotation) {
         throw new IllegalStateException("No transform equals " + this + " then " + outer);
     }
 
-    /** The transform that undoes this one. */
-    public Transform inverse() {
-        for (Mirror m : Mirror.values()) {
-            for (Rotation r : Rotation.values()) {
-                Transform candidate = new Transform(m, r);
-                if (then(candidate).isIdentity()) {
-                    return candidate;
-                }
-            }
-        }
-        throw new IllegalStateException("No inverse of " + this);
-    }
-
     /** Mirror-and-rotate pairs can describe the same transform (both mirrors with a half turn are one mirror). */
     public boolean isIdentity() {
         return apply(new BlockPos(1, 0, 0)).equals(new BlockPos(1, 0, 0)) && apply(new BlockPos(0, 0, 1)).equals(new BlockPos(0, 0, 1));

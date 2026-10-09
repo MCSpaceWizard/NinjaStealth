@@ -125,7 +125,7 @@ public final class AuthoringClientEvents {
             if (preview == null || minecraft.options.hideGui) {
                 return;
             }
-            BlockPos origin = GhostPreview.origin();
+            BlockPos origin = GhostPreview.shownOrigin();
             Component status = Component.translatable("hud.emergentstealth.structure_preview", preview.id().getPath(),
                     GhostPreview.rotation().ordinal() * 90, GhostPreview.mirror() == Mirror.NONE ? "-" : "M",
                     String.format("%+d", GhostPreview.raise()),

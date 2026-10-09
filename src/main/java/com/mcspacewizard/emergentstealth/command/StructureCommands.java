@@ -93,12 +93,7 @@ final class StructureCommands {
         }
         ctx.getSource().sendSuccess(() -> Component.translatable("message.emergentstealth.structure.placed", id.toString(),
                 box.minX(), box.minY(), box.minZ()), true);
-        StructurePlacement.Placed placed = StructurePlacement.last(author(ctx.getSource()));
-        CompoundDrafts.Draft draft = placed == null ? null : CompoundDrafts.onPlaced(author(ctx.getSource()), placed);
-        if (draft != null) {
-            ctx.getSource().sendSuccess(() -> Component.translatable("message.emergentstealth.compound.module_added", draft.id().toString(),
-                    draft.compound().structures().size()), false);
-        }
+        CompoundDrafts.joinDraft(author(ctx.getSource()), message -> ctx.getSource().sendSuccess(() -> message, false));
         return 1;
     }
 

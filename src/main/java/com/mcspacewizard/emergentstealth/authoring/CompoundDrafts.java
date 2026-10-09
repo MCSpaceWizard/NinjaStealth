@@ -3,6 +3,7 @@ package com.mcspacewizard.emergentstealth.authoring;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import org.jspecify.annotations.Nullable;
 
@@ -10,7 +11,10 @@ import com.mcspacewizard.emergentstealth.ai.routine.PatrolRoute;
 import com.mcspacewizard.emergentstealth.entity.StealthNpc;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 /**
@@ -21,9 +25,9 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 public final class CompoundDrafts {
     private CompoundDrafts() {}
 
-    public record Draft(Identifier id, BlockPos origin, Compound compound) {
+    public record Draft(Identifier id, ResourceKey<Level> dimension, BlockPos origin, Compound compound) {
         Draft with(Compound newCompound) {
-            return new Draft(id, origin, newCompound);
+            return new Draft(id, dimension, origin, newCompound);
         }
 
         /** A world position relative to the draft's origin. */
@@ -38,26 +42,46 @@ public final class CompoundDrafts {
         return DRAFTS.get(author);
     }
 
-    public static Draft start(UUID author, Identifier id, BlockPos origin, Compound compound) {
-        Draft draft = new Draft(id, origin, compound);
+    public static Draft start(UUID author, Identifier id, ResourceKey<Level> dimension, BlockPos origin, Compound compound) {
+        Draft draft = new Draft(id, dimension, origin, compound);
         DRAFTS.put(author, draft);
         return draft;
+    }
+
+    public static void clear() {
+        DRAFTS.clear();
     }
 
     public static @Nullable Draft close(UUID author) {
         return DRAFTS.remove(author);
     }
 
-    /** Adds a structure the author just placed to their draft, if they have one. Returns the draft, or null. */
+    /** Adds a placed structure to the author's draft, if they have one in that dimension. Returns the draft, or null. */
     public static @Nullable Draft onPlaced(UUID author, StructurePlacement.Placed placed) {
         Draft draft = DRAFTS.get(author);
-        if (draft == null) {
+        if (draft == null || !draft.dimension().equals(placed.dimension())) {
             return null;
         }
         return update(author, draft.compound().withModule(module(draft, placed)));
     }
 
-    public static Compound.Module module(Draft draft, StructurePlacement.Placed placed) {
+    /**
+     * After the author placed a structure (viewer or command): adds it to their open draft and tells them, or tells
+     * them why not.
+     */
+    public static void joinDraft(UUID author, Consumer<Component> tell) {
+        StructurePlacement.Placed placed = StructurePlacement.last(author);
+        Draft open = DRAFTS.get(author);
+        if (placed == null || open == null) {
+            return;
+        }
+        Draft draft = onPlaced(author, placed);
+        tell.accept(draft == null
+                ? Component.translatable("message.emergentstealth.compound.other_dimension", open.id().toString())
+                : Component.translatable("message.emergentstealth.compound.module_added", draft.id().toString(), draft.compound().structures().size()));
+    }
+
+    private static Compound.Module module(Draft draft, StructurePlacement.Placed placed) {
         return new Compound.Module(placed.template(), draft.local(placed.origin()), placed.rotation(), placed.mirror(), 0);
     }
 

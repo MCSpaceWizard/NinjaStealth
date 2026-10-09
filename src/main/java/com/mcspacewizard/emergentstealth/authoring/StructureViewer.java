@@ -89,12 +89,7 @@ public final class StructureViewer {
         }
         player.sendSystemMessage(Component.translatable("message.emergentstealth.structure.placed", payload.id().toString(),
                 box.minX(), box.minY(), box.minZ()));
-        StructurePlacement.Placed placed = StructurePlacement.last(player.getUUID());
-        CompoundDrafts.Draft draft = placed == null ? null : CompoundDrafts.onPlaced(player.getUUID(), placed);
-        if (draft != null) {
-            player.sendSystemMessage(Component.translatable("message.emergentstealth.compound.module_added", draft.id().toString(),
-                    draft.compound().structures().size()));
-        }
+        CompoundDrafts.joinDraft(player.getUUID(), player::sendSystemMessage);
     }
 
     static void handleUndo(StructurePayloads.Undo payload, IPayloadContext context) {
@@ -109,9 +104,11 @@ public final class StructureViewer {
                 : Component.translatable("message.emergentstealth.structure.undone", box.minX(), box.minY(), box.minZ()));
     }
 
-    /** Datapacks reloaded: templates may have changed. */
+    /** Datapacks reloaded (not a player joining, which fires this too): templates may have changed. */
     @SubscribeEvent
     static void onDatapackSync(OnDatapackSyncEvent event) {
-        StructureCatalog.clearCache();
+        if (event.getPlayer() == null) {
+            StructureCatalog.clearCache();
+        }
     }
 }

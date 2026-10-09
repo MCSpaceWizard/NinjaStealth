@@ -43,6 +43,8 @@ public final class GhostPreview implements DebugRenderer.SimpleDebugRenderer {
     private static Mirror mirror = Mirror.NONE;
     private static int raise;
     private static @Nullable Faces faces;
+    /** Where the ghost was drawn this frame (the HUD shows it without a second raycast). */
+    private static @Nullable BlockPos shown;
 
     /** Exposed faces after the transform: 4 corners each (12 floats), relative to the origin, and their colours. */
     private record Faces(Rotation rotation, Mirror mirror, float[] corners, int[] colors, int count, BlockPos min, BlockPos max) {}
@@ -58,6 +60,7 @@ public final class GhostPreview implements DebugRenderer.SimpleDebugRenderer {
     public static void stop() {
         active = null;
         faces = null;
+        shown = null;
     }
 
     public static boolean isActive() {
@@ -74,6 +77,11 @@ public final class GhostPreview implements DebugRenderer.SimpleDebugRenderer {
 
     public static Mirror mirror() {
         return mirror;
+    }
+
+    /** The origin the ghost was last drawn at, or null. */
+    public static @Nullable BlockPos shownOrigin() {
+        return shown;
     }
 
     public static int raise() {
@@ -251,6 +259,7 @@ public final class GhostPreview implements DebugRenderer.SimpleDebugRenderer {
     public void emitGizmos(double camX, double camY, double camZ, DebugValueAccess access, Frustum frustum, float partialTicks) {
         Faces f = faces();
         BlockPos origin = origin();
+        shown = origin;
         if (f == null || origin == null) {
             return;
         }
