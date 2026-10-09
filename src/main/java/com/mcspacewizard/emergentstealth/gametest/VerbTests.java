@@ -103,6 +103,23 @@ final class VerbTests {
         });
     }
 
+    /** 2b. Falling down never lifts a body off the ground (NoAI bodies would stay floating). */
+    static void bodyStaysOnGround(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        StealthNpc knocked = npc(helper, new Vec3(2.5, 1, 4.5), 0.0F, false, "ashigaru");
+        StealthNpc killed = npc(helper, new Vec3(6.5, 1, 4.5), 0.0F, false, "ashigaru");
+        double floor = knocked.getY();
+        // After the spawn tick: vanilla only re-fits a widening hitbox once an entity has ticked.
+        helper.runAfterDelay(3, () -> {
+            knocked.knockOut(level, null);
+            killed.becomeCorpse(level, null);
+            helper.assertTrue(knocked.getY() == floor && killed.getY() == floor, "Bodies should stay on the floor, at "
+                    + knocked.getY() + " and " + killed.getY() + " instead of " + floor);
+            helper.assertTrue(knocked.getBbHeight() < 0.5F, "A body lies flat");
+            helper.succeed();
+        });
+    }
+
     /** 3. A guard who sees a corpse raises the alarm and searches. */
     static void corpseRaisesAlarm(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();

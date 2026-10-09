@@ -29,9 +29,15 @@ import -display :99 -window root /tmp/shot.png   # ImageMagick screenshot
 - `type <text>`
 - `cmd <chat command>`
 - `click <x> <y>` (root-window coordinates)
-- `rclick`
+- `rclick`, `lclick`
+- `down <keysym>` / `up <keysym>` (hold a key, e.g. `Shift_L` to sneak)
 - `look <dx> <dy>`
+- `move <x> <y>`, `drag <x0> <y0> <x1> <y1> [steps]`, `wheel <n>` (GUI testing)
 - `sleep <s>`
+
+`xin.py` talks to `$XIN_DISPLAY`, else `$DISPLAY`, else `:99`. Give each concurrent client its own display.
+
+**Seeing animations from the side:** `/esphoto <yaw> [pitch]` (client command) swings the third-person camera around the player by that angle; `/esphoto off` stops it. `/es npc knockout <targets>` makes a knocked-out body to drag or carry.
 
 ## Tips
 

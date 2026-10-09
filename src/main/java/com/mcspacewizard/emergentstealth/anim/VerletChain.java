@@ -133,6 +133,16 @@ public final class VerletChain {
         pos[b + 2] -= dz * diff * wb;
     }
 
+    /**
+     * Nudges point {@code i} horizontally towards {@code (x, z)} by {@code strength} (0..1) of the gap, keeping
+     * the motion it implies. Lets a free chain settle where the server says the body is.
+     */
+    public void pull(int i, double x, double z, double strength) {
+        int k = i * 3;
+        pos[k] += (x - pos[k]) * strength;
+        pos[k + 2] += (z - pos[k + 2]) * strength;
+    }
+
     public double x(int i) {
         return pos[i * 3];
     }

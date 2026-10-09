@@ -211,7 +211,7 @@
   "ui.emergentstealth.skills.insight": "Insight %s / %s",
   "ui.emergentstealth.skills.points": "%s skill point(s) to spend",
   "ui.emergentstealth.skills.points_hint": "Earn Insight with stealth deeds: every 100 is a point.",
-  "ui.emergentstealth.skills.hint": "Drag: pan \u00b7 Wheel: zoom \u00b7 Click a glowing seal to learn it \u00b7 Q/E or swipe: path",
+  "ui.emergentstealth.skills.hint": "Drag: pan · Wheel: zoom · Click a glowing seal to learn it · Q/E or swipe: path",
   "ui.emergentstealth.skills.cost": "Cost: %s point(s)",
   "ui.emergentstealth.skills.requires": "Requires: %s",
   "ui.emergentstealth.skills.and": " and ",
@@ -240,7 +240,7 @@
   "ui.emergentstealth.dialogue.preview.wait": "Good. Don't move. I'll only be a moment.",
   "commands.emergentstealth.dev.dialogue.unsupported": "That client doesn't have Emergent Stealth, so it can't show the preview.",
   "ui.emergentstealth.skills.tab.shinobi": "Shinobi",
-  "ui.emergentstealth.skills.tab.shogunate": "Shogunate"
+  "ui.emergentstealth.skills.tab.shogunate": "Shogunate",
   "item.emergentstealth.pebble": "Pebble",
   "item.emergentstealth.smoke_bomb": "Smoke Bomb",
   "item.emergentstealth.firecracker": "Firecracker",
@@ -258,5 +258,15 @@
   "message.emergentstealth.tool.none": "No active tool: hold the Tool Wheel key to choose one",
   "message.emergentstealth.tool.out": "No %s left",
   "death.attack.emergentstealth.caltrops": "%1$s stepped on caltrops one time too many",
-  "death.attack.emergentstealth.caltrops.player": "%1$s stepped on caltrops while trying to escape %2$s"
+  "death.attack.emergentstealth.caltrops.player": "%1$s stepped on caltrops while trying to escape %2$s",
+  "commands.emergentstealth.npc.knocked_out": "Knocked out %s NPC(s)",
+  "emergentstealth.configuration.animation": "Animation",
+  "emergentstealth.configuration.proceduralCrawl": "Procedural Crawl",
+  "emergentstealth.configuration.proceduralBodies": "Body Poses, Dragging and Carrying",
+  "emergentstealth.configuration.breathing": "Breathing",
+  "emergentstealth.configuration.lean": "Lean Into Turns",
+  "emergentstealth.configuration.playerIdleAnimation": "Animate Players at Rest",
+  "emergentstealth.configuration.takedownCamera": "Takedown Camera (First Person)",
+  "emergentstealth.configuration.actionMouseScale": "Mouse Speed During Takedowns",
+  "emergentstealth.configuration.animationRange": "Animation Range (blocks)"
 }

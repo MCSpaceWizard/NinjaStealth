@@ -48,6 +48,7 @@ The **first build takes a while** (5–15 min): it downloads Minecraft, NeoForge
 
 1. Install **NeoForge 26.1.2** in your launcher (Prism Launcher / CurseForge app / the official installer from neoforged.net).
 2. Drop `build/libs/emergentstealth-<version>.jar` into that instance's `mods/` folder.
+   - **Clients also need** [Player Animation Library](https://modrinth.com/mod/player-animation-library) (1.2.8+ for 26.1) and [Bendable Cuboids](https://modrinth.com/mod/bendable-cuboids) (2.0.2+). Dedicated servers don't need either.
 3. Server and clients must run the **same jar**.
 
 ## 5. When something breaks
@@ -70,6 +71,7 @@ So Claude can compile and run tests inside cloud sessions, the environment needs
    (`api.modrinth.com` and `cdn.modrinth.com` are only needed for `-PwithSodium` / `-PwithIris`.)
    ```
    maven.neoforged.net
+   repo.redlance.org
    cdn.modrinth.com
    piston-meta.mojang.com
    piston-data.mojang.com
@@ -92,6 +94,6 @@ So Claude can compile and run tests inside cloud sessions, the environment needs
    maven.createmod.net
    maven.shedaniel.me
    ```
-   The first six are required to build at all. The rest cover Gradle, the JDK and the optional mod integrations (Curios, GeckoLib, EMI, Jade, …).
+   The first seven are required to build at all (`repo.redlance.org` serves Player Animation Library and Bendable Cuboids). The rest cover Gradle, the JDK and the optional mod integrations (Curios, GeckoLib, EMI, Jade, …).
 
    Docs: <https://code.claude.com/docs/en/cloud-environments#network-access>

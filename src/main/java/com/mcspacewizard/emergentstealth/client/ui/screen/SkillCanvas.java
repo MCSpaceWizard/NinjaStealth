@@ -310,6 +310,9 @@ final class SkillCanvas extends UiNode {
         for (Node node : tree.nodes()) {
             drawNode(ctx, g, node, now);
         }
+        for (Node node : tree.nodes()) {
+            drawLabel(ctx, g, node, now);
+        }
     }
 
     private float reveal(long now, int row) {
@@ -419,13 +422,26 @@ final class SkillCanvas extends UiNode {
             Paint.textCentered(g, ctx.font(), Component.literal(String.valueOf(node.skill().cost())), px + 0.5F, py - 3.5F,
                     theme.color(SumiTheme.TEXT_ON_INK));
         }
-        if (zoom >= 0.75F) {
-            Component name = Component.translatable(SkillDefinition.nameKey(node.id()));
-            float s = 0.75F;
-            float tw = ctx.font().width(name) * s;
-            int color = state == NodeState.OWNED || state == NodeState.AVAILABLE ? theme.color(SumiTheme.TEXT) : theme.color(SumiTheme.TEXT_MUTED);
-            Paint.textScaled(g, ctx.font(), name, cx - tw / 2.0F, cy + r + 4.0F, s, color);
+        Paint.popAlpha(previous);
+    }
+
+    /** A seal's name under it, on a soft paper wash so strokes passing behind stay readable. */
+    private void drawLabel(UiContext ctx, GuiGraphicsExtractor g, Node node, long now) {
+        float appear = reveal(now, node.row());
+        if (zoom < 0.75F || appear <= 0.01F) {
+            return;
         }
+        SumiTheme theme = ctx.theme();
+        float previous = Paint.pushAlpha(appear);
+        Component name = Component.translatable(SkillDefinition.nameKey(node.id()));
+        float s = 0.75F;
+        float tw = ctx.font().width(name) * s;
+        float lx = nodeX(node) - tw / 2.0F;
+        float ly = nodeY(node) + nodeRadius() + 4.0F;
+        Paint.cutRect(g, lx - 2, ly - 1.5F, tw + 4, 9, 2, Paint.fade(theme.color(SumiTheme.PAPER), 0.85F));
+        NodeState state = node.state();
+        int color = state == NodeState.OWNED || state == NodeState.AVAILABLE ? theme.color(SumiTheme.TEXT) : theme.color(SumiTheme.TEXT_MUTED);
+        Paint.textScaled(g, ctx.font(), name, lx, ly, s, color);
         Paint.popAlpha(previous);
     }
 

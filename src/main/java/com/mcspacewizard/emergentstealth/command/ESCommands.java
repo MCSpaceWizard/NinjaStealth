@@ -44,12 +44,28 @@ public final class ESCommands {
                                         .executes(ESCommands::spawnNpc)))
                         .then(Commands.literal("list")
                                 .executes(ESCommands::listNpcs))
+                        .then(Commands.literal("knockout")
+                                .then(Commands.argument("targets", net.minecraft.commands.arguments.EntityArgument.entities())
+                                        .executes(ESCommands::knockOut)))
                         .then(PatrolCommands.behaviour()))
                 .then(SkillCommands.skills())
                 .then(PatrolCommands.patrol())
                 .then(PatrolCommands.routine())
                 .then(DevCommands.dev()));
         dispatcher.register(Commands.literal("es").redirect(root));
+    }
+
+    /** Knocks NPCs out on the spot (for testing bodies and waking without a takedown). */
+    private static int knockOut(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        int count = 0;
+        for (net.minecraft.world.entity.Entity entity : net.minecraft.commands.arguments.EntityArgument.getEntities(ctx, "targets")) {
+            if (entity instanceof StealthNpc npc && npc.knockOut(ctx.getSource().getLevel(), null)) {
+                count++;
+            }
+        }
+        int knocked = count;
+        ctx.getSource().sendSuccess(() -> Component.translatable("commands.emergentstealth.npc.knocked_out", knocked), true);
+        return count;
     }
 
     private static int spawnNpc(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {

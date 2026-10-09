@@ -72,6 +72,7 @@ public final class ESGameTests {
         test("behaviour/attacker_closes_in", BehaviourTests::attackerClosesIn, 200);
         test("verbs/rear_takedown_rules", VerbTests::rearTakedownRules, 100);
         isolated("verbs/knocked_out_gets_woken", VerbTests::knockedOutGetsWoken, 600);
+        test("verbs/body_stays_on_ground", VerbTests::bodyStaysOnGround);
         isolated("verbs/corpse_raises_alarm", VerbTests::corpseRaisesAlarm, 400);
         isolated("verbs/hidden_corpse_unnoticed", VerbTests::hiddenCorpseUnnoticed, 150);
         test("verbs/drag_follows", VerbTests::dragFollows);
@@ -91,6 +92,7 @@ public final class ESGameTests {
         test("ui/typewriter", UiTests::typewriter);
         test("ui/paper_noise", UiTests::paperNoise);
         test("ui/dev_dialogue_command", UiTests::devDialogueCommand);
+        test("ui/lang_file_valid", UiTests::langFileValid);
     }
 
     private static void isolated(String name, Consumer<GameTestHelper> function, int maxTicks) {

@@ -1,4 +1,4 @@
-"""Tiny X11 input helper for driving the Minecraft client on virtual display :99 (XTEST).
+"""Tiny X11 input helper for driving the Minecraft client on a virtual display (XTEST).
 
 Usage: xin.py ACTION [ACTION ...]
   key <keysym>        press a key (e.g. Return, Escape, F1, t)
@@ -9,7 +9,10 @@ Usage: xin.py ACTION [ACTION ...]
   move <x> <y>        move the mouse to root-window coordinates
   drag <x0> <y0> <x1> <y1> [steps]   left-drag between two points
   wheel <n>           scroll the wheel n notches (negative = down)
-Set XIN_DISPLAY to use another display than :99.
+  down <keysym>       hold a key (e.g. Shift_L to sneak) until a later "up"
+  up <keysym>         release a held key
+  lclick / rclick     left / right mouse click
+The display is $XIN_DISPLAY, else $DISPLAY, else :99.
 """
 import os
 import sys
@@ -18,7 +21,7 @@ import time
 from Xlib import X, XK, display
 from Xlib.ext import xtest
 
-d = display.Display(os.environ.get('XIN_DISPLAY', ':99'))
+d = display.Display(os.environ.get('XIN_DISPLAY') or os.environ.get('DISPLAY') or ':99')
 root = d.screen().root
 
 
@@ -82,6 +85,12 @@ while i < len(args):
         xtest.fake_input(d, X.MotionNotify, False, x=int(args[i + 1]), y=int(args[i + 2])); d.sync(); time.sleep(0.2)
         xtest.fake_input(d, X.ButtonPress, 1); d.sync(); time.sleep(0.05)
         xtest.fake_input(d, X.ButtonRelease, 1); d.sync(); time.sleep(0.3); i += 3
+    elif a in ('down', 'up'):
+        code = d.keysym_to_keycode(XK.string_to_keysym(args[i + 1]))
+        xtest.fake_input(d, X.KeyPress if a == 'down' else X.KeyRelease, code); d.sync(); time.sleep(0.1); i += 2
+    elif a == 'lclick':
+        xtest.fake_input(d, X.ButtonPress, 1); d.sync(); time.sleep(0.05)
+        xtest.fake_input(d, X.ButtonRelease, 1); d.sync(); time.sleep(0.3); i += 1
     elif a == 'rclick':
         xtest.fake_input(d, X.ButtonPress, 3); d.sync(); time.sleep(0.05)
         xtest.fake_input(d, X.ButtonRelease, 3); d.sync(); time.sleep(0.3); i += 1

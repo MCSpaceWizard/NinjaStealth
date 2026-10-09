@@ -16,6 +16,38 @@ This is a living list of what's implemented and how to test it. It's updated wit
 
 ---
 
+## Sumi UI framework: config screen, skill tree (K), dialogue preview 🧪
+
+Design: [doc 31](design/31-ui-framework.md) §0. Geometric shapes drawn in code, procedural paper grain and brushed ink, eased animation, inertial scrolling and swipeable tabs. Screenshots: [docs/screenshots/ui/](screenshots/ui/).
+
+**Automated checks (already passing):** 11 GameTests (`ui/*`, 75 total):
+- easing curves and tweens (retargeting mid-flight, zero duration snaps)
+- inertial scroll (wheel glide, fling, rubber band, instant with reduced motion)
+- swipe pager (snap distance, flick, edge resistance)
+- layout maths (flex, offsets, grid)
+- theme JSON parsing and fallbacks (single-token overrides, bad colours, layering)
+- config spec to widget mapping (tabs, toggles, sliders, slider rounding)
+- the skill tree model agrees with the server's unlock rules; keyboard neighbours
+- typewriter timing, paper noise tiling
+- `/es dev dialogue` is registered and only messages modded clients
+- `en_us.json` parses strictly (a merge once broke it and every mod text showed as a raw key)
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| U.1 | Config screen | Mods → Emergent Stealth → Config (or `/esui config` in a world) | A paper sheet with a vermilion seal. Sidebar tabs grouped **Client** (HUD, Visual Lighting, Interface) and **Server** (Perception, Detection, Behaviour, Sound). Toggles, sliders and values for every option |
+| U.2 | Motion | Click between tabs; drag a page sideways; scroll a long tab with the wheel and by dragging | Pages slide and snap; the ink marker glides along the sidebar. Scrolling glides, a quick drag flings and coasts, the ends rubber-band. Rows slide in one after another |
+| U.3 | Editing | Change a toggle and a slider (drag, click, or focus with Tab and use the arrows; Shift = ×10) | The value changes at once; it's saved when you close (check `run/config/emergentstealth-client.toml`). **Reset tab** restores defaults. Hovering a row shows its comment, default and range |
+| U.4 | Server values | Open the config in your own singleplayer world; then on a server or a LAN-opened world | Editable in singleplayer. On a server (or LAN) server tabs are read-only, with a note in the footer. From the main menu: "Join a world to see these settings" |
+| U.5 | Classic list | Footer **Classic list** | NeoForge's standard config screen (fallback) |
+| U.6 | Skill tree | Press **K** (Controls → Emergent Stealth). `/es skills points @s shinobi 3` first | Two paths, **Shinobi** (ink) and **Shogunate** (vermilion). Seals at their grid places with brush-stroke prerequisites; dashed lines for missing ones. Learned seals are inked; buyable ones glow gold with a red ring; capstones are gold hexagons. The red seal top-right shows unspent points; the bar shows Insight towards the next point |
+| U.7 | Hover card | Hover a seal | A paper card: name, description, effects (e.g. "Footsteps -15%"), cost, prerequisites, and a status line (Learned / Click to learn / Not enough points / Learn a prerequisite first / Mastery challenge) |
+| U.8 | Unlock | Click a glowing seal | A spinner while the server answers, then the seal is stamped in ink with a sound and the point counter drops. Clicking a seal you can't buy shakes it. With the server rejecting (e.g. no points) nothing changes |
+| U.9 | Navigation | Wheel to zoom (around the cursor), drag to pan when zoomed in; drag sideways or Q/E to switch path; Tab, then arrows + Enter | Smooth zoom and pan; the path tabs follow the swipe. Keyboard focus shows a rotating dashed ring and the card |
+| U.10 | Dialogue preview | `/es dev dialogue` (op) or `/esui dialogue` | A dialogue box at the bottom: a guard portrait, his name on a seal, typewriter text. Click/Space finishes the line; then up to 4 choices with number keys 1-4 (or click, or arrows + Enter). Choice 3 leads to a second exchange |
+| U.11 | Accessibility | Config → Interface: **High Contrast**, **Reduced Motion**, **Dialogue Text Speed** (0 = instant). Reopen a screen | High contrast: brighter paper, black text, stronger lines. Reduced motion: no slides, glides or flings. GUI scale follows vanilla |
+| U.12 | Theming | Resource pack with `assets/emergentstealth/ui/theme.json` overriding e.g. `"colors": {"paper": "#f4efe2"}`, or `textures/gui/sumi/paper.png` | Only that token changes; everything else keeps the defaults. A paper PNG replaces the generated grain |
+| U.13 | Dedicated server | `./gradlew runServer` | Starts normally (no client classes on the server) |
+
 ## Beta toolkit, part A: pebble, smoke bomb, firecracker, blinding powder, caltrops 🧪
 
 **Automated checks (already passing):** 8 more GameTests (64 total):
@@ -50,7 +82,7 @@ All five are in the creative tab and the `#emergentstealth:tools` tag. The cheap
 - Insight becomes skill points
 - Still Breath: works only crouched and still, with cooldown
 
-The skill tree **screen** (K) is coming with the Sumi UI framework. Until then, use the commands below.
+The skill tree **screen** is on **K** (see the Sumi section above). The commands below still work for testing.
 
 | # | Feature | How to test | Expected |
 |---|---|---|---|
@@ -59,6 +91,29 @@ The skill tree **screen** (K) is coming with the Sumi UI framework. Until then, 
 | P.3 | Skills work | Unlock `soft_soles` and sprint past a guard behind you; compare with before | Heard noticeably less often (footsteps 15% quieter). `quiet_hands`: chokes are faster. `strong_back`: faster dragging. `iron_resolve`: +2 hearts |
 | P.4 | Techniques | Unlock `still_breath`, `light_step`, `feint`. Press **X** to use, **sneak + X** to switch | The selected technique and its cooldown show right of the light gem (green while active). Still Breath: crouch and stay still, 40% harder to see. Light Step: 6 s of silent footsteps. Feint: a noise where you look (a guard investigates it) |
 | P.5 | Stealth gear | Craft (or take from creative) Shinobi Hood, Garb, Hakama, Tabi | Black/indigo cloth armour. Tooltips show stealth stats (e.g. Footsteps -20%). Iron/diamond/netherite armour shows nothing but makes footsteps 20% louder per piece |
+
+## Stage 7 animation: crawl, bodies, dragging, carrying, takedowns 🧪
+
+Needs **Player Animation Library** and **Bendable Cuboids** on the client (`./gradlew runClient` includes both). Everything is procedural except the takedowns, which play programmer-art clips (`assets/emergentstealth/player_animations/takedowns.json` for you, `neoforge/animations/entity/takedown/*.victim.json` for the victim; `tools/programmer_art/takedown_clips.py` writes them). Screenshots: [docs/screenshots/animation](screenshots/animation).
+
+**Automated checks (already passing):** 6 more GameTests for the shared maths: two-bone IK reaches its targets, crawling hands stay planted, the drag chain keeps its shape on the floor, the action clock seeks for late viewers, pose blending, stable per-body poses.
+
+**Test helpers:** `/es npc knockout <targets>` makes a knocked-out body. `/esphoto <yaw> [pitch]` swings the third-person camera round you (try 90) so you can watch your own animations from the side; `/esphoto off` stops it.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| A7.1 | Elbow crawl | Press **Z** and crawl around (third person, `/esphoto 90`) | Elbows and knees bend. Hands stay planted while you pull past them, the opposite knee pushes out to the side. Standing still, the limbs rest |
+| A7.2 | Bodies lie down | Kill a guard, and `/es npc knockout` another | Each falls over in about half a second and lies flat on the ground, centred on where it stood, fitted to slopes and steps. Every body lies a little differently. Chokes fall on their backs, kills face down |
+| A7.3 | Knocked out vs dead | Watch both bodies closely | The knocked-out one breathes slowly (chest rises, arms ease out); the corpse doesn't move. Bodies show no detection indicator |
+| A7.4 | Dragging | Right-click a body, walk around, turn, go up a step | Your right hand reaches back and holds the wrists; you lean into the pull. The body is face up, arms overhead, hips and legs trailing along the floor behind you |
+| A7.5 | Carrying | Sneak + right-click a body | The body lies across your shoulders, arms and legs hanging, swaying as you walk; both your hands steady it. In first person it's hidden (it would fill the view) |
+| A7.6 | Choke | Rear takedown with an empty hand (third person and first person) | You wrap an arm round the neck and pull back; the victim claws at your arm and kicks, then goes limp and falls on its back. In first person the camera looks down over its shoulder with a struggle shake, the view doesn't zoom, mouse look is damped |
+| A7.7 | Rear kill | Left-click from behind | Grab with the left hand, strike with the right (0.75 s); the victim jerks and drops |
+| A7.8 | Air takedown | Drop onto a guard from 2+ blocks | A deep landing crouch, the camera dips; the victim is crushed down |
+| A7.9 | Skill speed | Unlock `quiet_hands`, then choke | The whole clip plays faster to match the shorter choke, staying in sync |
+| A7.10 | Breathing and lean | Stand still, sprint, turn sharply (NPCs too) | Subtle breathing, heavier after sprinting; a slight lean into turns |
+| A7.11 | Other players | On a server with a second player | They see your crawl, drag, carry and takedowns the same way (late joiners seek into a running takedown) |
+| A7.12 | Settings | The client config, `animation` section (in game or `run/config/emergentstealth-client.toml`) | Each part can be turned off: procedural crawl, bodies, breathing, lean, player idle animation, takedown camera, mouse damping, animation range |
 
 ## Stage 7: Crawl, takedowns, bodies & evidence 🧪
 
@@ -71,7 +126,7 @@ The skill tree **screen** (K) is coming with the Sumi UI framework. Until then, 
 - crawl stance (and no standing up under a low ceiling)
 - air takedown
 
-*(Animations are arriving on a separate branch: until then the body poses, crawl and takedowns use vanilla poses.)*
+Animations for this stage are in the next table (S7 animation).
 
 | # | Feature | How to test | Expected |
 |---|---|---|---|

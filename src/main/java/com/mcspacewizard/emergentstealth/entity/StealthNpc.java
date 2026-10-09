@@ -179,7 +179,19 @@ public class StealthNpc extends PathfinderMob {
             this.setSprinting(false);
             this.setAggressive(false);
         }
+        refreshDimensionsKeepingFeet();
+    }
+
+    /**
+     * Vanilla re-centres a shrinking hitbox in the old one, which would lift a falling body 0.7 blocks into the air
+     * (NoAI NPCs never come back down). Bodies keep their feet where they were.
+     */
+    private void refreshDimensionsKeepingFeet() {
+        double y = this.getY();
         this.refreshDimensions();
+        if (this.getY() != y) {
+            this.setPos(this.getX(), y, this.getZ());
+        }
     }
 
     /** Knocks the NPC out (non-lethal). It never wakes by itself (A-12). Returns false if it's already a body. */
@@ -251,7 +263,7 @@ public class StealthNpc extends PathfinderMob {
     public void onSyncedDataUpdated(EntityDataAccessor<?> accessor) {
         super.onSyncedDataUpdated(accessor);
         if (DATA_BODY_STATE.equals(accessor)) {
-            this.refreshDimensions();
+            refreshDimensionsKeepingFeet();
         }
     }
 
