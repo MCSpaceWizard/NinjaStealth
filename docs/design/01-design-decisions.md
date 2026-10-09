@@ -142,7 +142,7 @@ Each entry is **Decided**, **Proposed** (my reading or extension of your answers
   - **Could:** merchant, monk, shinobi.
   - **Won't:** dog/handler.
 - **Decided:** Humanoid player-shaped NPCs with a **layered outfit system** that powers disguises [N-03].
-- **Decided:** Two factions: **Shogunate** and **Shinobi** [N-02]. See **Q5**.
+- **Decided:** Two factions: **Shogunate** and **Shinobi** [N-02]. The player belongs to neither (Q5, 2026-10-09): most of each are enemies, but some Shinobi and some Shogunate NPCs may be allies or give aid.
 - **Decided:** Named targets with unique behaviour [N-04]. Pickpocketing keys and tools [N-06]. Neutral and trading NPCs much later [N-07].
 - **Decided:** Garrisons respawn unless the compound is "destroyed" [N-05]. See **Q6**.
 
@@ -221,7 +221,7 @@ Each entry is **Decided**, **Proposed** (my reading or extension of your answers
 
 ## Open questions
 
-> **2026-10-06:** you approved the proposals ("everything is looking good"), so **Q1–Q4 and Q6–Q11 are accepted as proposed**: 26.1.2, the light-gem-as-truth shadow split, a crawl toggle, the spyglass/goggles UI split, the compound command post, our own combat system, the Bloodlust/Serenity working names, the stage placement, the lamplighter, and the teppo as an NPC-only siege weapon. **Q5 (factions) is still open.** It isn't needed until S9/S11.
+> **2026-10-06:** you approved the proposals ("everything is looking good"), so **Q1–Q4 and Q6–Q11 are accepted as proposed**: 26.1.2, the light-gem-as-truth shadow split, a crawl toggle, the spyglass/goggles UI split, the compound command post, our own combat system, the Bloodlust/Serenity working names, the stage placement, the lamplighter, and the teppo as an NPC-only siege weapon. **Q5 (factions)** was answered on 2026-10-09 (below).
 
 Answer these with their IDs (Q1, Q2, …), the same way as before. A one-word "agree" is fine where there's a proposal.
 
@@ -247,6 +247,8 @@ Is it OK for the light gem to be the source of truth early on, with visual shado
 Agree?
 
 **Q5 ★ Factions.** Is the player a Shinobi, so Shinobi NPCs are allies, recruits and contract givers? Or are the Shinobi a rival clan you also infiltrate? And is "Path of Shogunate" just a combat playstyle name, or does it mean siding with the Shogunate?
+
+> **Answered (2026-10-09):** the player is not necessarily a Shinobi. Shinobi can be allies, and likewise the Shogunate: most of each faction are enemies, but some may aid the player. So factions are not player-aligned by default; allegiance is per NPC or group (S9 propagation and S11 disguises build on that). Reading of the answer (say if wrong): "Path of Shogunate" stays a playstyle name, not a side.
 
 **Q6 What does "destroyed" mean for a compound?** Proposal: each compound has a **command post** (captain + war banner/supply cache). Defeat or KO the captain *and* burn or steal the banner, and the compound is **broken**: no more respawns. Should it be re-occupied after a long time (e.g. tens of in-game days) so the world doesn't empty out?
 
