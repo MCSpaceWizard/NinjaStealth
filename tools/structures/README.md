@@ -41,6 +41,12 @@ python3 tools/structures/import_schematics.py   # _incoming/schematics/*.schem -
   `block_map.json` does. The GameTest names any block that turns into air, which is how this was found.
 - No block entities or entities, so no loot yet. The script stops if a future schematic has any, until it's extended.
 
+## Sites (generated)
+
+`emergentstealth:sites/…` are not imported: `tools/compounds/sites.py` generates them (ground, foundations, terraces,
+walls, gates, stairs) as the base a large compound's modules stand on. Edit the script and rerun it rather than editing
+the `.nbt`; see doc 32 and [doc 33](../../docs/design/33-compound-terrain.md).
+
 ## Worldgen
 
 Each structure also has a jigsaw structure and template pool (`worldgen/structure/edo/`, `worldgen/template_pool/edo/`),

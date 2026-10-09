@@ -2,11 +2,10 @@
 import nbtlib, collections
 AIR = {'air','cave_air','void_air'}
 SOFT = ('fern','grass','petals','flower','poppy','dandelion','tulip','orchid','allium','bluet','daisy','cornflower','lilac','rose_bush','peony','sapling','torch','sign','banner','button','pressure_plate','carpet','door','gate','vine','sugar_cane','short_','tall_grass','tall_seagrass','leaf_litter','dead_bush','rail','ladder','snow')
-SOLIDISH_FEET = ('trapdoor',)  # trapdoors: treat as passable
 def is_passable(nm, pr):
     if nm in AIR or nm == 'light': return True
     if nm.endswith('_wall') or nm.endswith('fence') or 'sweet_berry' in nm or 'cobweb' in nm: return False
-    if nm.endswith('trapdoor'): return pr.get('open','false')=='true' or pr.get('half')=='top' and False or True
+    if nm.endswith('trapdoor'): return pr.get('open','false')=='true'  # what the game's pathfinding says
     if nm.endswith('_fence_gate'): return True  # NPCs open gates
     if nm.endswith('_door'): return True
     if nm=='water' or nm.endswith('_block') or nm.endswith('_planks'): return False
