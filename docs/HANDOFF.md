@@ -11,35 +11,31 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 
 3. If you have new files for Claude (structures, art), commit them to the repo first (see "Incoming files").
 
-## State at handoff (2026-10-08)
+## State at handoff (2026-10-09)
 
-- **`main` / release `v0.1.0` (Alpha 1):** stages S0–S7 (server side), S6 hearing, progression foundations and visual lighting. **56 GameTests pass.** Release notes: [CHANGELOG.md](../CHANGELOG.md).
-- **Unfinished feature branches.** Agents were stopped by API usage limits; each branch's last commit is marked **WIP** and may not compile:
+- **`main`:** v0.1.0 (Alpha 1) plus PR #1 (toolkit part A, S7 animation framework) and PR #2 (Sumi UI). Two merge breakages on `main` (invalid `en_us.json`, the `[animation]` config nested in `[ui]`) are fixed on `claude/fervent-babbage-jyh6r0`, which also carries the `claude/ui-framework` post-merge fixes.
+- **`claude/fervent-babbage-jyh6r0` (PR open):** S7 animation finished and checked in the real client (crawl, bodies, drag, carry, takedowns, first-person camera), bodies no longer float, flaky verbs tests fixed, test helpers (`/es npc knockout`, `/esphoto`). **82 GameTests pass.**
+- **Feature branches still to finish** (stopped by usage limits; the last commit is **WIP** and may not compile):
 
 | Branch | What's done | What's left |
 |---|---|---|
-| `claude/toolkit-a` | **Merged into `claude/fervent-babbage-jyh6r0`** (tests green, 64). Wheel (R), quick use (V), particles, recipes, tests and the Thick Smoke skill hook are in | Play-test (TESTING.md "Beta toolkit, part A"), then a PR to `main` |
 | `claude/toolkit-b` | Water/fire arrows, blowgun + sleep darts, locks/keys/Locksmith's Kit, lockpicking minigame, spyglass tagging | WIP: GameTests, final tagging fix. Then merge. Also call `Skills.awardInsight(..., INSIGHT_LOCKPICK)` on a successful pick, and read `StealthStats` (`LOCKPICK_WINDOW`, `TAG_COUNT`) |
-| `claude/s7-animation` | Started: PAL dependency, pose framework, `NpcModel` | Most of doc 17 §8 / research-animation: body poses, crawl cycle, drag/carry poses, takedown clips, camera turning. Clip time must scale to `ActionPlayback.length` (takedown speed skills shorten it) |
 | `claude/visual-lighting` | Light nuance in progress: sky openness (`SkyCells`), penumbra, smoother falloff | WIP: finish, tests, light gem tiers, docs |
-| `claude/ui-framework` | **Merged into `main` (PR #2)**, then post-merge fixes on the branch: Sumi core (theme tokens, procedural paper/ink, mesh shapes, widgets, tweens, inertial scroll, swipe pages), config screen, skill tree (K), dialogue preview (`/es dev dialogue`, `/esui`), 11 `ui/*` GameTests, screenshots in `docs/screenshots/ui/` | Merge the post-merge fixes (broken `en_us.json`, `[ui]`/`[animation]` config nesting). User review of doc 31 §0. Later: text field, dropdown, list widgets; gamepad mapping; tool wheel and NPC spawner GUI on Sumi |
 
-## Next up (the user's latest requests, in priority order)
+## Next up (the user's priorities, 2026-10-09)
 
-1. **Finish and merge** toolkit A and B, then animation, light nuance and UI, each with tests green.
-2. **Structures from the builder.** The user's builder made `.nbt` structures and worldgen files, currently on the user's PC (`G:\Coding\EmergentStealthMCMod\_incoming`). **Ask the user to commit them to `_incoming/` in the repo** (a cloud session can't read local drives).
-   - Then double-check them: NBT validity, data version, block palette, size, jigsaw/worldgen JSON correctness.
-   - Move them into `data/emergentstealth/structure/` and `worldgen/`.
-3. **Structure placement tool:** an item or command to preview and place any of our structures (rotation, mirror, ghost preview), for browsing the builder's work.
-4. **Zone tool and compound authoring** (S9 zone design, pulled forward). The aim is building full compounds:
-   - mark zones (public / restricted / hostile)
-   - place guard posts and patrol routes (the S5 baton already does routes)
-   - NPC spawn points with archetypes and schedules
-   - lights
-   - **save and load a compound as one config file** (datapack JSON + structure) so it can be re-placed anywhere
-5. **NPC spawner tool with a GUI:** pick an archetype, behaviour, route/post and schedule, then place. Built on Sumi.
-6. **Distinct NPC placeholders:** archetypes currently differ only by colour. Give each a distinct silhouette and value in the programmer art (hats, armour shapes, sashes, banners) per [STYLE_GUIDE](art/STYLE_GUIDE.md) §4. Extend `tools/programmer_art/generate.py` with part shapes.
-7. **Artist support:** [STYLE_GUIDE](art/STYLE_GUIDE.md) and the ordered [TEXTURE_LIST](art/TEXTURE_LIST.md) exist. Keep the list updated as textures are added.
+1. **Structures, structure viewer and zone authoring.**
+   - The builder's structures arrived as an upload (21 `.nbt` plus worldgen JSON). Check them (NBT validity, data version, palette, size, worldgen JSON) and move them into `data/emergentstealth/structure/` and `worldgen/`.
+   - **Structure placement tool:** preview and place any structure (rotation, mirror, ghost preview) to browse the builder's work.
+   - **Zone tool and compound authoring** (S9 zone design, pulled forward): mark zones (public / restricted / hostile), guard posts and patrol routes (the S5 baton does routes), NPC spawn points with archetypes and schedules, lights, and **save and load a compound as one config file** (datapack JSON + structure).
+   - **NPC spawner tool with a GUI** (pick archetype, behaviour, route/post, schedule), built on Sumi.
+2. **Toolkit B:** finish and merge (see the table).
+3. **Light nuance:** finish and merge.
+4. Then **more weapons and armour** for the player, and **NPC work** (distinct placeholder silhouettes per archetype: hats, armour shapes, sashes, banners per [STYLE_GUIDE](art/STYLE_GUIDE.md) §4; extend `tools/programmer_art/generate.py` with part shapes).
+5. **Sumi must stay easy to extend and modify** (user, 2026-10-09): keep a short "how to add a screen / widget / theme token" guide current in doc 31, and build new GUIs (tool wheel, spawner) from its widgets rather than one-offs.
+6. **Artist support:** keep [TEXTURE_LIST](art/TEXTURE_LIST.md) updated as textures are added.
+
+**Getting files to Claude:** upload a zip in the chat (it lands in the session's uploads) or commit it to `_incoming/`.
 
 ## UI direction (user, 2026-10-08)
 
@@ -65,6 +61,12 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 - The test server is on **Peaceful**, where mobs can't target players. Combat tests set Normal difficulty.
 - Test players come from `TestPlayers.spawn`. They aren't ticked by the server, so tick logic must be callable directly (e.g. `BodyCarrying.tick`, `Takedowns.checkAirTakedown`).
 - `GameTestHelper.relativePos` is buggy in 26.1.2: subtract `absolutePos(BlockPos.ZERO)` instead.
+- Vanilla only re-fits a changed hitbox after an entity's first tick: test size changes a few ticks after spawning.
+- `visual/shadow_matches_gameplay` failed once in about ten runs (2026-10-09); not investigated yet.
+
+**Merging branches:** append-only shared files (`en_us.json`, `textures.json`, `ESConfig`, registries) can merge into something broken without a conflict (a lost comma, a lost `pop()`). After every merge, run the GameTests (`ui/lang_file_valid` parses the lang file strictly) and check `ESConfig` push/pop pairs.
+
+**Real client (animation checks):** `/esphoto <yaw> [pitch]` orbits the third-person camera; `/es npc knockout` makes bodies. Give each concurrent client its own Xvfb display (`XIN_DISPLAY`/`DISPLAY`). A container restart kills Xvfb and the client: check with `pgrep -a Xvfb` before driving it, or the client loops on an early-display y/n prompt and fills the log.
 
 **Code conventions:**
 - **Payloads:** always use `ESNetwork.sendIfSupported`. Attachment syncs use the `hasMod` predicate. Players without our channel would otherwise crash the server.
