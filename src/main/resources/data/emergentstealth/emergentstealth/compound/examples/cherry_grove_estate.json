@@ -1,0 +1,198 @@
+{
+  "structures": [
+    {
+      "template": "emergentstealth:cherrygrove/gatehouse",
+      "offset": [0, -8, 0],
+      "ground": 7
+    },
+    {
+      "template": "emergentstealth:cherrygrove/teahouse",
+      "offset": [-2, -8, -35],
+      "ground": 7
+    }
+  ],
+  "zones": [
+    {
+      "name": "teahouse",
+      "access": "restricted",
+      "boxes": [
+        [
+          [6, -1, -27],
+          [30, 20, -11]
+        ]
+      ]
+    },
+    {
+      "name": "gatehouse",
+      "access": "restricted",
+      "boxes": [
+        [
+          [9, -1, 4],
+          [33, 24, 32]
+        ]
+      ],
+      "hours": {
+        "from": 18,
+        "to": 6
+      }
+    }
+  ],
+  "routes": [
+    {
+      "name": "garden",
+      "mode": "loop",
+      "waypoints": [
+        {
+          "pos": [5, 0, 33],
+          "wait_ticks": 40,
+          "look_yaw": 0
+        },
+        {
+          "pos": [5, 0, 3]
+        },
+        {
+          "pos": [3, 0, -5],
+          "wait_ticks": 40,
+          "look_yaw": 180
+        },
+        {
+          "pos": [36, 0, -6]
+        },
+        {
+          "pos": [38, 0, -23],
+          "wait_ticks": 40,
+          "look_yaw": -90
+        },
+        {
+          "pos": [36, 0, -7]
+        },
+        {
+          "pos": [28, 0, 4]
+        },
+        {
+          "pos": [30, 0, 34],
+          "wait_ticks": 40,
+          "look_yaw": 0
+        }
+      ]
+    },
+    {
+      "name": "front",
+      "mode": "pingpong",
+      "waypoints": [
+        {
+          "pos": [1, 0, 35],
+          "wait_ticks": 60,
+          "look_yaw": 0
+        },
+        {
+          "pos": [20, 0, 33],
+          "wait_ticks": 40,
+          "look_yaw": 0
+        },
+        {
+          "pos": [31, 0, 35],
+          "wait_ticks": 60,
+          "look_yaw": 0
+        }
+      ]
+    }
+  ],
+  "spawns": [
+    {
+      "archetype": "emergentstealth:ashigaru",
+      "pos": [20, 0, 33],
+      "facing": 0,
+      "schedule": [
+        {
+          "from": 0,
+          "to": 0,
+          "activity": {
+            "type": "route",
+            "route": "front"
+          }
+        }
+      ]
+    },
+    {
+      "archetype": "emergentstealth:ashigaru",
+      "pos": [5, 0, 33],
+      "facing": 180,
+      "schedule": [
+        {
+          "from": 6,
+          "to": 18,
+          "activity": {
+            "type": "route",
+            "route": "garden"
+          }
+        },
+        {
+          "from": 18,
+          "to": 6,
+          "activity": {
+            "type": "post",
+            "pos": [5, 0, 33],
+            "yaw": 0
+          }
+        }
+      ]
+    },
+    {
+      "archetype": "emergentstealth:ashigaru",
+      "pos": [36, 0, -6],
+      "facing": 180,
+      "schedule": [
+        {
+          "from": 18,
+          "to": 6,
+          "activity": {
+            "type": "route",
+            "route": "garden"
+          }
+        },
+        {
+          "from": 6,
+          "to": 18,
+          "activity": {
+            "type": "post",
+            "pos": [38, 0, -23],
+            "yaw": -90
+          }
+        }
+      ]
+    },
+    {
+      "archetype": "emergentstealth:taisho",
+      "pos": [18, 2, -15],
+      "facing": 0,
+      "schedule": [
+        {
+          "from": 0,
+          "to": 0,
+          "activity": {
+            "type": "post",
+            "pos": [18, 2, -15],
+            "yaw": 0
+          }
+        }
+      ]
+    },
+    {
+      "archetype": "emergentstealth:townsfolk",
+      "pos": [8, 0, -5],
+      "facing": 0,
+      "schedule": [
+        {
+          "from": 0,
+          "to": 0,
+          "activity": {
+            "type": "wander",
+            "radius": 8
+          }
+        }
+      ],
+      "count": 2
+    }
+  ]
+}
