@@ -53,4 +53,8 @@ public final class ESItems {
             com.mcspacewizard.emergentstealth.tool.BlindingPowderItem::new, p -> p.stacksTo(8));
     public static final DeferredItem<com.mcspacewizard.emergentstealth.tool.CaltropsItem> CALTROPS = ITEMS.registerItem("caltrops",
             com.mcspacewizard.emergentstealth.tool.CaltropsItem::new, p -> p.stacksTo(8));
+
+    // Authoring tools (design doc 32): creative and game masters only, checked on the server.
+    /** Browse and place structures with a ghost preview. */
+    public static final DeferredItem<Item> SURVEYORS_PLAN = ITEMS.registerItem("surveyors_plan", Item::new, p -> p.stacksTo(1));
 }

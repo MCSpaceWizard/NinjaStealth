@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.mcspacewizard.emergentstealth.EmergentStealth;
+import com.mcspacewizard.emergentstealth.authoring.StructureCatalog;
+import com.mcspacewizard.emergentstealth.authoring.StructurePlacement;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -48,16 +50,104 @@ public final class StructureTests {
     private static final Map<String, Integer> EXPECTED = Map.of("structure/edo", 21, "structure/cherrygrove", 17);
     private static final Set<String> AIR = Set.of("minecraft:air", "minecraft:cave_air", "minecraft:void_air");
 
+    private static final Map<Identifier, java.util.function.Consumer<GameTestHelper>> TESTS = Map.of(
+            TEST, StructureTests::importsLoad,
+            EmergentStealth.id("structures/place_and_undo"), StructureTests::placeAndUndo,
+            EmergentStealth.id("structures/preview_data"), StructureTests::previewData);
+
     @SubscribeEvent
     static void onRegister(RegisterEvent event) {
-        event.register(Registries.TEST_FUNCTION, TEST, () -> StructureTests::importsLoad);
+        TESTS.forEach((id, function) -> event.register(Registries.TEST_FUNCTION, id, () -> function));
     }
 
     @SubscribeEvent
     static void onRegisterGameTests(RegisterGameTestsEvent event) {
         Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(EmergentStealth.id("structures"));
-        event.registerTest(TEST, new FunctionGameTestInstance(ResourceKey.create(Registries.TEST_FUNCTION, TEST),
-                new TestData<>(environment, ARENA, 20, 0, true)));
+        for (Identifier id : TESTS.keySet()) {
+            event.registerTest(id, new FunctionGameTestInstance(ResourceKey.create(Registries.TEST_FUNCTION, id),
+                    new TestData<>(environment, ARENA, 20, 0, true)));
+        }
+    }
+
+    /** Placing a structure and undoing it puts every block (and block entity) back; the structure's chest is gone. */
+    static void placeAndUndo(GameTestHelper helper) {
+        net.minecraft.server.level.ServerLevel level = helper.getLevel();
+        Identifier shrine = EmergentStealth.id("edo/small_shrine_v1");
+        // High above the arena, clear of neighbouring tests.
+        BlockPos origin = helper.absolutePos(new BlockPos(0, 20, 0));
+        java.util.UUID author = java.util.UUID.randomUUID();
+        BlockPos marker = origin.offset(2, 2, 2);
+        level.setBlock(marker, Blocks.GOLD_BLOCK.defaultBlockState(), 3);
+        StructureTemplate template = server(helper).getStructureManager().get(shrine).orElseThrow();
+        var box = StructurePlacement.place(level, author, shrine, origin, net.minecraft.world.level.block.Rotation.CLOCKWISE_90,
+                net.minecraft.world.level.block.Mirror.NONE);
+        helper.assertTrue(box != null, "The shrine should place");
+        int chests = 0;
+        int solid = 0;
+        for (BlockPos pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
+            if (!level.getBlockState(pos).isAir()) {
+                solid++;
+            }
+            if (level.getBlockState(pos).is(Blocks.CHEST)) {
+                chests++;
+            }
+        }
+        helper.assertTrue(solid > 100 && chests == 1, "Placed: " + solid + " solid blocks and " + chests + " chests");
+        helper.assertTrue(box.getXSpan() == template.getSize().getZ() && box.getZSpan() == template.getSize().getX(),
+                "Rotating 90° swaps the footprint");
+        // Water that "flowed" out of the structure, and petals standing on it, which mustn't pop off as items.
+        BlockPos spill = new BlockPos(box.maxX() + 3, box.minY(), box.minZ());
+        level.setBlock(spill, Blocks.WATER.defaultBlockState(), 3);
+        BlockPos petals = new BlockPos(box.minX(), box.maxY() + 1, box.minZ());
+        level.setBlock(petals.below(), Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+        level.setBlock(petals, Blocks.PINK_PETALS.defaultBlockState(), 3);
+        helper.assertTrue(StructurePlacement.undo(author) != null, "Undo should restore");
+        helper.assertTrue(level.getBlockState(spill).isAir(), "Undo should take back water that flowed out, found " + level.getBlockState(spill));
+        helper.assertTrue(level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, net.minecraft.world.phys.AABB.of(box).inflate(2)).isEmpty(),
+                "Undo shouldn't drop items");
+        for (BlockPos pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
+            boolean expectGold = pos.equals(marker);
+            helper.assertTrue(level.getBlockState(pos).is(expectGold ? Blocks.GOLD_BLOCK : Blocks.AIR),
+                    "After undo " + pos + " should be " + (expectGold ? "gold" : "air") + ", is " + level.getBlockState(pos));
+            helper.assertTrue(level.getBlockEntity(pos) == null, "No block entity left at " + pos);
+        }
+        helper.assertTrue(StructurePlacement.undo(author) == null, "Only one level of undo");
+        helper.succeed();
+    }
+
+    /** The ghost preview's data has no air, splits under the payload limit and joins back exactly. */
+    static void previewData(GameTestHelper helper) {
+        Identifier id = EmergentStealth.id("cherrygrove/teahouse");
+        byte[] bytes = StructureCatalog.previewBytes(server(helper), id);
+        helper.assertTrue(bytes != null && bytes.length > 0, "Preview bytes");
+        CompoundTag tag;
+        try {
+            tag = NbtIo.readCompressed(new java.io.ByteArrayInputStream(bytes), NbtAccounter.unlimitedHeap());
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
+        ListTag palette = tag.getListOrEmpty("palette");
+        ListTag blocks = tag.getListOrEmpty("blocks");
+        for (int i = 0; i < blocks.size(); i++) {
+            String name = palette.getCompoundOrEmpty(blocks.getCompoundOrEmpty(i).getIntOr("state", 0)).getStringOr("Name", "");
+            helper.assertTrue(!AIR.contains(name), "Preview should hold no air, found " + name);
+        }
+        StructureTemplate template = server(helper).getStructureManager().get(id).orElseThrow();
+        StructurePlaceSettings settings = new StructurePlaceSettings();
+        int air = template.filterBlocks(BlockPos.ZERO, settings, Blocks.AIR).size();
+        int total = template.getSize().getX() * template.getSize().getY() * template.getSize().getZ();
+        helper.assertTrue(blocks.size() == total - air, "Preview has " + blocks.size() + " blocks, the template " + (total - air) + " solid");
+        List<byte[]> parts = StructureCatalog.split(bytes, 1000);
+        helper.assertTrue(parts.size() == (bytes.length + 999) / 1000, "Split into 1000-byte parts");
+        helper.assertTrue(java.util.Arrays.equals(StructureCatalog.join(parts.toArray(new byte[0][])), bytes), "Join restores the bytes");
+        byte[][] missing = parts.toArray(new byte[0][]);
+        missing[1] = null;
+        helper.assertTrue(StructureCatalog.join(missing) == null, "A missing part means not complete yet");
+        helper.succeed();
+    }
+
+    private static MinecraftServer server(GameTestHelper helper) {
+        return helper.getLevel().getServer();
     }
 
     static void importsLoad(GameTestHelper helper) {
