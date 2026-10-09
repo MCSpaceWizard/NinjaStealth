@@ -48,6 +48,23 @@ Design: [doc 31](design/31-ui-framework.md) §0. Geometric shapes drawn in code,
 | U.12 | Theming | Resource pack with `assets/emergentstealth/ui/theme.json` overriding e.g. `"colors": {"paper": "#f4efe2"}`, or `textures/gui/sumi/paper.png` | Only that token changes; everything else keeps the defaults. A paper PNG replaces the generated grain |
 | U.13 | Dedicated server | `./gradlew runServer` | Starts normally (no client classes on the server) |
 
+## Compounds: author, save, place turned or mirrored 🧪
+
+Design doc [32](design/32-authoring-tools.md) §3. A compound is structures plus guards, patrol routes and zones, saved as one file and placed anywhere, turned or mirrored. Authoring is by command for now (the Compound Ledger item comes later). Creative with cheats. Screenshot: [compound_copy.png](screenshots/structures/compound_copy.png).
+
+**Automated checks (already passing):** `compounds/transform_algebra`, `compounds/file_format` (JSON both ways; doc 32's example parses), `compounds/round_trip` (at all 4 rotations, mirrored or not: the chest, the route's first waypoint, the guard, its night post and the zone all line up, and undo takes everything back).
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| C.1 | Start | Place a structure (Surveyor's Plan or `/es structure place emergentstealth:edo/small_shrine_v1 ~ ~ ~`), then `/es compound start shrine_post` | "Authoring compound emergentstealth:shrine_post from …" |
+| C.2 | More modules | Place a second structure (any way) | "Added to compound … (2 structures)" |
+| C.3 | Markers | `/es npc spawn emergentstealth:ashigaru` beside it, `/es compound add npcs @e[type=emergentstealth:stealth_npc,distance=..30]`; make a route with the patrol baton and `/es compound add route <name>`; `/es compound add zone yard restricted <corner> <corner>` | Each reports what it added; `/es compound info` lists the structures and counts |
+| C.4 | Save | `/es compound save` | The path of `generated/emergentstealth/compounds/shrine_post.json` in the world; the file is readable JSON |
+| C.5 | Place turned | `/es compound place shrine_post ~20 ~ ~ 180 front_back` | The same layout, turned and mirrored; the guard stands at the matching spot, facing the matching way; `/es compound copies` lists copy #1 |
+| C.6 | Patrol in the copy | If you added a route: wait for the guard's route hours (`/time set noon`) | It walks the copy's version of the route (`/es patrol list` shows `shrine_post#1/<name>`) |
+| C.7 | Undo | `/es structure undo` | The copy's blocks and guard are gone; `/es compound copies` shows none |
+| C.8 | Export | `/es compound export shrine_post` | Written to `run/compounds/emergentstealth/shrine_post.json`, ready to go in `data/emergentstealth/emergentstealth/compound/` |
+
 ## Structure viewer: browse, preview, place, undo 🧪
 
 Design doc [32](design/32-authoring-tools.md) §1. Browse every structure (ours first, then vanilla), see a translucent ghost of it in the world, and place it. Needs **creative mode with cheats** (the structure block rule). Screenshots: [docs/screenshots/structures](screenshots/structures) (`viewer_*.png`).

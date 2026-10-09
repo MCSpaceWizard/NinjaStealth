@@ -2,6 +2,8 @@
 
 > **2026-10-09.** The user's top priority: browse the builder's structures and turn them into playable compounds. This pulls the zone tool forward from S9 and the NPC spawner GUI forward from S19. Zone *gameplay* (alert levels, propagation, bells) stays in S9 (doc 18); this doc adds the tools, the data and a minimal trespass rule.
 
+**Progress:** §5 steps 1 (structure viewer) and 2 (compound format, save, place) are done; next is step 3, the zone tool and trespass rule.
+
 **Goal:** place any structure, mark it up (zones, posts, patrol routes, NPC spawns, lights), **save it as one compound file**, and re-place it anywhere, rotated or mirrored, fully working.
 
 **Building material (2026-10-09):** the builder's 21 structures (`emergentstealth:edo/…`, vanilla stand-ins for their modded blocks) and 17 **Cherry Grove modules** (`emergentstealth:cherrygrove/…`, vanilla). The modules are designed to be pieced together into large compounds, so a compound can hold several templates, each with its own offset, rotation and **ground line** (each module brings its own ground and water, which must sit at terrain level). The same modules feed S15's compound generator. See [tools/structures](../../tools/structures/README.md).
@@ -53,7 +55,7 @@ A **compound** is one or more structure templates plus markers, all relative to 
   "structures": [{ "template": "emergentstealth:edo/samurai_mini_fort", "offset": [0, 0, 0], "rotation": "none", "ground": 0 },
                  { "template": "emergentstealth:cherrygrove/teahouse", "offset": [52, -3, 6], "rotation": "clockwise_90", "ground": 3 }],
   "zones": [{ "name": "courtyard", "access": "restricted", "boxes": [[[2, 0, 2], [43, 10, 43]]], "hours": null }],
-  "routes": [{ "name": "wall_walk", "mode": "loop", "waypoints": [{ "pos": [4, 5, 4], "wait": 40, "look": 90 }] }],
+  "routes": [{ "name": "wall_walk", "mode": "loop", "waypoints": [{ "pos": [4, 5, 4], "wait_ticks": 40, "look_yaw": 90 }] }],
   "spawns": [{ "archetype": "emergentstealth:ashigaru", "pos": [10, 1, 12], "facing": 180,
                "schedule": [{ "from": 6, "to": 18, "activity": { "type": "route", "route": "wall_walk" } },
                             { "from": 18, "to": 6, "activity": { "type": "post", "pos": [10, 1, 12], "yaw": 180 } }] }],
@@ -61,7 +63,15 @@ A **compound** is one or more structure templates plus markers, all relative to 
 }
 ```
 
-**Authoring flow:**
+> **Implemented (2026-10-09):** `structures`, `zones`, `routes` (the patrol route format: `wait_ticks`, `look_yaw`, `relight`) and `spawns` (plus optional `behaviour` and `count`). `lights` comes with the lamplighter in step 5. Every field but a module's `template` is optional; `offset`, `rotation`, `mirror` and `ground` default to none. Rotations are `none`, `clockwise_90`, `180`, `counterclockwise_90`; mirrors are `none`, `left_right`, `front_back`. Saved files write positions as `[x, y, z]` on one line. Code: `authoring/Compound`, `Compounds`, `CompoundPlacer`, `Transform`.
+
+**Authoring flow** (built with commands first, 2026-10-09; the Compound Ledger item will drive the same steps):
+- `/es compound start <name> [origin]` opens a draft at your last placed structure (it becomes the first module) or at `origin`. Every structure you place while the draft is open joins it.
+- `/es compound add route <route>` copies a patrol route made with the baton; `add npcs <targets>` records NPCs as they stand (archetype, place, facing, behaviour, schedule); `add zone <name> <access> <from> <to> [hours]` adds a box zone.
+- `/es compound info`, `save`, `cancel`. Then `place <name> [pos] [rotation] [mirror]`, `list`, `copies`, `export <name>`, `remove <copy>`. Undo (`/es structure undo`) takes back a whole placed copy.
+- Not yet: re-saving edited templates on save, `reset`, automatic ground lines, and the browser listing compounds.
+
+The planned flow:
 1. Place a structure with the viewer.
 2. Use the **Compound Ledger** item on it to start a compound. It takes the structure's bounds and origin.
 3. Add markers with the tools: the zone rope, the patrol baton (its routes now belong to the compound), and the spawner tool (§4). Lights are found automatically.

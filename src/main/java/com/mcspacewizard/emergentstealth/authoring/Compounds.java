@@ -81,9 +81,12 @@ public final class Compounds {
         return file;
     }
 
+    /** Arrays of plain numbers (positions) on one line; Gson's pretty printing gives each number its own. */
+    private static final java.util.regex.Pattern NUMBER_ARRAY = java.util.regex.Pattern.compile("\\[\\s*(-?[0-9.]+(?:,\\s*-?[0-9.]+)*)\\s*]");
+
     public static String toJson(Compound compound) {
         JsonElement json = Compound.CODEC.encodeStart(JsonOps.INSTANCE, compound).getOrThrow();
-        return GSON.toJson(json);
+        return NUMBER_ARRAY.matcher(GSON.toJson(json)).replaceAll(match -> "[" + match.group(1).replaceAll(",\\s*", ", ") + "]");
     }
 
     private static void write(Path file, Compound compound) throws IOException {

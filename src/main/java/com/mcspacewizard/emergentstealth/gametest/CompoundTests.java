@@ -122,6 +122,7 @@ public final class CompoundTests {
         String json = Compounds.toJson(compound);
         Compound back = Compound.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(json)).getOrThrow();
         helper.assertTrue(back.equals(compound), "JSON round trip:\n" + json + "\nread back as " + back);
+        helper.assertTrue(json.contains("\"pos\": [2, 2, 3]"), "Positions are written on one line:\n" + json);
 
         String example = """
                 { "structures": [{ "template": "emergentstealth:edo/samurai_mini_fort" },
