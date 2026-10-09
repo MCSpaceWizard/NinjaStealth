@@ -48,6 +48,19 @@ Design: [doc 31](design/31-ui-framework.md) §0. Geometric shapes drawn in code,
 | U.12 | Theming | Resource pack with `assets/emergentstealth/ui/theme.json` overriding e.g. `"colors": {"paper": "#f4efe2"}`, or `textures/gui/sumi/paper.png` | Only that token changes; everything else keeps the defaults. A paper PNG replaces the generated grain |
 | U.13 | Dedicated server | `./gradlew runServer` | Starts normally (no client classes on the server) |
 
+## Builder structures (imported) 🧪
+
+The builder's 21 structures, imported with vanilla stand-ins for their modded blocks (see [tools/structures](../tools/structures/README.md)). Placement only: they don't generate in new worlds yet. Screenshots: [docs/screenshots/structures](screenshots/structures).
+
+**Automated check (already passing):** `structures/edo_imports_load`: all 21 load, no block turned into air, no spawners, every chest's loot table exists.
+
+| # | Feature | How to test | Expected |
+|---|---|---|---|
+| B.1 | Place one | `/place template emergentstealth:edo/mini_castle ~ ~ ~` (also `buddhist_temple`, `samurai_mini_fort`, `onsen`, `kofun`, `small_shrine_v1`…`v6`, the statues) | It appears complete: dark wood, deepslate-tile roofs, stone bases, white plaster, red shrine timbers, lanterns lit |
+| B.2 | Jigsaw version | `/place structure emergentstealth:edo/small_shrine_v3` | Placed on the surface with the terrain blended round it |
+| B.3 | Contents | Open chests in a shrine and a fort | Placeholder loot (paper, candles, food; rarely smoke bombs, caltrops or tabi). No illagers in the mini fort, no spawners in the kofun or cemetery |
+| B.4 | Look | Walk round a few | Report stand-ins that look wrong; `tools/structures/block_map.json` is the table to change |
+
 ## Beta toolkit, part A: pebble, smoke bomb, firecracker, blinding powder, caltrops 🧪
 
 **Automated checks (already passing):** 8 more GameTests (64 total):
