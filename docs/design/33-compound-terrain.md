@@ -1,6 +1,6 @@
-# 33 — Compound terrain: ground to stand on, and fitting real worlds 📄 proposal, for review
+# 33 — Compound terrain: ground to stand on, and fitting real worlds ⏳ approved, in progress
 
-> **2026-10-09.** The user: large compounds need natural terrain to rest on, and we need to know how they'll meet the real terrain of a world once they're in worldgen. This note sets out what exists, the options, and a recommendation. Nothing here is built yet except the **site** in §2 (it ships with the Takamori castle example).
+> **2026-10-09.** The user: large compounds need natural terrain to rest on, and we need to know how they'll meet the real terrain of a world once they're in worldgen. This note sets out what exists, the options, and a recommendation. Built so far: the **site** in §2 and the nature pass and first site pieces in §6 (all in the Takamori castle example). The user answered §5 the same day.
 
 ## 1. The problem
 
@@ -53,15 +53,61 @@ The compound generator picks *where* and *how*: sample the surface across the fo
 ## 4. Recommendation
 
 1. **Now:** sites (A) for authored large compounds, as in the castle. Done on this branch.
-2. **Next, small:** the terrain-fitting pass (B) in `CompoundPlacer`, with the `terrain` block in the compound JSON and an `exact` option on `/es compound place` to skip it. This also cleans up the odd placement on uneven ground, and the same code serves worldgen.
+2. **Next, small:** the terrain pass (B) in `CompoundPlacer`, with the `terrain` block in the compound JSON and a mode on `/es compound place`:
+   - `fit` (default): place **alongside** the terrain. Fill down under the footprint, cut back what pokes in, and blend a slope in the ring round it; the world outside the ring is untouched.
+   - `replace`: **replace** the terrain. Clear and flatten the footprint plus the ring to the compound's ground line and lay the site's own ground there (the castle's grass and foundation), so the compound brings its landscape with it.
+   - `exact`: the templates only, as now.
+   This also cleans up the odd placement on uneven ground, and the same code serves worldgen.
 3. **Worldgen (S15):** our own structure type, `emergentstealth:compound`, that places a compound like the command does:
    - choose the spot by sampling the heightmap over the footprint (reject steep or underwater spots);
    - use the terrain adaptation in C where it works for our pieces, and pass B for the rest;
    - register routes and zones and spawn the garrison when the chunk first loads near a player (structure generation can't touch saved data or spawn our NPCs safely).
 4. **Later:** terrain-aware terraces (D) with the compound generator.
 
-## 5. Questions for the user
+## 5. Decisions (user, 2026-10-09)
 
-1. **Placing by command:** fit to the terrain by default (B), with `exact` to skip, or keep placement exact and fit only on request? *Recommendation: fit by default.*
-2. **Worldgen first step:** large compounds only on fairly flat ground (spot rejection plus fitting), with terrain-following hill castles later? *Recommendation: yes.*
-3. **Water:** should castle sites bring their own moat (needs a ring of extra space and a water level that agrees with the world), or leave moats to compounds placed by rivers? *Recommendation: moats as an optional site piece, used where the site is next to water.*
+1. **Placing by command** fits to the terrain by default, with an option to **replace** the terrain instead (§4.2: `fit`, `replace`, `exact`).
+2. **Worldgen** starts with fairly flat spots only; castles that follow real hills come later.
+3. **Moats** become an optional site piece.
+4. The wall design is liked; its plaster-and-timber top was too short. Now: two blocks of plaster with posts every 8, loopholes at eye height every 4, a timber band, a tile cap and a tiled eave over the walk (guards see out through the loopholes, and a crouching player behind the parapet is hidden).
+5. Sites should look less dead and flat: natural noise (grass, flowers, leaves, trees) and a list of small site pieces to place procedurally or have the builder make (§6).
+
+## 6. Nature and site pieces
+
+### 6.1 The nature pass (built)
+`Site.nature` dresses a grass surface after everything else is placed. Smooth value noise (`smooth`) makes patches rather than salt-and-pepper:
+- **Grass and ferns** in patches, tall grass now and then, a few blades anywhere.
+- **Flower clusters**, one kind per cluster (poppy, dandelion, cornflower, bluet, daisy, allium, lily of the valley).
+- **Under trees:** pink petals round cherries, leaf litter round spruce and oak.
+- **Worn ground:** coarse dirt and moss in a few spots; **ragged path edges** (grass creeping into the gravel, the odd cobble).
+- **Shrubs** (azalea, some flowering) in clumps along the inside foot of the curtain wall, kept clear of gates and stairs.
+Plants are only placed on grass with air above, so paths, stairs and markers stay clear; the marker checker counts plants as passable, like the game.
+
+### 6.2 Site pieces (points of interest)
+Small set pieces that give a site landmarks, cover and life. Generated ones are methods on `Site` (one call each, with the surface height they stand on); detailed ones are better hand-built by the builder and placed as modules.
+
+| Piece | Status | Gameplay |
+|---|---|---|
+| Stone lantern (toro) | ✅ generated | A light the lamplighter relights; snuff it for shadow |
+| Garden pond (stone rim, lily pads) | ✅ generated | Blocks a straight line; water to hide in later |
+| Well (roof, chain) | ✅ generated | A landmark; later a water source and a hiding spot |
+| Wayside shrine (hokora) | ✅ generated | A small light and an offering; a meeting point for townsfolk |
+| Bamboo stand | ✅ generated | Dense cover and a sound mask when walking through it (S6 masking) |
+| Boulder | ✅ generated | Low cover |
+| Woodpile, hay bales | ✅ generated | Cover; hay later softens a drop |
+| Trees (spruce, oak, cherry) | ✅ generated (simple) | Cover and climbing later; the builder's trees would look better |
+| Moat (decided, §5.3) | to do | A ring of water outside the wall, with a bridge at the gate |
+| Rock garden (raked gravel, set stones) | to do | Open ground: noisy gravel, no cover |
+| Training ground (straw targets, weapon racks) | to do | Where off-duty guards gather by day |
+| Stable, cart, sacks and crates | to do | Cover in the bailey; carts block lanes |
+| Watch fire / brazier | to do | A big light that guards tend |
+| Notice board, bell frame | to do | The bell for S9's alarms |
+| Bridges (arched, plank) | to do | Over ponds and moats |
+| Stepping stones, stone stairs on slopes | to do | Paths over uneven ground (for `fit`) |
+
+**Already in the mod as modules:** the builder's small shrines (`edo/small_shrine_v1`…`v6`), statues (buddha, kitsune, frog, villager, illager), the cemetery (`mini_cemetary`), the burial mound (`kofun`) and the onsen. A compound can place these on a site today.
+
+### 6.3 Placing them procedurally (next)
+Today the castle places its pieces by hand in `sites.py`. The next step is a **scatter rule** per site region: which pieces, how many per 100 blocks², how far from paths, markers, stairs and each other, and which region (bailey, terrace, garden) they belong to. The same rules feed S15's compound generator. Later they can move to data (a `site_piece` list in JSON) so map-makers can add their own.
+
+**Builder or generator?** Recommendation: keep generating the simple pieces in code (they're quick, and size and material are parameters), and ask the builder for the detailed hero pieces where a procedural one looks plain: trees (pines, maples, cherries), a stable, a training ground, a bridge, a bell frame, and a rock garden.

@@ -37,6 +37,16 @@ def noise(x, y, z, salt=''):
     return h[0] / 255.0
 
 
+def smooth(x, z, scale, salt=''):
+    """Value noise: `noise` on a grid `scale` blocks apart, blended between grid points (0..1, clumpy)."""
+    gx, gz = x // scale, z // scale
+    fx, fz = (x % scale) / scale, (z % scale) / scale
+    fx, fz = fx * fx * (3 - 2 * fx), fz * fz * (3 - 2 * fz)
+    a, b = noise(gx, 0, gz, salt), noise(gx + 1, 0, gz, salt)
+    c, d = noise(gx, 0, gz + 1, salt), noise(gx + 1, 0, gz + 1, salt)
+    return (a * (1 - fx) + b * fx) * (1 - fz) + (c * (1 - fx) + d * fx) * fz
+
+
 # Minecraft stair `facing` is the side the tall back is on: a flight climbing north uses facing=north.
 OPPOSITE = {'north': 'south', 'south': 'north', 'east': 'west', 'west': 'east'}
 STEP = {'north': (0, -1), 'south': (0, 1), 'east': (1, 0), 'west': (-1, 0)}
@@ -112,17 +122,64 @@ class Site:
         """A gravel path on the surface whose top block is at `top`."""
         self.fill(x0, top, z0, x1, top, z1, PATH)
 
-    def flowers(self, x0, z0, x1, z1, top, density=0.08):
-        """Scattered grass and ferns on the grass surface `top` (kept off paths)."""
+    def nature(self, x0, z0, x1, z1, top, trees=()):
+        """
+        Dresses the grass surface at `top` so it doesn't look mown: patches of grass and ferns, flower clusters
+        (one kind per cluster), petals under cherry trees and leaf litter under the rest, coarse dirt and moss
+        worn into the ground, and gravel paths with ragged edges. Patches come from smooth noise, so plants
+        clump the way they do in vanilla meadows. `trees` are (x, z, kind) to drop petals and litter around.
+        """
+        flowers = ['poppy', 'dandelion', 'cornflower', 'azure_bluet', 'oxeye_daisy', 'allium', 'lily_of_the_valley']
         for x in range(x0, x1 + 1):
             for z in range(z0, z1 + 1):
-                if self.get(x, top, z)[0] != 'minecraft:grass_block' or self.get(x, top + 1, z) != AIR:
+                ground = self.get(x, top, z)[0]
+                if self.get(x, top + 1, z) != AIR:
                     continue
-                n = noise(x, top, z, 'plants')
-                if n < density * 0.7:
+                if ground == 'minecraft:gravel':
+                    # Ragged path edges: grass creeping in, the odd cobble.
+                    if self._next_to(x, top, z, 'minecraft:grass_block') and noise(x, top, z, 'edge') < 0.25:
+                        self.set(x, top, z, block('coarse_dirt'))
+                    elif noise(x, top, z, 'cobble') < 0.05:
+                        self.set(x, top, z, block('cobblestone'))
+                    continue
+                if ground != 'minecraft:grass_block':
+                    continue
+                near = next((k for tx, tz, k in trees if (tx - x) ** 2 + (tz - z) ** 2 <= 9 and (tx, tz) != (x, z)), None)
+                worn = smooth(x, z, 9, 'worn')
+                patch = smooth(x, z, 7, 'patch')
+                bloom = smooth(x, z, 5, 'bloom')
+                n = noise(x, top, z, 'plant')
+                if worn > 0.85 and n < 0.5:
+                    self.set(x, top, z, block('coarse_dirt') if n < 0.35 else block('moss_block'))
+                elif near == 'cherry' and n < 0.55:
+                    self.set(x, top + 1, z, block('pink_petals', facing=('north', 'east', 'south', 'west')[int(n * 40) % 4],
+                                                  flower_amount=1 + int(n * 7) % 4))
+                elif near and n < 0.4:
+                    self.set(x, top + 1, z, block('leaf_litter', facing=('north', 'east', 'south', 'west')[int(n * 40) % 4],
+                                                  segment_amount=1 + int(n * 9) % 4))
+                elif bloom > 0.72 and n < 0.35:
+                    kind = flowers[int(smooth(x, z, 11, 'kind') * len(flowers) * 3) % len(flowers)]
+                    self.set(x, top + 1, z, block(kind))
+                elif patch > 0.55 and n < 0.55:
+                    if n < 0.06 and self.get(x, top + 2, z) == AIR:
+                        self.set(x, top + 1, z, block('tall_grass', half='lower'))
+                        self.set(x, top + 2, z, block('tall_grass', half='upper'))
+                    else:
+                        self.set(x, top + 1, z, block('fern') if n < 0.12 else block('short_grass'))
+                elif n < 0.05:
                     self.set(x, top + 1, z, block('short_grass'))
-                elif n < density:
-                    self.set(x, top + 1, z, block('fern'))
+
+    def _next_to(self, x, y, z, name):
+        return any(self.get(x + dx, y, z + dz)[0] == name for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+
+    def shrubs(self, cells, top, kind='azalea'):
+        """Knee-high bushes (persistent leaves) on grass cells at `top`, e.g. along the foot of a wall."""
+        for (x, z) in cells:
+            above = self.get(x, top + 1, z)[0]
+            if self.get(x, top, z)[0] == 'minecraft:grass_block' and above in ('minecraft:air', 'minecraft:short_grass',
+                                                                              'minecraft:fern'):
+                leaves = 'flowering_azalea_leaves' if noise(x, top, z, 'bloom') < 0.3 else kind + '_leaves'
+                self.set(x, top + 1, z, block(leaves, distance=1, persistent=True, waterlogged=False))
 
     # --- Terraces -----------------------------------------------------------------------------------------------
 
@@ -183,8 +240,8 @@ class Site:
     def outer_wall(self, x0, z0, x1, z1, base, walk):
         """
         A curtain wall around a rectangle, 4 thick: castle stone up to the wall walk's surface at `walk`, and on
-        the outermost ring a plaster parapet one block above the walk with a tile cap (a guard looks over it),
-        dark beams every 8 blocks.
+        the outermost ring a plaster parapet (dobei) two blocks above the walk, with dark posts every 8 blocks,
+        loopholes at eye height every 4, a timber band and a tile cap, and a tiled eave over the walk.
         """
         for x in range(x0, x1 + 1):
             for z in range(z0, z1 + 1):
@@ -195,11 +252,19 @@ class Site:
                     self.set(x, y, z, ishigaki(x, y, z) if y > base or ring == 0 else earth(x, y, z, base - y + 1))
                 if ring == 0:
                     along = x - x0 if z in (z0, z1) else z - z0
-                    self.set(x, walk + 1, z, BEAM if along % 8 == 0 else PLASTER)
-                    self.set(x, walk + 2, z, ROOF_SLAB)
+                    beam = along % 8 == 0
+                    self.set(x, walk + 1, z, BEAM if beam else PLASTER)
+                    # Loopholes (sama) at eye height, two between each pair of posts.
+                    self.set(x, walk + 2, z, BEAM if beam else AIR if along % 4 == 2 else PLASTER)
+                    self.set(x, walk + 3, z, block('stripped_dark_oak_wood', axis='x' if z in (z0, z1) else 'z'))
+                    self.set(x, walk + 4, z, ROOF_SLAB)
                 else:
                     self.set(x, walk, z, block('stone_bricks') if ring == 3 or noise(x, walk, z, 'walk') < 0.7
                              else block('polished_andesite'))
+                    if ring == 1:
+                        # The wall's tiled eave over the walk, sloping down to the inside.
+                        side = min((z - z0, 'north'), (z1 - z, 'south'), (x - x0, 'west'), (x1 - x, 'east'))[1]
+                        self.set(x, walk + 3, z, roof_stair(side))
 
     def corner_tower(self, x0, z0, walk, doors):
         """
@@ -369,6 +434,111 @@ class Site:
                             self.set(x + ax, top + 1 + dy, z + az,
                                      block(kind + '_leaves', distance=1, persistent=True, waterlogged=False))
 
+    # --- Site pieces (points of interest) -----------------------------------------------------------------------
+    # Small set pieces scattered over a site to give it life and give players cover and landmarks. Each takes the
+    # surface block height `top` it stands on. Catalogue and plans: docs/design/33-compound-terrain.md §6.
+
+    def pond(self, cx, cz, rx, rz, top):
+        """An oval garden pond: water two deep, a ragged stone rim, lily pads, ferns at the edge."""
+        for x in range(cx - rx - 1, cx + rx + 2):
+            for z in range(cz - rz - 1, cz + rz + 2):
+                d = ((x - cx) / (rx + 0.5)) ** 2 + ((z - cz) / (rz + 0.5)) ** 2 + (noise(x, top, z, 'shore') - 0.5) * 0.4
+                n = noise(x, top, z, 'pond')
+                if d < 0.55:
+                    self.set(x, top - 1, z, block('water', level=0))
+                    self.set(x, top, z, block('water', level=0))
+                    self.set(x, top - 2, z, block('mud') if n < 0.5 else block('clay'))
+                    if n < 0.08:
+                        self.set(x, top + 1, z, block('lily_pad'))
+                    else:
+                        self.set(x, top + 1, z, AIR)
+                elif d < 1.0:
+                    self.set(x, top, z, block('water', level=0))
+                    self.set(x, top - 1, z, block('mud'))
+                    self.set(x, top + 1, z, AIR)
+                elif d < 1.6:
+                    rim = block('mossy_cobblestone') if n < 0.4 else block('stone') if n < 0.6 else block('grass_block', snowy=False)
+                    self.set(x, top, z, rim)
+                    if rim[0] == 'minecraft:grass_block' and n > 0.85:
+                        self.set(x, top + 1, z, block('fern'))
+                    elif n < 0.1:
+                        self.set(x, top + 1, z, block('stone_slab', type='bottom', waterlogged=False))
+
+    def well(self, x, z, top):
+        """A 3x3 stone well with water, two posts and a little tiled roof; the bucket hangs on a chain."""
+        for dx in (-1, 0, 1):
+            for dz in (-1, 0, 1):
+                for y in range(top - 4, top + 1):
+                    self.set(x + dx, y, z + dz, block('cobblestone') if (dx, dz) != (0, 0) else block('water', level=0))
+                if (dx, dz) != (0, 0):
+                    self.set(x + dx, top + 1, z + dz, block('mossy_cobblestone_wall', east='none', north='none',
+                                                           south='none', west='none', up=True, waterlogged=False)
+                             if dx and dz else block('stone_brick_slab', type='bottom', waterlogged=False))
+        self.set(x, top + 1, z, AIR)
+        for dx in (-1, 1):
+            self.set(x + dx, top + 2, z, block('spruce_fence', east='false', north='false', south='false', west='false',
+                                                waterlogged=False))
+            self.set(x + dx, top + 3, z, block('spruce_fence', east='false', north='false', south='false', west='false',
+                                                waterlogged=False))
+            self.set(x + dx, top + 1, z, block('cobblestone'))
+        self.set(x, top + 3, z, block('iron_chain', axis='y', waterlogged=False))
+        self.fill(x - 1, top + 4, z - 1, x + 1, top + 4, z + 1, ROOF_SLAB)
+        self.set(x, top + 4, z, ROOF)
+
+    def hokora(self, x, z, top, facing='south'):
+        """A tiny wayside shrine: a stone plinth, a small timber house with a tiled roof, an offering lantern."""
+        self.set(x, top + 1, z, block('stone_bricks'))
+        self.set(x, top + 2, z, block('spruce_planks'))
+        self.set(x, top + 3, z, roof_stair(OPPOSITE[facing]))
+        dx, dz = STEP[facing]
+        self.set(x + dx, top + 1, z + dz, block('stone_brick_slab', type='bottom', waterlogged=False))
+        self.set(x + dx * 2, top + 1, z + dz * 2, block('stone_brick_wall', east='none', north='none', south='none',
+                                                        west='none', up=True, waterlogged=False))
+        self.set(x + dx * 2, top + 2, z + dz * 2, block('lantern', hanging=False, waterlogged=False))
+        for side in (-1, 1):
+            sx, sz = (side, 0) if dz else (0, side)
+            self.set(x + sx, top + 1, z + sz, block('potted_red_tulip') if side < 0 else block('candle', candles=2,
+                                                                                               lit=False, waterlogged=False))
+
+    def bamboo(self, x0, z0, x1, z1, top, density=0.35):
+        """A bamboo stand: culms of mixed height on podzol, thickest in the middle of the patch."""
+        for x in range(x0, x1 + 1):
+            for z in range(z0, z1 + 1):
+                if self.get(x, top, z)[0] not in ('minecraft:grass_block', 'minecraft:coarse_dirt', 'minecraft:moss_block'):
+                    continue
+                self.set(x, top, z, block('podzol', snowy=False))
+                self.set(x, top + 1, z, AIR)
+                if noise(x, top, z, 'bamboo') >= density:
+                    continue
+                height = 5 + int(noise(x, top, z, 'tall') * 7)
+                for i in range(height):
+                    leaves = 'large' if i >= height - 2 else 'small' if i >= height - 4 else 'none'
+                    self.set(x, top + 1 + i, z, block('bamboo', age=1, leaves=leaves, stage=0))
+
+    def boulder(self, x, z, top, size=2):
+        """A mossy rock half sunk in the ground."""
+        for dx in range(-size, size + 1):
+            for dz in range(-size, size + 1):
+                for dy in range(0, size + 1):
+                    if dx * dx + dz * dz + (dy * 1.6) ** 2 <= size * size + noise(x + dx, top + dy, z + dz, 'rock'):
+                        n = noise(x + dx, top + dy, z + dz, 'stone')
+                        self.set(x + dx, top + dy, z + dz, block('mossy_cobblestone') if n < 0.3 else
+                                 block('andesite') if n < 0.6 else block('stone'))
+
+    def woodpile(self, x, z, top, length=4, axis='x'):
+        """Split logs stacked two high under a slab roof, with a chopping block."""
+        dx, dz = (1, 0) if axis == 'x' else (0, 1)
+        for i in range(length):
+            for y in (1, 2):
+                self.set(x + dx * i, top + y, z + dz * i, block('spruce_log', axis='z' if axis == 'x' else 'x'))
+            self.set(x + dx * i, top + 3, z + dz * i, block('spruce_slab', type='bottom', waterlogged=False))
+        self.set(x - dz - dx, top + 1, z - dx - dz, block('oak_log', axis='y'))
+
+    def haystacks(self, x, z, top):
+        """A few hay bales, one on top."""
+        for (dx, dz, dy) in ((0, 0, 1), (1, 0, 1), (0, 1, 1), (0, 0, 2)):
+            self.set(x + dx, top + dy, z + dz, block('hay_block', axis='y'))
+
     # --- Output -------------------------------------------------------------------------------------------------
 
     def save(self, path):
@@ -476,13 +646,37 @@ class Takamori:
         s.stone_lantern(121, 105, g)
         s.stone_lantern(121, 125, g)
 
-        # A few trees in the bailey corners and on the middle terrace.
-        for (x, z) in ((14, 137), (100, 138), (140, 70), (20, 92), (60, 92)):
-            s.tree(x, z, g, 'spruce')
-        for (x, z) in ((84, 70), (86, 20), (20, 75)):
-            s.tree(x, z, cls.NINOMARU, 'cherry', 5)
-        s.flowers(4, 4, 145, 145, g)
-        s.flowers(nx0 + 1, nz0 + 1, nx1 - 1, nz1 - 1, cls.NINOMARU)
+        # Site pieces: a garden pond on the ninomaru, a well and wayside shrines in the bailey, a bamboo stand
+        # along the west wall, rocks, firewood and hay by the barracks.
+        s.pond(102, 74, 6, 4, cls.NINOMARU)
+        s.well(99, 125, g)
+        s.hokora(8, 90, g, facing='east')
+        s.hokora(110, 140, g, facing='north')
+        s.bamboo(5, 52, 10, 74, g)
+        for (x, z, top, size) in ((30, 140, g, 2), (115, 90, g, 1), (125, 72, cls.NINOMARU, 2),
+                                  (110, 80, cls.NINOMARU, 1), (128, 50, cls.HONMARU, 1)):
+            s.boulder(x, z, top, size)
+        s.woodpile(28, 94, g)
+        s.haystacks(54, 94, g)
+
+        # Trees: spruce and oak in the bailey, cherries on the ninomaru.
+        trees = [(14, 137, 'spruce'), (100, 138, 'spruce'), (140, 70, 'spruce'), (20, 92, 'spruce'),
+                 (60, 92, 'spruce'), (140, 30, 'spruce'), (35, 138, 'oak'), (90, 128, 'oak'), (8, 20, 'oak')]
+        for (x, z, kind) in trees:
+            s.tree(x, z, g, kind, 7 if kind == 'spruce' else 5)
+        blossoms = [(84, 70, 'cherry'), (86, 20, 'cherry'), (20, 75, 'cherry'), (125, 80, 'cherry'), (66, 45, 'cherry')]
+        for (x, z, kind) in blossoms:
+            s.tree(x, z, cls.NINOMARU, kind, 5)
+
+        # Bushes along the inside foot of the curtain wall, in clumps, kept clear of gates and stairs.
+        clear = [(58, 135, 91, 145), (140, 86, 145, 117), (4, 132, 9, 140), (4, 38, 9, 44)]
+        foot = [(x, z) for x in range(9, 141) for z in (4, 145)] + [(x, z) for z in range(9, 141) for x in (4, 145)]
+        s.shrubs([(x, z) for (x, z) in foot if smooth(x, z, 6, 'hedge') > 0.6
+                  and not any(a <= x <= c and b <= z <= d for a, b, c, d in clear)], g)
+
+        s.nature(4, 4, 145, 145, g, trees)
+        s.nature(nx0 + 1, nz0 + 1, nx1 - 1, nz1 - 1, cls.NINOMARU, blossoms)
+        s.nature(hx0 + 1, hz0 + 1, hx1 - 1, hz1 - 1, cls.HONMARU)
         return s
 
 
