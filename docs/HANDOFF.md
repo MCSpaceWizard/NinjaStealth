@@ -33,7 +33,13 @@ Long sessions get expensive, so work moves to a fresh session regularly. This fi
 2. **Toolkit B:** finish and merge (see the table).
 3. **Light nuance:** finish and merge.
 4. Then **more weapons and armour** for the player, and **NPC work** (distinct placeholder silhouettes per archetype: hats, armour shapes, sashes, banners per [STYLE_GUIDE](art/STYLE_GUIDE.md) §4; extend `tools/programmer_art/generate.py` with part shapes).
-5. **Sumi must stay easy to extend and modify** (user, 2026-10-09): keep a short "how to add a screen / widget / theme token" guide current in doc 31, and build new GUIs (tool wheel, spawner) from its widgets rather than one-offs.
+5. **Sumi must stay easy to extend and modify** (user, 2026-10-09): keep [docs/sumi-guide.md](sumi-guide.md) (how to add a screen, widget or theme token) current, and build new GUIs (tool wheel, spawner) from its widgets rather than one-offs. Cleanups found while writing the guide, worth doing when touching Sumi:
+   - a panel-centring helper (every screen writes its own anonymous `UiNode`)
+   - builder chaining: `size`/`flex`/`tooltip` return an unchecked `T`, `UiFlex.gap/padding/center` return `UiFlex`
+   - consistency: `enabledWhen` on every input widget (toggle, slider and cycle take a fixed `editable`), theme tokens rather than raw ARGB (`UiProgressBar`, `UiTabBar` accents, `DialogueScreen.guardPortrait`), widget heights from theme metrics
+   - `SumiTextures.invalidate()` is never called, so F3+T probably keeps the cached paper and ink
+   - `UiTextField` has no caret movement, selection or paste
+   - `ToolWheelScreen` is still a vanilla `Screen`
 6. **Artist support:** keep [TEXTURE_LIST](art/TEXTURE_LIST.md) updated as textures are added.
 
 **Getting files to Claude:** upload a zip in the chat (it lands in the session's uploads) or commit it to `_incoming/`.
